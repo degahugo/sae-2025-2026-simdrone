@@ -1,0 +1,110 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>fr.dronsim</groupId>
+    <artifactId>dronsim</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>DronSim</name>
+    <description>Simulateur de drones réaliste, multi-milieux et multi-agent</description>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <jme3.groupId>org.jmonkeyengine</jme3.groupId>
+        <jme3.version>3.7.0-stable</jme3.version>
+
+        <maven.compiler.release>17</maven.compiler.release>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+
+        <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
+        <junit.version>5.12.1</junit.version>
+    </properties>
+
+    <dependencies>
+        <!-- JMonkeyEngine -->
+        <dependency>
+            <groupId>${jme3.groupId}</groupId>
+            <artifactId>jme3-core</artifactId>
+            <version>${jme3.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>${jme3.groupId}</groupId>
+            <artifactId>jme3-desktop</artifactId>
+            <version>${jme3.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>${jme3.groupId}</groupId>
+            <artifactId>jme3-lwjgl3</artifactId>
+            <version>${jme3.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>${jme3.groupId}</groupId>
+            <artifactId>jme3-effects</artifactId>
+            <version>${jme3.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>${jme3.groupId}</groupId>
+            <artifactId>jme3-jbullet</artifactId>
+            <version>${jme3.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>${jme3.groupId}</groupId>
+            <artifactId>jme3-networking</artifactId>
+            <version>${jme3.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>${jme3.groupId}</groupId>
+            <artifactId>jme3-plugins</artifactId>
+            <version>${jme3.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>${jme3.groupId}</groupId>
+            <artifactId>jme3-terrain</artifactId>
+            <version>${jme3.version}</version>
+        </dependency>
+
+        <!-- Tests -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.plugin.version}</version>
+                <configuration>
+                    <release>${maven.compiler.release}</release>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
