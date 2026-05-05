@@ -23,11 +23,30 @@
         <maven.compiler.target>17</maven.compiler.target>
 
         <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
+        <maven.surefire.plugin.version>3.2.5</maven.surefire.plugin.version>
+
         <junit.version>5.12.1</junit.version>
+        <monkeywrench.version>0.6.2</monkeywrench.version>
     </properties>
 
     <dependencies>
-        <!-- JMonkeyEngine -->
+
+        <!-- JavaFX (à activer plus tard pour l'interface graphique) -->
+        <!--
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>21</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>21</version>
+        </dependency>
+        -->
+
+        <!-- JMonkeyEngine - core -->
         <dependency>
             <groupId>${jme3.groupId}</groupId>
             <artifactId>jme3-core</artifactId>
@@ -46,6 +65,7 @@
             <version>${jme3.version}</version>
         </dependency>
 
+        <!-- JMonkeyEngine  -->
         <dependency>
             <groupId>${jme3.groupId}</groupId>
             <artifactId>jme3-effects</artifactId>
@@ -60,7 +80,19 @@
 
         <dependency>
             <groupId>${jme3.groupId}</groupId>
+            <artifactId>jme3-jogg</artifactId>
+            <version>${jme3.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>${jme3.groupId}</groupId>
             <artifactId>jme3-networking</artifactId>
+            <version>${jme3.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>${jme3.groupId}</groupId>
+            <artifactId>jme3-niftygui</artifactId>
             <version>${jme3.version}</version>
         </dependency>
 
@@ -74,6 +106,25 @@
             <groupId>${jme3.groupId}</groupId>
             <artifactId>jme3-terrain</artifactId>
             <version>${jme3.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>${jme3.groupId}</groupId>
+            <artifactId>jme3-testdata</artifactId>
+            <version>${jme3.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>${jme3.groupId}</groupId>
+            <artifactId>jme3-vr</artifactId>
+            <version>${jme3.version}</version>
+        </dependency>
+
+        <!-- GLTF / GLB / OBJ / FBX asset loading -->
+        <dependency>
+            <groupId>com.github.stephengold</groupId>
+            <artifactId>MonkeyWrench</artifactId>
+            <version>${monkeywrench.version}</version>
         </dependency>
 
         <!-- Tests -->
@@ -94,15 +145,21 @@
 
     <build>
         <plugins>
+            <!-- Java 17 compilation -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven.compiler.plugin.version}</version>
                 <configuration>
                     <release>${maven.compiler.release}</release>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
                 </configuration>
+            </plugin>
+
+            <!-- JUnit 5 tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven.surefire.plugin.version}</version>
             </plugin>
         </plugins>
     </build>
