@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="15"
+      alignment="CENTER"
+      prefWidth="900"
+      prefHeight="600"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="fr.app.controller.ConnexionController">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <Label text="Connexion Drone"
+           style="-fx-font-size: 24px; -fx-font-weight: bold;" />
+
+    <TextField fx:id="ipField"
+               promptText="Adresse IP type : 192.168.10.255"
+               prefHeight="40"
+               style="-fx-font-size: 18px"
+               maxWidth="250"/>
+
+
+    <TextField fx:id="portField"
+               promptText="Port"
+               prefHeight="40"
+               style="-fx-font-size: 18px"
+               maxWidth="250"/>
+
+    <Button text="Connexion"
+            prefHeight="40"
+            prefWidth="150"
+            onAction="#ConnexionClique"/>
+
+    <Label fx:id="statusLabel"
+           text=""
+           style="-fx-font-size: 14px;"/>
+
+</VBox>

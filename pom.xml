@@ -32,7 +32,7 @@
     <dependencies>
 
         <!-- JavaFX (à activer plus tard pour l'interface graphique) -->
-        <!--
+
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
@@ -44,7 +44,7 @@
             <artifactId>javafx-fxml</artifactId>
             <version>21</version>
         </dependency>
-        -->
+
 
         <!-- JMonkeyEngine - core -->
         <dependency>
@@ -160,6 +160,16 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven.surefire.plugin.version}</version>
+            </plugin>
+
+            <!-- Plugin pour exécuter l'application JavaFX -->
+            <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.8</version>
+                <configuration>
+                    <mainClass>fr.app.InterfacePilote</mainClass>
+                </configuration>
             </plugin>
         </plugins>
     </build>
