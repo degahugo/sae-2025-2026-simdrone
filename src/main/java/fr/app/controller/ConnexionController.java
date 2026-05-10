@@ -7,9 +7,11 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 
 // Classe permettant de récupérer l'adresse ip et le port
+// Détermine les règles validité de l'adresse ip et le port
 
 public class ConnexionController {
 
+    //Variables récuperé du fichier FXML
     @FXML private TextField ipField;
     @FXML private TextField portField;
     @FXML private Label statusLabel;
@@ -25,23 +27,25 @@ public class ConnexionController {
             return;
         }
 
-        // Validation port
+        // Validation port entre 49152 et 65535 (on choisira le port 62500)
         int port;
         try {
             port = Integer.parseInt(portText);
-            if (port < 1 || port > 65535) throw new NumberFormatException();
+            if (port < 49152 || port > 65535) throw new NumberFormatException();
         } catch (NumberFormatException e) {
-            setStatus("Port invalide (doit être entre 1 et 65535).", "red");
+            setStatus("Port invalide (doit être entre 49152 et 65535).", "red");
             return;
         }
 
         setStatus("Connexion en cours...", "orange");
 
-        // Connexion en arrière-plan pour ne pas bloquer l'interface
+        // Connexion en arrière-plan pour ne pas bloquer l'interface (s'exécute dans un thread séparé)
         final int finalPort = port;
         Task<Void> task = new Task<>() {
             @Override
             protected Void call() throws Exception {
+                //Ce code s'exécute dans un thread séparé (pas sur le thread JavaFX)
+                //On crée le client TCP avec l'IP et le port saisis
                 Client client = new Client(ip, finalPort);
                 client.connect();
                 return null;
@@ -59,6 +63,7 @@ public class ConnexionController {
     }
 
     private boolean isValidIpv4(String ip) {
+        // On regarde que l'adresse ip est bien en 4 partie (séparé par un point) avec des valeurs de 0 à 255
         String[] parts = ip.split("\\.");
         if (parts.length != 4) return false;
         for (String part : parts) {

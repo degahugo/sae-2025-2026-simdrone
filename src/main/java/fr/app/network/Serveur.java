@@ -4,6 +4,12 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+// Serveur TCP : Ordre des étapes :
+// 1. Créer un ServerSocket sur un port donné (ex: 62500)
+// 2. Attente en boucle de connexions entrantes (accept)
+// 3. Pour chaque client connecté -> création d'un thread dédié
+// 4. Lecture des messages du client et envoi d'un accusé de réception
+
 public class Serveur {
 
     private final int port;
@@ -29,12 +35,15 @@ public class Serveur {
 
     private void handleClient(Socket socket) {
         try (
+                // BufferedReader : lit les données envoyées par le client (texte ligne par ligne)
                 BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                // PrintWriter : envoie des données au client (autoFlush=true -> envoi immédiat)
                 PrintWriter writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true)
         ) {
             String line;
             while ((line = reader.readLine()) != null) {
                 System.out.println("[Serveur] Reçu : " + line);
+                // On renvoie un accusé de réception au client pour confirmer la réception
                 writer.println("ACK: " + line); // réponse au client
             }
         } catch (IOException e) {
@@ -42,6 +51,8 @@ public class Serveur {
         }
     }
 
+    // Arrête proprement le serveur en fermant le ServerSocket
+    // Cela interrompt aussi le accept() bloquant dans start()
     public void stop() throws IOException {
         if (serverSocket != null && !serverSocket.isClosed()) {
             serverSocket.close();
