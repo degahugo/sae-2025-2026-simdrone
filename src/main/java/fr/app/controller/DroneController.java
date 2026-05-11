@@ -34,7 +34,7 @@ public class DroneController {
     //private Vector3f upMovement = new Vector3f(0, 1, 0);
     //private Vector3f downMovement = new Vector3f(0, -1, 0);
 
-    // noms des inputs
+    // noms des inputs et des mouvements
     DroneMovement moveForward = DroneMovement.FORWARD;
     DroneMovement moveBackward = DroneMovement.BACKWARD;
     DroneMovement moveLeft = DroneMovement.LEFT;
@@ -86,6 +86,7 @@ public class DroneController {
 
     private final ActionListener actionListener = new ActionListener() {
 
+        //une touche après l'autre
         @Override
         public void onAction(String name,
                              boolean keyPressed,
@@ -215,3 +216,7 @@ public class DroneController {
                 .setLocalTranslation(nextPosition);
     }
 }
+
+//implémenter les capteurs et les lier au drone (caméra, distortion)
+
+//
