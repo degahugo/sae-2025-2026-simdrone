@@ -56,10 +56,10 @@ public class DroneController {
 
         // touches
         inputManager.addMapping(moveForward.name(),
-                new KeyTrigger(KeyInput.KEY_I));
+                new KeyTrigger(KeyInput.KEY_K));
 
         inputManager.addMapping(moveBackward.name(),
-                new KeyTrigger(KeyInput.KEY_K));
+                new KeyTrigger(KeyInput.KEY_I));
 
         inputManager.addMapping(moveLeft.name(),
                 new KeyTrigger(KeyInput.KEY_J));
