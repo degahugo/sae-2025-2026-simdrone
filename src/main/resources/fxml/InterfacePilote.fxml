@@ -97,6 +97,7 @@
         <Label fx:id="statusLabel"
                text=""
                maxWidth="Infinity"
+               wrapText="true"
                alignment="CENTER"
                style="-fx-font-size: 12px;
                       -fx-text-fill: #7a92a8;
