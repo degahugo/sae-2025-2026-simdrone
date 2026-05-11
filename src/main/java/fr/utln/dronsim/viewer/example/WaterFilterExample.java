@@ -19,6 +19,9 @@ import com.jme3.water.WaterFilter;
 
 import fr.utln.dronsim.viewer.primitives.ReferentialNode;
 
+import fr.app.controller.DroneController;
+import fr.app.model.Drone;
+
 /**
  * An example that illustrate a complete scene with water simulation.
  * @author Julien Seinturier - Universit&eacute; de Toulon / LIS umr CNRS 7020 - <a href="http://web.seinturier.fr">http://web.seinturier.fr</a>
@@ -29,42 +32,73 @@ public class WaterFilterExample extends SimpleApplication {
 	 * The filter post processor
 	 */
 	private FilterPostProcessor fpp = null;
-	
+
+    private Drone drone;
+    private DroneController droneController;
+
 	@Override
 	public void simpleInitApp() {
 
 		// Create scene objects
 		Node scene = createScene();
-		
+
 		// ******************************************************
 		// ** Rendering water need Y vector to be the vertical **
 		scene.rotate(-FastMath.HALF_PI, 0.0f, 0.0f);
 		// ******************************************************
-		
+
 		rootNode.attachChild(scene);
 
 		// Initialize lighting
 		initLighting();
 
 		initFilter();
-		
+
 		// Set up camera
 		cam.setLocation(new Vector3f(4.00f, 4.40f, 2.0f));
 		cam.lookAt(Vector3f.ZERO, Vector3f.UNIT_Y);
 		flyCam.setUpVector(Vector3f.UNIT_Y);
-		
+
 		// Add a sky
 		rootNode.attachChild(SkyFactory.createSky(getAssetManager(), "Textures/Sky/Bright/BrightSky.dds", SkyFactory.EnvMapType.CubeMap));
-		
+
 	}
+
+    @Override
+    public void simpleUpdate(float tpf) {
+
+        droneController.updateMovement(tpf);
+
+        Vector3f dronePosition =
+                drone.getDroneSpatial()
+                        .getWorldTranslation();
+
+        Vector3f droneForward =
+                drone.getDroneSpatial()
+                        .getWorldRotation()
+                        .mult(Vector3f.UNIT_Z);
+
+        Vector3f cameraOffset =
+                droneForward.negate().mult(6f)
+                        .add(0f, 3f, 2f);
+
+        cam.setLocation(
+                dronePosition.add(cameraOffset)
+        );
+
+        cam.lookAt(
+                dronePosition,
+                Vector3f.UNIT_Y
+        );
+    }
 
 	/**
 	 * Create the main 3D scene
 	 */
 	private Node createScene() {
-		
+
 		Node scene = new Node("Main scene");
-		
+
 		// Register the MonkeyWrench loader to the asset manager
 		assetManager.registerLoader(LwjglAssetLoader.class,"3ds", "3mf", "blend", "bvh", "dae", "fbx", "glb", "gltf", "lwo", "meshxml", "mesh.xml", "obj", "ply", "stl");
 
@@ -91,11 +125,21 @@ public class WaterFilterExample extends SimpleApplication {
 		//   - Attach the vehicle node to the main scene
 		scene.attachChild(vehicleANode);
 
+        drone = new Drone(vehicleANode);
+
+        droneController =
+                new DroneController(
+                        inputManager,
+                        drone
+                );
+
+        droneController.setUpKeys();
+
 		// Create a second vehicle
 		Node vehicleBNode = new Node("Vehicle B");
 
 		//   - Load the vehicle model from an asset
-		Spatial vehicleBModel = assetManager.loadModel("vehicle/subseatech/guardian/guardian-vehicle.j3o");		
+		Spatial vehicleBModel = assetManager.loadModel("vehicle/subseatech/guardian/guardian-vehicle.j3o");
 
 		//   - Attach the vehicle model to the vehicle node
 		vehicleBNode.attachChild(vehicleBModel);
@@ -112,9 +156,9 @@ public class WaterFilterExample extends SimpleApplication {
 		// If the terrain use texture, the asset manager has to be updated.
 		assetManager.registerLocator("data/asset/terrain/military", FileLocator.class);
 
-		Spatial terrain = assetManager.loadModel("terrain/military/target-approach-line-terrain.j3o");		
+		Spatial terrain = assetManager.loadModel("terrain/military/target-approach-line-terrain.j3o");
 		scene.attachChild(terrain);
-		
+
 		return scene;
 
 	}
@@ -126,17 +170,17 @@ public class WaterFilterExample extends SimpleApplication {
 		//ExtendedWaterFilter waterFilter = new ExtendedWaterFilter(Vector3f.UNIT_Z, 0.0f);
 		//ExtendedWaterFilter waterFilter = new ExtendedWaterFilter();
 		WaterFilter waterFilter = new WaterFilter();
-		
+
 		waterFilter.setWaterHeight(3.0f);
 		waterFilter.setSpeed(0.5f);
-		
+
 		fpp = new FilterPostProcessor(assetManager);
 
         fpp.addFilter(waterFilter);
 
         viewPort.addProcessor(fpp);
 	}
-	
+
 	/**
 	 * Initialize the global scene lighting
 	 */
@@ -164,7 +208,7 @@ public class WaterFilterExample extends SimpleApplication {
 		DirectionalLight sun = new DirectionalLight();
 		sun.setColor(ColorRGBA.White);
 		sun.setDirection(new Vector3f(-.5f,-.5f,-.5f).normalizeLocal());
-		rootNode.addLight(sun);  
+		rootNode.addLight(sun);
 	}
 
 	/**
@@ -183,5 +227,5 @@ public class WaterFilterExample extends SimpleApplication {
 		app.setSettings(settings);
 		app.start(); // start the game
 	}
-	
+
 }
