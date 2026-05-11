@@ -6,7 +6,9 @@ import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.math.Vector3f;
 
+import com.jme3.scene.control.UpdateControl;
 import fr.app.model.Drone;
+import fr.app.model.DroneMovement;
 
 public class DroneController {
 
@@ -25,18 +27,22 @@ public class DroneController {
     private Boolean downIntention = false;
 
     // vecteurs
-    private Vector3f forwardMovement = new Vector3f(0, 0, -1);
-    private Vector3f backwardMovement = new Vector3f(0, 0, 1);
-    private Vector3f leftMovement = new Vector3f(-1, 0, 0);
-    private Vector3f rightMovement = new Vector3f(1, 0, 0);
-    private Vector3f upMovement = new Vector3f(0, 1, 0);
-    private Vector3f downMovement = new Vector3f(0, -1, 0);
+   // private Vector3f forwardMovement = new Vector3f(0, 0, -1);
+    //private Vector3f backwardMovement = new Vector3f(0, 0, 1);
+    //private Vector3f leftMovement = new Vector3f(-1, 0, 0);
+    //private Vector3f rightMovement = new Vector3f(1, 0, 0);
+    //private Vector3f upMovement = new Vector3f(0, 1, 0);
+    //private Vector3f downMovement = new Vector3f(0, -1, 0);
 
     // noms des inputs
-    String moveForward = "Move Forward";
-    String moveBackward = "Move Backward";
-    String moveLeft = "Move Left";
-    String moveRight = "Move Right";
+    DroneMovement moveForward = DroneMovement.FORWARD;
+    DroneMovement moveBackward = DroneMovement.BACKWARD;
+    DroneMovement moveLeft = DroneMovement.LEFT;
+    DroneMovement moveRight = DroneMovement.RIGHT;
+    DroneMovement moveUp = DroneMovement.UP;
+    DroneMovement moveDown = DroneMovement.DOWN;
+
+
 
 
     public DroneController(InputManager inputManager,
@@ -49,26 +55,33 @@ public class DroneController {
     public void setUpKeys() {
 
         // touches
-        inputManager.addMapping(moveForward,
+        inputManager.addMapping(moveForward.name(),
                 new KeyTrigger(KeyInput.KEY_I));
 
-        inputManager.addMapping(moveBackward,
+        inputManager.addMapping(moveBackward.name(),
                 new KeyTrigger(KeyInput.KEY_K));
 
-        inputManager.addMapping(moveLeft,
+        inputManager.addMapping(moveLeft.name(),
                 new KeyTrigger(KeyInput.KEY_J));
 
-        inputManager.addMapping(moveRight,
+        inputManager.addMapping(moveRight.name(),
                 new KeyTrigger(KeyInput.KEY_L));
+        inputManager.addMapping(moveUp.name(),
+                new KeyTrigger(KeyInput.KEY_B));
+
+        inputManager.addMapping(moveDown.name(),
+                new KeyTrigger(KeyInput.KEY_N));
 
 
         // listeners
         inputManager.addListener(actionListener,
-                moveForward,
-                moveBackward,
-                moveLeft,
-                moveRight
-               );
+                moveForward.name(),
+                moveBackward.name(),
+                moveLeft.name(),
+                moveRight.name(),
+                moveDown.name(),
+                moveUp.name()
+        );
     }
 
     private final ActionListener actionListener = new ActionListener() {
@@ -80,52 +93,124 @@ public class DroneController {
 
             switch (name) {
 
-                case "Move Forward":
-                    forwardIntention = keyPressed;
-                    break;
+                    case "FORWARD":
+                        forwardIntention = keyPressed;
+                        break;
 
-                case "Move Backward":
-                    backwardIntention = keyPressed;
-                    break;
+                    case "BACKWARD":
+                        backwardIntention = keyPressed;
+                        break;
 
-                case "Move Left":
-                    leftIntention = keyPressed;
-                    break;
+                    case "LEFT":
+                        leftIntention = keyPressed;
+                        break;
 
-                case "Move Right":
-                    rightIntention = keyPressed;
-                    break;
+                    case "RIGHT":
+                        rightIntention = keyPressed;
+                        break;
+
+                    case "UP":
+                        upIntention = keyPressed;
+                        break;
+
+                    case "DOWN":
+                        downIntention = keyPressed;
+                        break;
+
+
 
             }
         }
     };
 
-    public void updateMovement() {
+    public void updateMovement(float tpf) {
 
         Vector3f moveDirection = new Vector3f();
 
+        /*
+         * Direction avant du drone
+         */
+        Vector3f forward =
+                drone.getDroneSpatial()
+                        .getLocalRotation()
+                        .mult(Vector3f.UNIT_Z);
+
+        /*
+         * Direction verticale
+         */
+        Vector3f up =
+                drone.getDroneSpatial()
+                        .getLocalRotation()
+                        .mult(Vector3f.UNIT_Y);
+
+        /*
+         * Avancer / reculer
+         */
+
         if (forwardIntention) {
-            moveDirection.addLocal(forwardMovement);
+
+            moveDirection.addLocal(
+                    forward.negate()
+            );
         }
 
         if (backwardIntention) {
-            moveDirection.addLocal(backwardMovement);
+
+            moveDirection.addLocal(
+                    forward
+            );
         }
 
+        /*
+         * Monter / descendre
+         */
+
+        if (upIntention) {
+
+            moveDirection.addLocal(
+                    up.negate()
+            );
+        }
+
+        if (downIntention) {
+
+            moveDirection.addLocal(
+                    up
+            );
+        }
+
+        /*
+         * Rotation gauche / droite
+         */
+
         if (leftIntention) {
-            moveDirection.addLocal(leftMovement);
+
+            drone.getDroneSpatial()
+                    .rotate(
+                            0f,
+                            1.5f * tpf,
+                            0f
+                    );
         }
 
         if (rightIntention) {
-            moveDirection.addLocal(rightMovement);
+
+            drone.getDroneSpatial()
+                    .rotate(
+                            0f,
+                            -1.5f * tpf,
+                            0f
+                    );
         }
 
+        /*
+         * Déplacement fluide
+         */
 
         Vector3f nextPosition =
                 drone.getDroneSpatial()
                         .getLocalTranslation()
-                        .add(moveDirection.mult(droneSpeed));
-
+                        .add(moveDirection.mult(droneSpeed * tpf * 60f));
         drone.getDroneSpatial()
                 .setLocalTranslation(nextPosition);
     }
