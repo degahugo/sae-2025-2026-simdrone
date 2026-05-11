@@ -1,140 +1,124 @@
 package fr.app.network;
 
-// Import des outils de chiffrement fournis par Java
+
 import javax.crypto.*;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.*;
+import java.util.Base64;
 
+/**
+ * Gère le chiffrement RSA (échange de clé) et AES/GCM (messages).
+ * Cette classe est indépendante du réseau : elle ne fait que chiffrer/déchiffrer.
+ */
 public class ProtocoleDeChiffrement {
 
-    // 🔐 Clé AES (clé secrète partagée après la connexion)
+    // --- Clés RSA (serveur uniquement) ---
+    private PublicKey rsaPublicKey;
+    private PrivateKey rsaPrivateKey;
+
+    // --- Clé AES partagée (client + serveur) ---
     private SecretKey aesKey;
 
-    // 🔐 Clés RSA (publique + privée) utilisées par le serveur
-    private KeyPair rsaKeyPair;
+    // --- Paramètres AES/GCM ---
+    private static final int AES_KEY_SIZE = 256;
+    private static final int GCM_TAG_LENGTH = 128;
 
-    // =========================
-    // 🔵 PARTIE SERVEUR
-    // =========================
+    // ============================================================
+    // 1. RSA — utilisé pour échanger la clé AES
+    // ============================================================
 
     /**
-     * Le serveur génère ses clés RSA au démarrage
+     * Génère une paire RSA (serveur).
      */
-    public void initServeur() throws Exception {
-        // Création du générateur RSA
+    public void generateRSAKeys() throws Exception {
         KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
-
-        // Taille de clé sécurisée
         kpg.initialize(2048);
+        KeyPair pair = kpg.generateKeyPair();
+        rsaPublicKey = pair.getPublic();
+        rsaPrivateKey = pair.getPrivate();
+    }
 
-        // Génération des clés (publique + privée)
-        rsaKeyPair = kpg.generateKeyPair();
+    public SecretKey getAESKey() {
+        return aesKey;
+    }
+
+
+    /**
+     * Retourne la clé publique RSA (serveur → client).
+     */
+    public PublicKey getPublicKey() {
+        return rsaPublicKey;
     }
 
     /**
-     * Le serveur envoie sa clé publique au client
+     * Déchiffre la clé AES envoyée par le client (serveur).
      */
-    public PublicKey getClePublique() {
-        return rsaKeyPair.getPublic();
-    }
-
-    /**
-     * Le serveur reçoit la clé AES chiffrée par le client
-     */
-    public void recevoirCleAES(byte[] cleChiffree) throws Exception {
-
-        // Création du déchiffreur RSA
-        Cipher cipher = Cipher.getInstance("RSA");
-
-        // On utilise la clé privée pour déchiffrer
-        cipher.init(Cipher.DECRYPT_MODE, rsaKeyPair.getPrivate());
-
-        // Déchiffrement de la clé AES
-        byte[] aesBytes = cipher.doFinal(cleChiffree);
-
-        // Transformation en clé AES utilisable
+    public void decryptAESKey(byte[] encryptedAES) throws Exception {
+        Cipher rsaCipher = Cipher.getInstance("RSA");
+        rsaCipher.init(Cipher.DECRYPT_MODE, rsaPrivateKey);
+        byte[] aesBytes = rsaCipher.doFinal(encryptedAES);
         aesKey = new SecretKeySpec(aesBytes, "AES");
     }
 
-    // =========================
-    // 🟢 PARTIE CLIENT
-    // =========================
+    // ============================================================
+    // 2. AES — utilisé pour chiffrer les messages
+    // ============================================================
 
     /**
-     * Le client crée une clé AES et la chiffre avec la clé publique du serveur
+     * Génère une clé AES (client).
      */
-    public byte[] creerEtChiffrerCleAES(PublicKey clePublique) throws Exception {
-
-        // Génération d’une clé AES
+    public SecretKey generateAESKey() throws Exception {
         KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-        keyGen.init(256);
+        keyGen.init(AES_KEY_SIZE);
         aesKey = keyGen.generateKey();
-
-        // Création du chiffrement RSA
-        Cipher cipher = Cipher.getInstance("RSA");
-
-        // On chiffre avec la clé publique du serveur
-        cipher.init(Cipher.ENCRYPT_MODE, clePublique);
-
-        // Retourne la clé AES chiffrée
-        return cipher.doFinal(aesKey.getEncoded());
+        return aesKey;
     }
 
-    // =========================
-    // 🔁 PARTIE AES (COMMUNICATION)
-    // =========================
+    /**
+     * Chiffre la clé AES avec RSA (client → serveur).
+     */
+    public byte[] encryptAESKey(SecretKey aesKey, PublicKey rsaPublicKey) throws Exception {
+        Cipher rsaCipher = Cipher.getInstance("RSA");
+        rsaCipher.init(Cipher.ENCRYPT_MODE, rsaPublicKey);
+        return rsaCipher.doFinal(aesKey.getEncoded());
+    }
 
     /**
-     * Chiffrer un message avec AES
+     * Chiffre un message avec AES/GCM.
+     * Retourne un tableau contenant {IV, données chiffrées}.
      */
-    public byte[] chiffrer(byte[] data) throws Exception {
-
-        // Mode sécurisé AES/GCM
+    public ChiffreAES encryptAES(byte[] data) throws Exception {
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        cipher.init(Cipher.ENCRYPT_MODE, aesKey);
 
-        // IV = nombre aléatoire obligatoire
-        byte[] iv = new byte[12];
-        new SecureRandom().nextBytes(iv);
-
-        // Paramètre GCM
-        GCMParameterSpec spec = new GCMParameterSpec(128, iv);
-
-        // Initialisation du chiffrement
-        cipher.init(Cipher.ENCRYPT_MODE, aesKey, spec);
-
-        // Chiffrement du message
+        byte[] iv = cipher.getIV();
         byte[] encrypted = cipher.doFinal(data);
 
-        // On combine IV + message chiffré
-        byte[] result = new byte[iv.length + encrypted.length];
-
-        System.arraycopy(iv, 0, result, 0, iv.length);
-        System.arraycopy(encrypted, 0, result, iv.length, encrypted.length);
-
-        return result;
+        return new ChiffreAES(iv, encrypted);
     }
 
     /**
-     * Déchiffrer un message AES
+     * Déchiffre un message AES/GCM.
      */
-    public byte[] dechiffrer(byte[] data) throws Exception {
-
-        // On récupère le IV (12 premiers bytes)
-        byte[] iv = new byte[12];
-
-        // Le reste = message chiffré
-        byte[] encrypted = new byte[data.length - 12];
-
-        System.arraycopy(data, 0, iv, 0, 12);
-        System.arraycopy(data, 12, encrypted, 0, encrypted.length);
-
-        // Préparation du déchiffrement
+    public byte[] decryptAES(byte[] encryptedData, byte[] iv) throws Exception {
+        GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        cipher.init(Cipher.DECRYPT_MODE, aesKey, spec);
+        return cipher.doFinal(encryptedData);
+    }
 
-        cipher.init(Cipher.DECRYPT_MODE, aesKey, new GCMParameterSpec(128, iv));
+    // ============================================================
+    // Classe interne pour stocker IV + données chiffrées
+    // ============================================================
 
-        // Déchiffrement
-        return cipher.doFinal(encrypted);
+    public static class ChiffreAES {
+        public final byte[] iv;
+        public final byte[] data;
+
+        public ChiffreAES(byte[] iv, byte[] data) {
+            this.iv = iv;
+            this.data = data;
+        }
     }
 }
