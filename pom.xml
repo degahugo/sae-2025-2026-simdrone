@@ -126,7 +126,13 @@
             <artifactId>MonkeyWrench</artifactId>
             <version>${monkeywrench.version}</version>
         </dependency>
-
+<!--
+        <dependency>
+            <groupId>com.github.stephengold</groupId>
+            <artifactId>Minie</artifactId>
+            <version>9.0.3+mt</version>
+        </dependency>
+-->
         <!-- Tests -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
