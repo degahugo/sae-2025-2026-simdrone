@@ -2,6 +2,8 @@ package fr.app.network;
 
 import java.io.*;
 import java.net.Socket;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 //Client TCP pour se connecter au serveur de simulation DronSim.
 
@@ -32,7 +34,12 @@ public class Client {
         reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
 
-        System.out.println("[Client] Connecté à " + adresse + ":" + port);
+        // Récupération de la date et heure actuelles
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:SSS");
+        String formattedDateTime = now.format(formatter);
+
+        System.out.println("[Client] Connecté à " + adresse + ":" + port + " à la date : " + formattedDateTime);
     }
 
 

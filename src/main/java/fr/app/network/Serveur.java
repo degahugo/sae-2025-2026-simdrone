@@ -3,6 +3,8 @@ package fr.app.network;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 // Serveur TCP : Ordre des étapes :
 // 1. Créer un ServerSocket sur un port donné (ex: 62500)
@@ -26,7 +28,13 @@ public class Serveur {
 
         while (true) {
             Socket clientSocket = serverSocket.accept(); // bloquant
-            System.out.println("[Serveur] Client connecté : " + clientSocket.getInetAddress());
+
+            // Récupération de la date et heure actuelles
+            LocalDateTime now = LocalDateTime.now();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+            String formattedDateTime = now.format(formatter);
+
+            System.out.println("[Serveur] Client connecté : " + clientSocket.getInetAddress()+ " à la date : " + formattedDateTime);
 
             // Gérer chaque client dans un thread séparé
             new Thread(() -> handleClient(clientSocket)).start();
