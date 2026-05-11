@@ -11,9 +11,15 @@ public class DashboardController {
     private TextArea logArea;
 
     private void send(PilotCommand cmd) {
-        logArea.appendText("Commande : " + cmd + "\n");
-    }
 
+        logArea.appendText("Commande : " + cmd + "\n");
+
+        if (client != null && client.isConnected()) {
+            client.send(cmd.name());   // 🔥 ENVOI AU SERVEUR
+        } else {
+            logArea.appendText("❌ Client non connecté\n");
+        }
+    }
     private Client client;
 
     public void setClient(Client client) {
