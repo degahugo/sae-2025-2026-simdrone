@@ -5,6 +5,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import fr.app.network.ProtocoleDeChiffrement;
+import java.security.PublicKey;
+
 
 // Serveur TCP : Ordre des étapes :
 // 1. Créer un ServerSocket sur un port donné (ex: 62500)
@@ -16,6 +19,10 @@ public class Serveur {
 
     private final int port;
     private ServerSocket serverSocket;
+    //  Ajout du protocole de chiffrement
+    private ProtocoleDeChiffrement protocole = new ProtocoleDeChiffrement();
+
+
 
     public Serveur(int port) {
         this.port = port;
@@ -25,6 +32,13 @@ public class Serveur {
         serverSocket = new ServerSocket(port);
         System.out.println("test " + serverSocket);
         System.out.println("[Serveur] En écoute sur le port " + port);
+        //  Génération des clés RSA au démarrage du serveur
+        try {
+            protocole.generateRSAKeys();
+            System.out.println("[Serveur] Clés RSA générées.");
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur génération RSA", e);
+        }
 
         while (true) {
             Socket clientSocket = serverSocket.accept(); // bloquant
@@ -42,22 +56,38 @@ public class Serveur {
     }
 
     private void handleClient(Socket socket) {
-        try (
-                // BufferedReader : lit les données envoyées par le client (texte ligne par ligne)
-                BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                // PrintWriter : envoie des données au client (autoFlush=true -> envoi immédiat)
-                PrintWriter writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true)
-        ) {
+        try {
+            //  Envoi de la clé publique RSA au client
+            ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+            oos.writeObject(protocole.getPublicKey());
+            oos.flush();
+            System.out.println("[Serveur] Clé publique envoyée au client.");
+
+            //  Réception de la clé AES chiffrée
+            ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+            byte[] aesChiffree = (byte[]) ois.readObject();
+            protocole.decryptAESKey(aesChiffree);
+            System.out.println("[Serveur] Clé AES reçue et déchiffrée.");
+
+            // --- Communication texte classique ---
+            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            PrintWriter writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
+
             String line;
             while ((line = reader.readLine()) != null) {
                 System.out.println("[Serveur] Reçu : " + line);
-                // On renvoie un accusé de réception au client pour confirmer la réception
-                writer.println("ACK: " + line); // réponse au client
+                writer.println("ACK: " + line);
             }
-        } catch (IOException e) {
+
+        } catch (Exception e) {
             System.out.println("[Serveur] Client déconnecté : " + e.getMessage());
         }
     }
+
+
+
+
+
 
     // Arrête proprement le serveur en fermant le ServerSocket
     // Cela interrompt aussi le accept() bloquant dans start()
