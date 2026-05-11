@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox alignment="CENTER"
+      spacing="0"
+      prefWidth="900"
+      prefHeight="600"
+      style="-fx-background-color: #f0f4f8;"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="fr.app.controller.ConnexionController">
+
+    <!-- Carte centrale -->
+    <VBox alignment="CENTER"
+          spacing="16"
+          maxWidth="360"
+          style="-fx-background-color: #ffffff;
+                 -fx-border-color: #d0dce8;
+                 -fx-border-width: 1;
+                 -fx-border-radius: 8;
+                 -fx-background-radius: 8;
+                 -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 12, 0, 0, 4);">
+
+        <padding>
+            <Insets top="36" right="32" bottom="32" left="32"/>
+        </padding>
+
+        <!-- Titre -->
+        <VBox alignment="CENTER" spacing="4">
+            <Label text="Connexion Drone"
+                   style="-fx-font-size: 22px;
+                          -fx-font-weight: bold;
+                          -fx-text-fill: #1a2b3c;"/>
+        </VBox>
+
+        <!-- Séparateur -->
+        <Separator style="-fx-background-color: #e4ecf3;"/>
+
+        <!-- Champ IP -->
+        <VBox spacing="6">
+            <Label text="Adresse IP"
+                   style="-fx-font-size: 12px;
+                          -fx-font-weight: bold;
+                          -fx-text-fill: #4a6275;"/>
+            <TextField fx:id="ipField"
+                       promptText="192.168.10.255"
+                       prefHeight="42"
+                       maxWidth="Infinity"
+                       style="-fx-font-size: 14px;
+                              -fx-background-color: #f7fafc;
+                              -fx-border-color: #c8d8e8;
+                              -fx-border-width: 1;
+                              -fx-border-radius: 6;
+                              -fx-background-radius: 6;
+                              -fx-text-fill: #1a2b3c;
+                              -fx-prompt-text-fill: #b0c4d4;
+                              -fx-padding: 0 12;"/>
+        </VBox>
+
+        <!-- Champ Port -->
+        <VBox spacing="6">
+            <Label text="Port"
+                   style="-fx-font-size: 12px;
+                          -fx-font-weight: bold;
+                          -fx-text-fill: #4a6275;"/>
+            <TextField fx:id="portField"
+                       promptText="62500"
+                       prefHeight="42"
+                       maxWidth="Infinity"
+                       style="-fx-font-size: 14px;
+                              -fx-background-color: #f7fafc;
+                              -fx-border-color: #c8d8e8;
+                              -fx-border-width: 1;
+                              -fx-border-radius: 6;
+                              -fx-background-radius: 6;
+                              -fx-text-fill: #1a2b3c;
+                              -fx-prompt-text-fill: #b0c4d4;
+                              -fx-padding: 0 12;"/>
+        </VBox>
+
+        <!-- Bouton -->
+        <Button text="Se connecter"
+                prefHeight="44"
+                maxWidth="Infinity"
+                onAction="#ConnexionClique"
+                style="-fx-background-color: #2563eb;
+                       -fx-text-fill: #ffffff;
+                       -fx-font-size: 14px;
+                       -fx-font-weight: bold;
+                       -fx-border-radius: 6;
+                       -fx-background-radius: 6;
+                       -fx-cursor: hand;"/>
+
+        <!-- Statut -->
+        <Label fx:id="statusLabel"
+               text=""
+               maxWidth="Infinity"
+               wrapText="true"
+               alignment="CENTER"
+               style="-fx-font-size: 12px;
+                      -fx-text-fill: #7a92a8;
+                      -fx-alignment: CENTER;"/>
+
+    </VBox>
+
+</VBox>
