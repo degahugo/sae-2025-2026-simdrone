@@ -66,9 +66,9 @@ Il permettra d’envoyer les commandes du pilote et de recevoir les données du 
 
 ## Organisation des packages
 
-- fr.dronsim.simulation : application de simulation 3D JMonkeyEngine
-- fr.dronsim.pilotui : application d’interface de pilotage JavaFX
-- fr.dronsim.model : classes communes
-- fr.dronsim.controller : logique de contrôle
-- fr.dronsim.network : communication entre les applications
-- fr.dronsim.utils : outils communs
+- fr.app.simulation : application de simulation 3D JMonkeyEngine
+- fr.app.pilotui : application d’interface de pilotage JavaFX
+- fr.app.model : classes communes
+- fr.app.controller : logique de contrôle
+- fr.app.network : communication entre les applications
+- fr.app.utils : outils communs
