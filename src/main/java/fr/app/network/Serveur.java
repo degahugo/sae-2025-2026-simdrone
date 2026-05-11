@@ -26,6 +26,7 @@ public class Serveur {
         System.out.println("test " + serverSocket);
         System.out.println("[Serveur] En écoute sur le port " + port);
 
+
         while (true) {
             Socket clientSocket = serverSocket.accept(); // bloquant
 
@@ -42,6 +43,7 @@ public class Serveur {
     }
 
     private void handleClient(Socket socket) {
+        String clientIp = socket.getInetAddress().getHostAddress();
         try (
                 // BufferedReader : lit les données envoyées par le client (texte ligne par ligne)
                 BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -50,13 +52,11 @@ public class Serveur {
         ) {
             String line;
             while ((line = reader.readLine()) != null) {
-                System.out.println("[Serveur] Reçu : " + line);
-                // On renvoie un accusé de réception au client pour confirmer la réception
+                System.out.println("[Serveur] " + clientIp + " -> " + line);                // On renvoie un accusé de réception au client pour confirmer la réception
                 writer.println("ACK: " + line); // réponse au client
             }
         } catch (IOException e) {
-            System.out.println("[Serveur] Client déconnecté : " + e.getMessage());
-        }
+            System.out.println("[Serveur] Client déconnecté (" + clientIp + ") : " + e.getMessage());        }
     }
 
     // Arrête proprement le serveur en fermant le ServerSocket
