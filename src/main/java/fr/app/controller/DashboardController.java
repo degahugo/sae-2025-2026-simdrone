@@ -15,7 +15,12 @@ public class DashboardController {
         logArea.appendText("Commande : " + cmd + "\n");
 
         if (client != null && client.isConnected()) {
-            client.send(cmd.name());   // 🔥 ENVOI AU SERVEUR
+            try{
+                client.sendCommand(cmd);
+            } catch (Exception e) {
+                logArea.appendText(" Erreur envoi : " + e.getMessage() + "\n");
+            }
+            //client.send(cmd.name());   // 🔥 ENVOI AU SERVEUR
         } else {
             logArea.appendText("❌ Client non connecté\n");
         }

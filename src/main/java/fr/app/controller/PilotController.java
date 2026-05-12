@@ -50,9 +50,15 @@ public class PilotController {
             return;
         }
 
-        client.send(command.toString());
-
-        System.out.println("Commande envoyée : " + command);
+        //client.send(command.toString());
+        //System.out.println("Commande envoyée : " + command);
+        try {
+            // Envoie la commande sérialisée en JSON : {"command":"RIGHT"}
+            client.sendCommand(command);
+            System.out.println("Commande envoyée : " + command);
+        } catch (Exception e) {
+            System.out.println("Erreur envoi commande : " + e.getMessage());
+        }
     }
 
     public boolean isConnected() {

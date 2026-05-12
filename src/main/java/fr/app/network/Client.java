@@ -4,7 +4,14 @@ import java.io.*;
 import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+
+import fr.app.model.CommandeMessage;
+import fr.app.model.DroneStatus;
+import fr.app.model.PilotCommand;
 import fr.app.network.ProtocoleDeChiffrement;
+import fr.app.structure.JsonSerializer;
+import fr.app.structure.SerialisationException;
+
 import java.security.PublicKey;
 import javax.crypto.SecretKey;
 //Client TCP pour se connecter au serveur de simulation DronSim.
@@ -21,6 +28,9 @@ public class Client {
     private PrintWriter writer;
     //  Ajout du protocole de chiffrement
     private ProtocoleDeChiffrement protocole = new ProtocoleDeChiffrement();
+
+    //Serialisation
+    private JsonSerializer serializer = new JsonSerializer();
 
     public Client(String adresse, int port) {
         this.adresse = adresse;
@@ -100,5 +110,28 @@ public class Client {
 
     public boolean isConnected() {
         return socket != null && socket.isConnected() && !socket.isClosed();
+    }
+
+    //Envoie une commande de pilotage au serveur
+    public void sendCommand(PilotCommand command) throws SerialisationException {
+        CommandeMessage msg = new CommandeMessage(command);
+        // on sérialise le message en le transformant en tableau de byte
+        byte[] data = serializer.serialisation(msg);
+        // Tableau de bytes
+        //System.out.println("[Client] Bytes sérialisés     : " + java.util.Arrays.toString(data));
+
+        // on transforme le tableau de byte en String correspondant au format JSON : {"command":"RIGHT"}
+        String json = new String(data);
+        System.out.println("[Client] Commande sérialisée : " + command + " -> " + json);
+        writer.println(json);
+    }
+
+    //Reçoit le statut du drone envoyé par le serveur
+    public DroneStatus receiveStatus() throws IOException, SerialisationException {
+        String json = reader.readLine();
+        if (json == null){
+            return null;
+        }
+        return serializer.deserisation(json.getBytes(), DroneStatus.class);
     }
 }
