@@ -1,49 +1,35 @@
 package fr.app.controller;
 
 import fr.app.model.PilotCommand;
+import fr.app.network.Client;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextArea;
-import fr.app.network.Client;
 
 public class DashboardController {
 
     @FXML
     private TextArea logArea;
 
-    private void send(PilotCommand cmd) {
-
-        logArea.appendText(
-                "Commande : "
-                        + cmd
-                        + "\n"
-        );
-
-        if (client != null && client.isConnected()) {
-
-            client.send(
-                    "COMMAND;"
-                            + droneId
-                            + ";"
-                            + cmd.name()
-            );
-
-        } else {
-
-            logArea.appendText(
-                    "❌ Client non connecté\n"
-            );
-        }
-    }
     private Client client;
-    private String droneId;
-    public void setDroneId(String droneId) {
-        this.droneId = droneId;
-    }
 
     public void setClient(Client client) {
         this.client = client;
     }
 
+    private void send(PilotCommand cmd) {
+
+        logArea.appendText("Commande : " + cmd + "\n");
+
+        if (client != null && client.isConnected()) {
+            try {
+                client.sendCommand(cmd);
+            } catch (Exception e) {
+                logArea.appendText(" Erreur envoi : " + e.getMessage() + "\n");
+            }
+        } else {
+            logArea.appendText("❌ Client non connecté\n");
+        }
+    }
 
     @FXML
     private void moveForward() { send(PilotCommand.FORWARD); }
