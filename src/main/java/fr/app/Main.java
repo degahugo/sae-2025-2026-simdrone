@@ -55,7 +55,7 @@ public class Main extends SimpleApplication {
         // Creates the water filter
         WaterFilterManager waterFilterManager = new WaterFilterManager(assetManager, viewPort, rootNode, model);
         // Add tests cubes to test collisions, should be commented or removed later
-        physicsEngine.spawnTestCube(0, 10f, 0, ColorRGBA.Red);
+        physicsEngine.spawnTestCube(0, 15f, 0, ColorRGBA.Red);
         physicsEngine.spawnTestCube(0, 2f, 0, ColorRGBA.Yellow);
     }
 }
