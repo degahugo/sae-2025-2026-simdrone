@@ -16,6 +16,7 @@ public class MainClient {
         System.out.println("[Client] Réponse du serveur : " + reponse);
 
         client.disconnect();
+
     }
 }
 

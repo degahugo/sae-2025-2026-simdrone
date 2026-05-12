@@ -21,6 +21,16 @@ public class Client {
     private PrintWriter writer;
     //  Ajout du protocole de chiffrement
     private ProtocoleDeChiffrement protocole = new ProtocoleDeChiffrement();
+    /**
+     * Flux binaire d'entrée pour la communication chiffrée.
+     */
+    private DataInputStream dataIn;
+
+    /**
+     * Flux binaire de sortie pour la communication chiffrée.
+     */
+    private DataOutputStream dataOut;
+
 
     public Client(String adresse, int port) {
         this.adresse = adresse;
@@ -47,17 +57,24 @@ public class Client {
             PublicKey clePubliqueServeur = (PublicKey) ois.readObject();
             System.out.println("[Client] Clé publique reçue.");
 
-            // 🔐 2. Génération de la clé AES
+            //  2. Génération de la clé AES
             SecretKey aesKey = protocole.generateAESKey();
 
             //  3. Chiffrement de la clé AES avec RSA
             byte[] aesChiffree = protocole.encryptAESKey(aesKey, clePubliqueServeur);
 
             //  4. Envoi de la clé AES chiffrée au serveur
-            ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+            ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
             oos.writeObject(aesChiffree);
             oos.flush();
             System.out.println("[Client] Clé AES chiffrée envoyée au serveur.");
+
+            // Initialisation des flux binaires pour la communication chiffrée
+            dataIn = new DataInputStream(socket.getInputStream());
+            dataOut = new DataOutputStream(socket.getOutputStream());
+
+            System.out.println("[Client] Flux binaires initialisés pour la communication chiffrée.");
+
 
         } catch (Exception e) {
             throw new RuntimeException("Erreur lors de l'échange RSA/AES", e);
@@ -80,6 +97,30 @@ public class Client {
             writer.println(message);
         }
     }
+    /**
+     * Envoie un message chiffré au serveur en utilisant AES/GCM.
+     *
+     * @param message le message en clair à envoyer
+     * @throws Exception si une erreur de chiffrement ou d'E/S survient
+     */
+    public void sendSecure(String message) throws Exception {
+        if (dataOut == null) {
+            throw new IllegalStateException("Flux binaires non initialisés pour la communication chiffrée.");
+        }
+
+        byte[] data = message.getBytes();
+
+        ProtocoleDeChiffrement.ChiffreAES chiffre = protocole.encryptAES(data);
+
+        dataOut.writeInt(chiffre.iv.length);
+        dataOut.write(chiffre.iv);
+
+        dataOut.writeInt(chiffre.data.length);
+        dataOut.write(chiffre.data);
+
+        dataOut.flush();
+    }
+
 
     // Lit une ligne de réponse du serveur.
 
@@ -89,6 +130,29 @@ public class Client {
         }
         return null;
     }
+
+    /**
+     * Reçoit un message chiffré depuis le serveur et le déchiffre.
+     *
+     * @return le message en clair reçu
+     * @throws Exception si une erreur de déchiffrement ou d'E/S survient
+     */
+    public String receiveSecure() throws Exception {
+        if (dataIn == null) {
+            throw new IllegalStateException("Flux binaire non initialisé pour la communication chiffrée.");
+        }
+
+        int ivLength = dataIn.readInt();
+        byte[] iv = dataIn.readNBytes(ivLength);
+
+        int dataLength = dataIn.readInt();
+        byte[] encryptedData = dataIn.readNBytes(dataLength);
+
+        byte[] plaintext = protocole.decryptAES(encryptedData, iv);
+
+        return new String(plaintext);
+    }
+
 
     // Fermeture de la connexion
     public void disconnect() throws IOException {

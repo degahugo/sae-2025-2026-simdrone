@@ -64,12 +64,19 @@ public class Serveur {
             System.out.println("[Serveur] Clé publique envoyée au client.");
 
             //  Réception de la clé AES chiffrée
-            ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+            ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
             byte[] aesChiffree = (byte[]) ois.readObject();
             protocole.decryptAESKey(aesChiffree);
             System.out.println("[Serveur] Clé AES reçue et déchiffrée.");
+            // Initialisation des flux binaires pour la communication chiffrée
+            DataInputStream dataIn = new DataInputStream(socket.getInputStream());
+            DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
+
+            System.out.println("[Serveur] Flux binaires initialisés pour la communication chiffrée.");
+
 
             // --- Communication texte classique ---
+            /*
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintWriter writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
 
@@ -77,7 +84,36 @@ public class Serveur {
             while ((line = reader.readLine()) != null) {
                 System.out.println("[Serveur] Reçu : " + line);
                 writer.println("ACK: " + line);
+            }*/
+            // Boucle de communication chiffrée AES/GCM
+            // TODO: Remplacer définitivement la communication texte par la communication chiffrée
+
+            while (true) {
+                int ivLength = dataIn.readInt();
+                byte[] iv = dataIn.readNBytes(ivLength);
+
+                int dataLength = dataIn.readInt();
+                byte[] encryptedData = dataIn.readNBytes(dataLength);
+
+                byte[] plaintext = protocole.decryptAES(encryptedData, iv);
+                String message = new String(plaintext);
+
+                System.out.println("[Serveur] Message déchiffré : " + message);
+
+                String response = "ACK: " + message;
+                ProtocoleDeChiffrement.ChiffreAES chiffreReponse =
+                        protocole.encryptAES(response.getBytes());
+
+                dataOut.writeInt(chiffreReponse.iv.length);
+                dataOut.write(chiffreReponse.iv);
+
+                dataOut.writeInt(chiffreReponse.data.length);
+                dataOut.write(chiffreReponse.data);
+
+                dataOut.flush();
             }
+
+
 
         } catch (Exception e) {
             System.out.println("[Serveur] Client déconnecté : " + e.getMessage());
