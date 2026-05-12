@@ -12,15 +12,33 @@ public class DashboardController {
 
     private void send(PilotCommand cmd) {
 
-        logArea.appendText("Commande : " + cmd + "\n");
+        logArea.appendText(
+                "Commande : "
+                        + cmd
+                        + "\n"
+        );
 
         if (client != null && client.isConnected()) {
-            client.send(cmd.name());   // 🔥 ENVOI AU SERVEUR
+
+            client.send(
+                    "COMMAND;"
+                            + droneId
+                            + ";"
+                            + cmd.name()
+            );
+
         } else {
-            logArea.appendText("❌ Client non connecté\n");
+
+            logArea.appendText(
+                    "❌ Client non connecté\n"
+            );
         }
     }
     private Client client;
+    private String droneId;
+    public void setDroneId(String droneId) {
+        this.droneId = droneId;
+    }
 
     public void setClient(Client client) {
         this.client = client;

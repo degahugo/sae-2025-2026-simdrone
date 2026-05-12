@@ -68,15 +68,14 @@ public class ConnexionController {
             setStatus("Connecté à " + ip + ":" + port, "green");
 
             try {
-                // Chargement de la vue Dashboard après connexion réussie
+                // Chargement de la vue Selection de drone après connexion réussie
                 FXMLLoader loader = new FXMLLoader(
-                        getClass().getResource("/fxml/Dashboard.fxml")
+                        getClass().getResource("/fxml/SelectionDrone.fxml")
                 );
 
                 Parent root = loader.load();
 
-                // 👉 On passe le client au controller du Dashboard (IMPORTANT)
-                DashboardController controller = loader.getController();
+                SelectionDroneController controller = loader.getController();
                 controller.setClient(client);
 
                 // Récupération de la fenêtre actuelle et changement de scène

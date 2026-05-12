@@ -9,6 +9,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.control.UpdateControl;
 import fr.app.model.Drone;
 import fr.app.model.DroneMovement;
+import fr.app.model.PilotCommand;
 
 public class DroneController {
 
@@ -50,6 +51,46 @@ public class DroneController {
 
         this.inputManager = inputManager;
         this.drone = drone;
+    }
+
+    public void executeCommand(PilotCommand command,
+                               boolean pressed) {
+
+        switch (command) {
+
+            case FORWARD:
+                forwardIntention = pressed;
+                break;
+
+            case BACKWARD:
+                backwardIntention = pressed;
+                break;
+
+            case LEFT:
+                leftIntention = pressed;
+                break;
+
+            case RIGHT:
+                rightIntention = pressed;
+                break;
+
+            case UP:
+                upIntention = pressed;
+                break;
+
+            case DOWN:
+                downIntention = pressed;
+                break;
+
+            case STOP:
+                forwardIntention = false;
+                backwardIntention = false;
+                leftIntention = false;
+                rightIntention = false;
+                upIntention = false;
+                downIntention = false;
+                break;
+        }
     }
 
     public void setUpKeys() {
