@@ -56,6 +56,7 @@ public class Serveur {
     }
 
     private void handleClient(Socket socket) {
+        String clientIp = socket.getInetAddress().getHostAddress();
         try {
             //  Envoi de la clé publique RSA au client
             ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
@@ -75,13 +76,11 @@ public class Serveur {
 
             String line;
             while ((line = reader.readLine()) != null) {
-                System.out.println("[Serveur] Reçu : " + line);
-                writer.println("ACK: " + line);
+                System.out.println("[Serveur] " + clientIp + " -> " + line);                writer.println("ACK: " + line);
             }
 
         } catch (Exception e) {
-            System.out.println("[Serveur] Client déconnecté : " + e.getMessage());
-        }
+            System.out.println("[Serveur] Client déconnecté (" + clientIp + ") : " + e.getMessage());        }
     }
 
 
