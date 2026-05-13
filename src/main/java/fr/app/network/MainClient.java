@@ -10,13 +10,12 @@ public class MainClient {
         client.connect();
 
         // Envoi d’un message test
-        client.send("Bonjour serveur !");
-        String reponse = client.receive();
+        client.sendSecure("Bonjour serveur !");
+        String reponse = client.receiveSecure();
 
         System.out.println("[Client] Réponse du serveur : " + reponse);
 
         client.disconnect();
-
     }
 }
 

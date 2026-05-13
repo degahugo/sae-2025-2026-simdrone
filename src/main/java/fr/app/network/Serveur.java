@@ -64,7 +64,7 @@ public class Serveur {
             System.out.println("[Serveur] Clé publique envoyée au client.");
 
             //  Réception de la clé AES chiffrée
-            ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
+            ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
             byte[] aesChiffree = (byte[]) ois.readObject();
             protocole.decryptAESKey(aesChiffree);
             System.out.println("[Serveur] Clé AES reçue et déchiffrée.");
