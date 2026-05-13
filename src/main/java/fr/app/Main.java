@@ -6,9 +6,14 @@ import com.jme3.scene.*;
 import com.jme3.system.AppSettings;
 import fr.app.model.PhysicsEngine;
 import fr.app.model.WorldView;
-import fr.app.view.CameraManager;
+//import fr.app.view.CameraManager;
 import fr.app.view.LightingManager;
 import fr.app.view.WaterFilterManager;
+import fr.app.controller.DroneController;
+import fr.app.model.Drone;
+import fr.app.view.DroneCameraManager;
+import fr.app.view.WaterDistortionManager;
+
 
 /**
  * Main class to launch the simulation
@@ -17,7 +22,13 @@ public class Main extends SimpleApplication {
 
     private WorldView model;
     private LightingManager lightingManager;
-    private CameraManager cameraManager;
+    //private CameraManager cameraManager;
+    private Drone drone;
+    private DroneController droneController;
+    private DroneCameraManager droneCameraManager;
+    private WaterDistortionManager waterDistortionManager;
+
+
 
     public static void main(String[] args) {
 
@@ -44,18 +55,61 @@ public class Main extends SimpleApplication {
         this.lightingManager = new LightingManager(rootNode, cam, assetManager);
         this.lightingManager.initLighting();
 
-        this.cameraManager = new CameraManager(cam, flyCam);
+        //this.cameraManager = new CameraManager(cam, flyCam);
         // Set false to disable flying camera
-        this.cameraManager.configureCamera(true);
+        //this.cameraManager.configureCamera(false);
 
         // Creates scene
         Node sceneNode = physicsEngine.createTerrainScene();
         // Attach scene to node
         rootNode.attachChild(sceneNode);
+
+
+        Node droneNode = new Node("Drone");
+
+        Spatial droneModel = assetManager.loadModel("vehicle/bluerobotics/br2r4/br2-r4-vehicle.j3o");
+
+        droneNode.attachChild(droneModel);
+
+        droneNode.move(0f, 1f, 0f);
+
+        sceneNode.attachChild(droneNode);
+
+        this.drone = new Drone(droneNode);
+
+        this.droneController = new DroneController(inputManager, drone);
+
+        this.droneController.setUpKeys();
+
+        this.droneCameraManager = new DroneCameraManager(cam, drone);
+
+
+
         // Creates the water filter
         WaterFilterManager waterFilterManager = new WaterFilterManager(assetManager, viewPort, rootNode, model);
+        this.waterDistortionManager = new WaterDistortionManager(assetManager, viewPort, drone, model);
         // Add tests cubes to test collisions, should be commented or removed later
         physicsEngine.spawnTestCube(0, 10f, 0, ColorRGBA.Red);
         physicsEngine.spawnTestCube(0, 2f, 0, ColorRGBA.Yellow);
+
     }
+
+    @Override
+    public void simpleUpdate(float tpf){
+
+        if (droneController != null){
+            droneController.updateMovement(tpf);
+        }
+
+        if (droneCameraManager != null){
+            droneCameraManager.update(tpf);
+        }
+
+        if (waterDistortionManager != null){
+            waterDistortionManager.update();
+        }
+
+
+    }
+
 }

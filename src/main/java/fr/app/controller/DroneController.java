@@ -19,12 +19,12 @@ public class DroneController {
     private float droneSpeed = 0.2f;
 
     // intentions
-    private Boolean forwardIntention = false;
-    private Boolean backwardIntention = false;
-    private Boolean leftIntention = false;
-    private Boolean rightIntention = false;
-    private Boolean upIntention = false;
-    private Boolean downIntention = false;
+    private boolean forwardIntention = false;
+    private boolean backwardIntention = false;
+    private boolean leftIntention = false;
+    private boolean rightIntention = false;
+    private boolean upIntention = false;
+    private boolean downIntention = false;
 
     // vecteurs
    // private Vector3f forwardMovement = new Vector3f(0, 0, -1);
@@ -217,6 +217,3 @@ public class DroneController {
     }
 }
 
-//implémenter les capteurs et les lier au drone (caméra, distortion)
-
-//
