@@ -2,6 +2,7 @@ package fr.app;
 
 import com.jme3.app.SimpleApplication;
 import com.jme3.math.ColorRGBA;
+import com.jme3.post.FilterPostProcessor;
 import com.jme3.scene.*;
 import com.jme3.system.AppSettings;
 import fr.app.model.PhysicsEngine;
@@ -27,7 +28,7 @@ public class Main extends SimpleApplication {
     private DroneController droneController;
     private DroneCameraManager droneCameraManager;
     private WaterDistortionManager waterDistortionManager;
-
+    private FilterPostProcessor fpp;
 
 
     public static void main(String[] args) {
@@ -54,6 +55,8 @@ public class Main extends SimpleApplication {
         // Configure scene
         this.lightingManager = new LightingManager(rootNode, cam, assetManager);
         this.lightingManager.initLighting();
+        // Filter processor
+        fpp = new FilterPostProcessor(assetManager);
 
         //this.cameraManager = new CameraManager(cam, flyCam);
         // Set false to disable flying camera
@@ -63,31 +66,20 @@ public class Main extends SimpleApplication {
         Node sceneNode = physicsEngine.createTerrainScene();
         // Attach scene to node
         rootNode.attachChild(sceneNode);
-
-
+        // Create a drone
         Node droneNode = new Node("Drone");
-
         Spatial droneModel = assetManager.loadModel("vehicle/bluerobotics/br2r4/br2-r4-vehicle.j3o");
-
         droneNode.attachChild(droneModel);
-
         droneNode.move(0f, 1f, 0f);
-
         sceneNode.attachChild(droneNode);
-
         this.drone = new Drone(droneNode);
-
         this.droneController = new DroneController(inputManager, drone);
-
         this.droneController.setUpKeys();
-
         this.droneCameraManager = new DroneCameraManager(cam, drone);
 
-
-
         // Creates the water filter
-        WaterFilterManager waterFilterManager = new WaterFilterManager(assetManager, viewPort, rootNode, model);
-        this.waterDistortionManager = new WaterDistortionManager(assetManager, viewPort, drone, model);
+        WaterFilterManager waterFilterManager = new WaterFilterManager(fpp, viewPort, rootNode, model);
+        this.waterDistortionManager = new WaterDistortionManager(fpp, viewPort, drone, model);
         // Add tests cubes to test collisions, should be commented or removed later
         physicsEngine.spawnTestCube(0, 10f, 0, ColorRGBA.Red);
         physicsEngine.spawnTestCube(0, 2f, 0, ColorRGBA.Yellow);
@@ -96,20 +88,14 @@ public class Main extends SimpleApplication {
 
     @Override
     public void simpleUpdate(float tpf){
-
         if (droneController != null){
             droneController.updateMovement(tpf);
         }
-
         if (droneCameraManager != null){
             droneCameraManager.update(tpf);
         }
-
         if (waterDistortionManager != null){
             waterDistortionManager.update();
         }
-
-
     }
-
 }
