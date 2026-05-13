@@ -8,6 +8,7 @@ import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.collision.shapes.MeshCollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
+import com.jme3.export.binary.BinaryExporter;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
@@ -16,7 +17,11 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.*;
 import com.jme3.scene.shape.Box;
 import com.jme3.util.BufferUtils;
+import fr.app.view.GUIManager;
 import fr.utln.dronsim.viewer.primitives.ReferentialNode;
+
+import java.io.File;
+import java.io.IOException;
 
 public class PhysicsEngine{
 
@@ -25,12 +30,15 @@ public class PhysicsEngine{
     private AssetManager assetManager;
     private WorldView model;
     private Node rootNode;
+    private GUIManager guiManager;
 
-    public PhysicsEngine(SimpleApplication app, WorldView model) {
+    public PhysicsEngine(SimpleApplication app, WorldView model, GUIManager guiManager) {
         this.model = model;
         this.app = app;
         // Getting the asset manager
         this.assetManager = this.app.getAssetManager();
+        // Getting the gui manager
+        this.guiManager = guiManager;
         // Initialize bullet engine
         this.bulletAppState = new BulletAppState();
         this.rootNode = this.app.getRootNode();
@@ -45,6 +53,7 @@ public class PhysicsEngine{
 
     /**
      * Create the terrain node
+     * @param terrain : 1 = line, 2 = spiral, 3 = point_borlo
      * @return A node
      */
     /*public Node createTerrainScene() {
@@ -73,22 +82,38 @@ public class PhysicsEngine{
         node.attachChild(terrainVisuel);
         return node;
     }*/
-    public Node createTerrainScene() {
+    public Node createTerrainScene(int terrain, Runnable onTerrainReady) {
         Node node = new Node("TerrainNode");
         // Configuration des locators
         assetManager.registerLocator("data/asset", FileLocator.class);
-        assetManager.registerLocator("data/asset/terrain/military", FileLocator.class);
-        // On charge les fichiers
-        System.out.println("Loading terrain");
-        Spatial terrainVisuel = assetManager.loadModel("terrain/military/target-approach-line-terrain.j3o"); // Visuel
-        Spatial terrainLowPoly = assetManager.loadModel("terrain/military/target-approach-line-terrain-lowpoly.j3o"); // Physique
-        System.out.println("Terrain loaded");
-        // Correct axes
-        terrainVisuel.rotate(-FastMath.HALF_PI, 0.0f, 0.0f);
-        node.attachChild(terrainVisuel);
+        String name;
+        /*
+        terrain =
+                1 : target-approach-line-terrain
+                2 : target-approach-spiral-terrain
+                3 : point_borlo
+         */
+        if(terrain==1){
+            assetManager.registerLocator("data/asset/terrain/military", FileLocator.class);
+            name = "terrain/military/target-approach-line-terrain";
+        } else if (terrain==2) {
+            assetManager.registerLocator("data/asset/terrain/military", FileLocator.class);
+            name = "terrain/military/target-approach-spiral-terrain";
+        } else {
+            name = "";
+            if(terrain==3){
+                // Add point_borlo things
+            }
+        }
+        guiManager.CreateWaitingGUI();
         // Using thread to launch the simulator faster
         new Thread(() -> {
-            System.out.println("Beggining mesh generation in the background");
+            // On charge les fichiers
+            System.out.println("Loading terrain " + name + " in the background");
+            Spatial terrainVisuel = assetManager.loadModel(name+".j3o"); // Visuel
+            Spatial terrainLowPoly = assetManager.loadModel(name+"-lowpoly.j3o"); // Physique
+            System.out.println("Terrain loaded");
+            System.out.println("Beggining mesh generation");
             // Generating mesh
             CollisionShape sceneShape = CollisionShapeFactory.createMeshShape(terrainLowPoly);
             // JMonkey stuff
@@ -99,14 +124,22 @@ public class PhysicsEngine{
              */
             landscape.setFriction(0.1f);
             landscape.setRestitution(0.2f);
-            // Physical rotation to match the visual (-FastMath.HALF_PI)
+            // Correct axes
+            terrainVisuel.rotate(-FastMath.HALF_PI, 0.0f, 0.0f);
             landscape.setPhysicsRotation(terrainVisuel.getWorldRotation());
             // Once the processing is finished, we can inject it cleanly
             // app should be a reference to JME application (SimpleApplication)
             app.enqueue(() -> {
                 terrainVisuel.addControl(landscape);
                 bulletAppState.getPhysicsSpace().add(landscape);
-                System.out.println("Terrain physic injected succesfully");
+                node.attachChild(terrainVisuel);
+                System.out.println("Terrain visual and physic injected succesfully");
+                guiManager.RemoveWaitingGUI();
+                // Callback to generate cubes or drones
+                if (onTerrainReady != null) {
+                    // The physics engine knows it has something to do but it doesn't know what it is
+                    onTerrainReady.run();
+                }
                 return null;
             });
         }).start();
@@ -115,6 +148,7 @@ public class PhysicsEngine{
         Return the node without the RigidBodyControl to accelerate loading and avoiding freezes on low end computers.
         Side effect : now you can go through the ground while it's still processing.
          */
+        System.out.println("Returning node early without the mesh done");
         return node;
     }
 
@@ -235,7 +269,7 @@ public class PhysicsEngine{
      * @param z the z coordinate
      * @param color the color of the cube
      */
-    public void spawnTestCube(float x, float y, float z, ColorRGBA color) {
+    public void spawnTestCube(Node cubeNode, float x, float y, float z, ColorRGBA color) {
         // Cube of 0.5m
         Box boxMesh = new Box(0.5f, 0.5f, 0.5f);
         Geometry cubeGeo = new Geometry("TestCube", boxMesh);
@@ -250,7 +284,7 @@ public class PhysicsEngine{
                 0,
                 20 * FastMath.DEG_TO_RAD);
         cubeGeo.setLocalRotation(rotation);
-        rootNode.attachChild(cubeGeo);
+        cubeNode.attachChild(cubeGeo);
         // Cube physics
         RigidBodyControl cubePhys = new RigidBodyControl(1.0f);
         cubeGeo.addControl(cubePhys);
