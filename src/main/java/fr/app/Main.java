@@ -7,6 +7,8 @@ import com.jme3.system.AppSettings;
 import fr.app.model.PhysicsEngine;
 import fr.app.model.WorldView;
 //import fr.app.view.CameraManager;
+import fr.app.model.sensor.Sensor;
+import fr.app.model.sensor.TemperatureSensor;
 import fr.app.view.LightingManager;
 import fr.app.view.WaterFilterManager;
 import fr.app.controller.DroneController;
@@ -27,7 +29,8 @@ public class Main extends SimpleApplication {
     private DroneController droneController;
     private DroneCameraManager droneCameraManager;
     private WaterDistortionManager waterDistortionManager;
-
+    private Sensor sensor;
+    private TemperatureSensor temperatureSensor;
 
 
     public static void main(String[] args) {
@@ -77,10 +80,11 @@ public class Main extends SimpleApplication {
 
         this.drone = new Drone(droneNode);
 
+        this.temperatureSensor = new TemperatureSensor("TempSensor");
+        drone.addSensor(temperatureSensor);
+
         this.droneController = new DroneController(inputManager, drone);
-
         this.droneController.setUpKeys();
-
         this.droneCameraManager = new DroneCameraManager(cam, drone);
 
 
@@ -107,6 +111,17 @@ public class Main extends SimpleApplication {
 
         if (waterDistortionManager != null){
             waterDistortionManager.update();
+        }
+
+        for (Sensor sensor : drone.getSensors()) {
+            sensor.update(drone);
+            if (sensor instanceof TemperatureSensor) {
+                TemperatureSensor ts = (TemperatureSensor) sensor;
+                ts.affectDrone(drone);
+                System.out.println(
+                        "Température : " + ts.getTemperature()
+                );
+            }
         }
 
 

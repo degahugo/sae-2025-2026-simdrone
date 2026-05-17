@@ -58,7 +58,7 @@ public class WaterDistortionManager {
         // =====================================
 
         if (droneHeight < waterHeight) {
-        //test immersion, si immergée on continue
+            //test immersion, si immergée on continue
             float profondeur = waterHeight - droneHeight;
 
 
@@ -100,3 +100,5 @@ public class WaterDistortionManager {
             distortionModel.setP1(0f);
             distortionModel.setP2(0f);}}}
 
+//capteur de température qui est rattaché au drone et qui influe sur le drone, que dois je rajouter comme classe
+//ou comme instance?
