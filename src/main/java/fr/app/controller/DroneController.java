@@ -19,12 +19,12 @@ public class DroneController {
     private float droneSpeed = 0.2f;
 
     // intentions
-    private Boolean forwardIntention = false;
-    private Boolean backwardIntention = false;
-    private Boolean leftIntention = false;
-    private Boolean rightIntention = false;
-    private Boolean upIntention = false;
-    private Boolean downIntention = false;
+    private boolean forwardIntention = false;
+    private boolean backwardIntention = false;
+    private boolean leftIntention = false;
+    private boolean rightIntention = false;
+    private boolean upIntention = false;
+    private boolean downIntention = false;
 
     // vecteurs
    // private Vector3f forwardMovement = new Vector3f(0, 0, -1);
@@ -34,7 +34,7 @@ public class DroneController {
     //private Vector3f upMovement = new Vector3f(0, 1, 0);
     //private Vector3f downMovement = new Vector3f(0, -1, 0);
 
-    // noms des inputs
+    // noms des inputs et des mouvements
     DroneMovement moveForward = DroneMovement.FORWARD;
     DroneMovement moveBackward = DroneMovement.BACKWARD;
     DroneMovement moveLeft = DroneMovement.LEFT;
@@ -56,10 +56,10 @@ public class DroneController {
 
         // touches
         inputManager.addMapping(moveForward.name(),
-                new KeyTrigger(KeyInput.KEY_I));
+                new KeyTrigger(KeyInput.KEY_K));
 
         inputManager.addMapping(moveBackward.name(),
-                new KeyTrigger(KeyInput.KEY_K));
+                new KeyTrigger(KeyInput.KEY_I));
 
         inputManager.addMapping(moveLeft.name(),
                 new KeyTrigger(KeyInput.KEY_J));
@@ -86,6 +86,7 @@ public class DroneController {
 
     private final ActionListener actionListener = new ActionListener() {
 
+        //une touche après l'autre
         @Override
         public void onAction(String name,
                              boolean keyPressed,
@@ -215,3 +216,4 @@ public class DroneController {
                 .setLocalTranslation(nextPosition);
     }
 }
+
