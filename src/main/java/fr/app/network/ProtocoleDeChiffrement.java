@@ -121,4 +121,36 @@ public class ProtocoleDeChiffrement {
             this.data = data;
         }
     }
+
+    //setter de clé AES
+    public void setAesKey(SecretKey aesKey) {
+        this.aesKey = aesKey;
+    }
+
+    private static final int GCM_IV_BYTES = 12;
+    public byte[] encrypt(byte[] data) throws Exception {
+        ChiffreAES chiffre = encryptAES(data);
+        // Préfixe l'IV dans le paquet : [ IV (12) | ciphertext ]
+        byte[] result = new byte[GCM_IV_BYTES + chiffre.data.length];
+        System.arraycopy(chiffre.iv,   0, result, 0,            GCM_IV_BYTES);
+        System.arraycopy(chiffre.data, 0, result, GCM_IV_BYTES, chiffre.data.length);
+        return result;
+    }
+
+    public byte[] decrypt(byte[] encryptedWithIv) throws Exception {
+        // Extrait l'IV et les données
+        byte[] iv         = new byte[GCM_IV_BYTES];
+        byte[] ciphertext = new byte[encryptedWithIv.length - GCM_IV_BYTES];
+        System.arraycopy(encryptedWithIv, 0,            iv,         0, GCM_IV_BYTES);
+        System.arraycopy(encryptedWithIv, GCM_IV_BYTES, ciphertext, 0, ciphertext.length);
+        return decryptAES(ciphertext, iv);
+    }
+    public void setRSAKeys(PublicKey pub, PrivateKey priv) {
+        this.rsaPublicKey = pub;
+        this.rsaPrivateKey = priv;
+    }
+
+    public PrivateKey getPrivateKey() {
+        return rsaPrivateKey;
+    }
 }

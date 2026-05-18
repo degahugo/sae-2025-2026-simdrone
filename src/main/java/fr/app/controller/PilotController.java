@@ -1,11 +1,11 @@
 package fr.app.controller;
 
 import fr.app.model.PilotCommand;
-import fr.app.network.Client;
+import fr.app.network.NetworkClient;
 
 public class PilotController {
 
-    private Client client;
+    private NetworkClient client;
     private boolean connected = false;
 
     private String droneId;
@@ -18,9 +18,10 @@ public class PilotController {
     public boolean connect(String ip, String port) {
 
         try {
-            int p = Integer.parseInt(port);
+            int portTcp = Integer.parseInt(port);
+            int portUdp = portTcp+1;
 
-            client = new Client(ip, p);
+            client = new NetworkClient(ip, portTcp,portUdp);
             client.connect();
 
             connected = true;
