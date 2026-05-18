@@ -7,5 +7,7 @@ public enum DroneMovement {
     LEFT,
     RIGHT,
     UP,
-    DOWN
+    DOWN,
+    ROTATELEFT,
+    ROTATERIGHT
 }

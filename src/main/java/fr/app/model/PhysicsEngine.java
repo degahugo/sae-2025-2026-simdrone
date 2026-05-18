@@ -4,11 +4,11 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.asset.AssetManager;
 import com.jme3.asset.plugins.FileLocator;
 import com.jme3.bullet.BulletAppState;
+import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.collision.shapes.MeshCollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
-import com.jme3.export.binary.BinaryExporter;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
@@ -20,9 +20,6 @@ import com.jme3.util.BufferUtils;
 import fr.app.view.GUIManager;
 import fr.utln.dronsim.viewer.primitives.ReferentialNode;
 
-import java.io.File;
-import java.io.IOException;
-
 public class PhysicsEngine{
 
     private SimpleApplication app;
@@ -32,7 +29,7 @@ public class PhysicsEngine{
     private Node rootNode;
     private GUIManager guiManager;
 
-    public PhysicsEngine(SimpleApplication app, WorldView model, GUIManager guiManager) {
+    public PhysicsEngine(SimpleApplication app, WorldView model, GUIManager guiManager, boolean debugMode) {
         this.model = model;
         this.app = app;
         // Getting the asset manager
@@ -47,7 +44,7 @@ public class PhysicsEngine{
         // Attach it to the global manager
         this.app.getStateManager().attach(bulletAppState);
         // true to see the blue wireframe, false if you want FPS
-        this.bulletAppState.setDebugEnabled(false);
+        this.bulletAppState.setDebugEnabled(debugMode);
         System.out.println("PhysicsEngine : Successfully initialized");
     }
 
@@ -56,7 +53,7 @@ public class PhysicsEngine{
      * @param terrain : 1 = line, 2 = spiral, 3 = point_borlo
      * @return A node
      */
-    /*public Node createTerrainScene() {
+    /*public Node CreateTerrainScene() {
         // Old way of doing it, here for legacy and because I didn't commited it before changing it because the issue wasn't fixed
         Node node = new Node("TerrainNode");
         // Locators config, path of the assets
@@ -82,7 +79,7 @@ public class PhysicsEngine{
         node.attachChild(terrainVisuel);
         return node;
     }*/
-    public Node createTerrainScene(int terrain, Runnable onTerrainReady) {
+    public Node CreateTerrainScene(int terrain, Runnable onTerrainReady) {
         Node node = new Node("TerrainNode");
         // Configuration des locators
         assetManager.registerLocator("data/asset", FileLocator.class);
@@ -158,7 +155,7 @@ public class PhysicsEngine{
      * @return MeshCollisionShape La forme de collision simplifiée
      */
     @Deprecated
-    private MeshCollisionShape createCustomCollisionMesh() {
+    private MeshCollisionShape CreateCustomCollisionMesh() {
         System.out.println("Creating a custom mesh for the terrain");
         // Dimensions
         System.out.println("Defining dimensions");
@@ -269,7 +266,7 @@ public class PhysicsEngine{
      * @param z the z coordinate
      * @param color the color of the cube
      */
-    public void spawnTestCube(Node cubeNode, float x, float y, float z, ColorRGBA color) {
+    public void SpawnTestCube(Node cubeNode, float x, float y, float z, ColorRGBA color) {
         // Cube of 0.5m
         Box boxMesh = new Box(0.5f, 0.5f, 0.5f);
         Geometry cubeGeo = new Geometry("TestCube", boxMesh);
@@ -293,6 +290,41 @@ public class PhysicsEngine{
         cubePhys.setFriction(0.1f);
         // Add to physic space
         bulletAppState.getPhysicsSpace().add(cubePhys);
+    }
+
+    /**
+     * Creates a hitbox for the drone
+     * @param drone The drone that need to get a hitbox generated
+     * @param mode Type of hitbox, "BR2R4" and "Guardian" are manual and anything else is an automatic box (not very good)
+     */
+    public void CreateDroneHitbox(Drone drone, String mode){
+        System.out.println("Generating the drone hitbox using the ");
+        CollisionShape droneHitbox = switch(mode){
+            case "BR2R4" :
+                System.out.println("Manual hitbox for the " + mode + ".");
+                yield new BoxCollisionShape(new Vector3f(0.2f, 0.1f, 0.2f));
+            case "Guardian" :
+                System.out.println("Manual hitbox for the " + mode + ".");
+                yield new BoxCollisionShape(new Vector3f(0.25f, 0.15f, 0.2f));
+            default :
+                System.out.println("Automatic box.");
+                yield CollisionShapeFactory.createBoxShape(drone.getDroneSpatial());
+        };
+        // Set mass to 0 to have the drone float
+        RigidBodyControl dronePhysics = new RigidBodyControl(droneHitbox, 5.0f);
+        dronePhysics.setFriction(0.3f);
+        dronePhysics.setRestitution(0.1f);
+        // Inertia
+        dronePhysics.setLinearDamping(0.4f);
+        dronePhysics.setAngularDamping(0.6f);
+        // Attach the physic to the visual
+        drone.getDroneSpatial().addControl(dronePhysics);
+        // Add the rigid body to the physic space
+        bulletAppState.getPhysicsSpace().add(dronePhysics);
+    }
+
+    public void CreateDroneHitbox(Drone drone){
+        CreateDroneHitbox(drone, "Auto");
     }
 
     /**

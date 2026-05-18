@@ -67,7 +67,7 @@ public class WaterFilterExample extends SimpleApplication {
     @Override
     public void simpleUpdate(float tpf) {
 
-        droneController.updateMovement(tpf);
+        droneController.updateMovement();
 
         Vector3f dronePosition =
                 drone.getDroneSpatial()

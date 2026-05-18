@@ -1,7 +1,6 @@
 package fr.app;
 
 import com.jme3.app.SimpleApplication;
-import com.jme3.asset.plugins.FileLocator;
 import com.jme3.math.ColorRGBA;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.scene.*;
@@ -10,7 +9,6 @@ import fr.app.model.PhysicsEngine;
 import fr.app.model.WorldView;
 import fr.app.view.CameraManager;
 import fr.app.view.GUIManager;
-//import fr.app.view.CameraManager;
 import fr.app.view.LightingManager;
 import fr.app.view.WaterFilterManager;
 import fr.app.controller.DroneController;
@@ -34,6 +32,7 @@ public class Main extends SimpleApplication {
     private DroneCameraManager droneCameraManager;
     private WaterDistortionManager waterDistortionManager;
     private FilterPostProcessor fpp;
+    private boolean debugMode = false;
 
 
     public static void main(String[] args) {
@@ -56,52 +55,53 @@ public class Main extends SimpleApplication {
         this.model = new WorldView();
         this.guiManager = new GUIManager(assetManager, settings, guiNode);
 
-        PhysicsEngine physicsEngine = new PhysicsEngine(this, this.model, this.guiManager);
+        PhysicsEngine physicsEngine = new PhysicsEngine(this, this.model, this.guiManager, debugMode);
 
         // Configure scene
         this.lightingManager = new LightingManager(rootNode, cam, assetManager);
         this.lightingManager.initLighting();
         // Filter processor
-        fpp = new FilterPostProcessor(assetManager);
+        this.fpp = new FilterPostProcessor(assetManager);
 
         //this.cameraManager = new CameraManager(cam, flyCam);
         // Set false to disable flying camera
         //this.cameraManager.configureCamera(false);
 
         // Creates scene and with a callback add the rest of the physics objects
-        Node sceneNode = physicsEngine.createTerrainScene(2, () -> {
+        Node sceneNode = physicsEngine.CreateTerrainScene(1, () -> {
             // Only executes when the terrain is ready
             // Add all physics objects here to avoid issues with the terrain not being finished
             System.out.println("Terrain ready : adding the CUBES");
-            physicsEngine.spawnTestCube(rootNode, -4f, 15f, 0f, ColorRGBA.Red);
-            physicsEngine.spawnTestCube(rootNode, 0f, 2f, 0f, ColorRGBA.Yellow);
+            //physicsEngine.SpawnTestCube(rootNode, -4f, 15f, 0f, ColorRGBA.Red);
+            //physicsEngine.SpawnTestCube(rootNode, 0f, 2f, 0f, ColorRGBA.Yellow);
+            // Create a drone
+            Node droneNode = new Node("Drone");
+            //String droneName = "bluerobotics/br2r4/br2-r4-vehicle.j3o";
+            String droneName = "subseatech/guardian/guardian-vehicle.j3o";
+            Spatial droneModel = assetManager.loadModel("vehicle/" + droneName);
+            droneNode.attachChild(droneModel);
+            droneNode.move(0f, 1f, 0f);
+            rootNode.attachChild(droneNode);
+            this.drone = new Drone(droneNode);
+            physicsEngine.CreateDroneHitbox(drone, "Guardian");
+            this.droneController = new DroneController(inputManager, drone);
+            this.droneController.setUpKeys();
+            this.droneCameraManager = new DroneCameraManager(cam, drone);
+            // Creates the water filter
+            //WaterFilterManager waterFilterManager = new WaterFilterManager(fpp, viewPort, rootNode, model);
+            //this.waterDistortionManager = new WaterDistortionManager(fpp, viewPort, drone, model);
         });
         // Attach scene to node
         rootNode.attachChild(sceneNode);
-        // Create a drone
-        Node droneNode = new Node("Drone");
-        Spatial droneModel = assetManager.loadModel("vehicle/bluerobotics/br2r4/br2-r4-vehicle.j3o");
-        droneNode.attachChild(droneModel);
-        droneNode.move(0f, 1f, 0f);
-        sceneNode.attachChild(droneNode);
-        this.drone = new Drone(droneNode);
-        this.droneController = new DroneController(inputManager, drone);
-        this.droneController.setUpKeys();
-        this.droneCameraManager = new DroneCameraManager(cam, drone);
-
-        // Creates the water filter
-        WaterFilterManager waterFilterManager = new WaterFilterManager(fpp, viewPort, rootNode, model);
-        this.waterDistortionManager = new WaterDistortionManager(fpp, viewPort, drone, model);
-        // Add tests cubes to test collisions, should be commented or removed later
-        physicsEngine.spawnTestCube(0, 10f, 0, ColorRGBA.Red);
-        physicsEngine.spawnTestCube(0, 2f, 0, ColorRGBA.Yellow);
-
     }
 
     @Override
     public void simpleUpdate(float tpf){
+        if (this.drone == null) {
+            return;
+        }
         if (droneController != null){
-            droneController.updateMovement(tpf);
+            droneController.updateMovement();
         }
         if (droneCameraManager != null){
             droneCameraManager.update(tpf);
@@ -109,6 +109,5 @@ public class Main extends SimpleApplication {
         if (waterDistortionManager != null){
             waterDistortionManager.update();
         }
-        WaterFilterManager waterFilterManager = new WaterFilterManager(assetManager, viewPort, rootNode, model);
     }
 }

@@ -41,16 +41,12 @@ public class WaterDistortionManager {
         float intensity = Math.min(profondeur * 0.03f, 0.35f);
         if (droneHeight < waterHeight) {
         // test immersion, si immergée on continue
-            System.out.println("profondeur : " + profondeur);
-            System.out.println("intensity : "+intensity);
             // profondeur *0;03f car l'image ne doit pas être trop grande pour qu'on puisse la voir.
-            //profondeur -> intensité visuelle
+            // profondeur -> intensité visuelle
             // Distortion radiale
-            //k1 grosse distorsion globale
-            //k2 raffinement
-            //k3 minime
+            // k1 grosse distorsion globale, k2 raffinement, k3 minime
             // on utilise que k1 et k2 pour notre drone
-            //K1 négatif car sous l'eau l'effet est bombé (vers l'extérieur) positif -> vers le centre
+            // K1 négatif car sous l'eau l'effet est bombé (vers l'extérieur) positif -> vers le centre
             distortionFilter.setK1(-intensity); // k1 est le plus gros facteur, donc c'est lui qui sera négatif
             distortionFilter.setK2(intensity * 0.4f);
             // DISTORSION TANGENTIELLE
