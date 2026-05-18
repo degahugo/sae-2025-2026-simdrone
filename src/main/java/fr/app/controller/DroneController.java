@@ -10,22 +10,26 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.control.UpdateControl;
 import fr.app.model.Drone;
 import fr.app.model.DroneMovement;
+import fr.app.model.WorldView;
 
 public class DroneController {
 
     private InputManager inputManager;
     private Drone drone;
+    private WorldView model;
 
     // Speed for cinematic mode
     private float droneSpeed = 0.2f;
     // Speed for the physic mode
-    private float thrustPower = 10f;
+    private float thrustPower = 7f;
     // Rotation speed for the physic mode
-    private float torquePower = 0.2f;
+    private float torquePower = 0.1f;
     // Max speed, rotation speed dans height
-    private float maxRotationSpeed = 1.0f;
+    private float maxRotationSpeed = 0.5f;
     private float waterHeight;
-    private float maxSpeed = 20f;
+    private float maxSpeed = 10f;
+    private boolean isSubmerged;
+    private float submersionHysteresis = 0.1f;
 
     // intentions
     private boolean forwardIntention = false;
@@ -36,6 +40,10 @@ public class DroneController {
     private boolean rotateRightIntention = false;
     private boolean upIntention = false;
     private boolean downIntention = false;
+    private boolean pitchForwardIntention = false;
+    private boolean pitchBackwardIntention = false;
+    private boolean rollLeftIntention = false;
+    private boolean rollRightIntention = false;
     private RigidBodyControl physicsControl;
     private float mass;
     private float gravityCounterForce;
@@ -57,10 +65,16 @@ public class DroneController {
     DroneMovement rotateRight = DroneMovement.ROTATERIGHT;
     DroneMovement moveUp = DroneMovement.UP;
     DroneMovement moveDown = DroneMovement.DOWN;
+    DroneMovement pitchUp = DroneMovement.PITCHUP;
+    DroneMovement pitchDown = DroneMovement.PITCHDOWN;
+    DroneMovement rollLeft = DroneMovement.ROLLLEFT;
+    DroneMovement rollRight = DroneMovement.ROLLRIGHT;
 
-    public DroneController(InputManager inputManager, Drone drone) {
+    public DroneController(InputManager inputManager, Drone drone, WorldView worldView) {
         this.inputManager = inputManager;
         this.drone = drone;
+        this.model = worldView;
+        this.waterHeight = model.getWaterHeight();
         physicsControl = drone.getDroneSpatial().getControl(RigidBodyControl.class);
         mass = physicsControl.getMass();
         gravityCounterForce = mass * 9.81f;
@@ -104,14 +118,22 @@ public class DroneController {
      */
     public void setUpKeys() {
         // Key mappings
+        // Moving horizontally
         inputManager.addMapping(moveForward.name(), new KeyTrigger(KeyInput.KEY_W));
         inputManager.addMapping(moveBackward.name(), new KeyTrigger(KeyInput.KEY_S));
-        inputManager.addMapping(moveLeft.name(), new KeyTrigger(KeyInput.KEY_A));
-        inputManager.addMapping(moveRight.name(), new KeyTrigger(KeyInput.KEY_D));
-        inputManager.addMapping(rotateRight.name(), new KeyTrigger(KeyInput.KEY_E));
-        inputManager.addMapping(rotateLeft.name(), new KeyTrigger(KeyInput.KEY_Q));
-        inputManager.addMapping(moveUp.name(), new KeyTrigger(KeyInput.KEY_Z));
-        inputManager.addMapping(moveDown.name(), new KeyTrigger(KeyInput.KEY_X));
+        inputManager.addMapping(moveLeft.name(), new KeyTrigger(KeyInput.KEY_Q));
+        inputManager.addMapping(moveRight.name(), new KeyTrigger(KeyInput.KEY_E));
+        // Moving vertically
+        inputManager.addMapping(moveUp.name(), new KeyTrigger(KeyInput.KEY_R));
+        inputManager.addMapping(moveDown.name(), new KeyTrigger(KeyInput.KEY_F));
+        // Moving on an axis
+        inputManager.addMapping(rotateRight.name(), new KeyTrigger(KeyInput.KEY_D));
+        inputManager.addMapping(rotateLeft.name(), new KeyTrigger(KeyInput.KEY_A));
+        inputManager.addMapping(rollLeft.name(), new KeyTrigger(KeyInput.KEY_J));
+        inputManager.addMapping(rollRight.name(), new KeyTrigger(KeyInput.KEY_L));
+        inputManager.addMapping(pitchUp.name(), new KeyTrigger(KeyInput.KEY_I));
+        inputManager.addMapping(pitchDown.name(), new KeyTrigger(KeyInput.KEY_K));
+
         // Listeners
         inputManager.addListener(actionListener,
                 moveForward.name(),
@@ -121,7 +143,11 @@ public class DroneController {
                 rotateLeft.name(),
                 rotateRight.name(),
                 moveDown.name(),
-                moveUp.name()
+                moveUp.name(),
+                pitchUp.name(),
+                pitchDown.name(),
+                rollLeft.name(),
+                rollRight.name()
         );
     }
 
@@ -132,22 +158,18 @@ public class DroneController {
                              boolean keyPressed,
                              float tpf) {
             switch (name) {
-                    case "FORWARD":
-                        forwardIntention = keyPressed;break;
-                    case "BACKWARD":
-                        backwardIntention = keyPressed;break;
-                    case "LEFT":
-                        leftIntention = keyPressed;break;
-                    case "RIGHT":
-                        rightIntention = keyPressed;break;
-                    case "ROTATELEFT":
-                        rotateLeftIntention = keyPressed;break;
-                    case "ROTATERIGHT":
-                        rotateRightIntention = keyPressed;break;
-                    case "UP":
-                        upIntention = keyPressed;break;
-                    case "DOWN":
-                        downIntention = keyPressed;break;
+                    case "FORWARD": forwardIntention = keyPressed;break;
+                    case "BACKWARD": backwardIntention = keyPressed;break;
+                    case "LEFT": leftIntention = keyPressed;break;
+                    case "RIGHT": rightIntention = keyPressed;break;
+                    case "ROTATELEFT": rotateLeftIntention = keyPressed;break;
+                    case "ROTATERIGHT": rotateRightIntention = keyPressed;break;
+                    case "UP": upIntention = keyPressed;break;
+                    case "DOWN": downIntention = keyPressed;break;
+                    case "PITCHUP":pitchForwardIntention = keyPressed;break;
+                    case "PITCHDOWN": pitchBackwardIntention = keyPressed; break;
+                    case "ROLLLEFT": rollLeftIntention = keyPressed; break;
+                    case "ROLLRIGHT": rollRightIntention = keyPressed; break;
             }
         }
     };
@@ -157,51 +179,52 @@ public class DroneController {
      */
     public void updateMovement(){
         // Main vector
-        Vector3f totalForce = new Vector3f(0f, gravityCounterForce, 0f);
+        Vector3f totalForce = new Vector3f();
         // Local direction
         Vector3f forward = drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Z);
         Vector3f left = drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_X);
         Vector3f up = drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Y);
         Vector3f angularVelocity = physicsControl.getAngularVelocity(); // Used to avoid the beyblade spin
         Vector3f linearVelocity = physicsControl.getLinearVelocity(); // Used to avoid infinite acceleration
-        // Forward
-        if (forwardIntention) {
-            totalForce.addLocal(forward.mult(thrustPower));
+        Vector3f totalTorque = new Vector3f();
+        float droneHeight = drone.getDroneSpatial().getLocalTranslation().getY();
+        if(isSubmerged) {
+            if(droneHeight >= waterHeight + submersionHysteresis) isSubmerged = false;
+        } else{
+            if(droneHeight <= waterHeight) isSubmerged = true;
         }
-        // Backward
-        if (backwardIntention) {
-            totalForce.addLocal(forward.negate().mult(thrustPower));
-        }
-        // Move left
-        if (leftIntention) {
-            totalForce.addLocal(left.mult(thrustPower));
-        }
-        // Move right
-        if (rightIntention) {
-            totalForce.addLocal(left.negate().mult(thrustPower));
-        }
-        // Up
-        if (upIntention) {
-            // Add force to push the drone upward
-            totalForce.addLocal(up.negate().mult(thrustPower));
-        }
-        // Down
-        if (downIntention) {
-            // Reducing force to let the drone sink
-            totalForce.addLocal(up.mult(thrustPower));
-        }
-        // Apply forces
-        physicsControl.applyCentralForce(totalForce);
-        // Left and right rotation
-        if (rotateLeftIntention) {
-            physicsControl.applyTorque(new Vector3f(0f, torquePower, 0f));
-        } else if (rotateRightIntention) {
-            physicsControl.applyTorque(new Vector3f(0f, -torquePower, 0f));
+        if(isSubmerged){
+            totalForce.setY(gravityCounterForce);
+            // Forward
+            if (forwardIntention) totalForce.addLocal(forward.mult(thrustPower));
+            // Backward
+            if (backwardIntention) totalForce.addLocal(forward.negate().mult(thrustPower));
+            // Move left
+            if (leftIntention) totalForce.addLocal(left.mult(thrustPower));
+            // Move right
+            if (rightIntention) totalForce.addLocal(left.negate().mult(thrustPower));
+            // Up - Add force to push the drone upward
+            if (upIntention) totalForce.addLocal(up.mult(thrustPower));
+            // Down - Reducing force to let the drone sink
+            if (downIntention) totalForce.addLocal(up.negate().mult(thrustPower));
+            // Yaw
+            if (rotateLeftIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Y).mult(torquePower));
+            else if (rotateRightIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Y).mult(-torquePower));
+            // Pitch
+            if (pitchForwardIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_X).mult(-torquePower));
+            else if (pitchBackwardIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_X).mult(torquePower));
+            // Roll
+            if (rollLeftIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Z).mult(-torquePower));
+            else if (rollRightIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Z).mult(torquePower));
         } else {
-            Vector3f currentAngularVelocity = physicsControl.getAngularVelocity();
-            physicsControl.setAngularVelocity(currentAngularVelocity.mult(0.95f));
+            if (linearVelocity.y > 0) {
+                physicsControl.setLinearVelocity(new Vector3f(linearVelocity.x, linearVelocity.y * 0.9f, linearVelocity.z));
+            }
         }
-        // SPPED MANAGEMENT :
+        // Apply forces and torques
+        physicsControl.applyCentralForce(totalForce);
+        physicsControl.applyTorque(totalTorque);
+        // SPEED MANAGEMENT :
         // Cap the speed to avoid infinite acceleration
         if (linearVelocity.length() > maxSpeed) {
             // On conserve la direction du déplacement, mais on force sa taille à maxLinearSpeed
@@ -214,6 +237,7 @@ public class DroneController {
         } else if (angularVelocity.y < -maxRotationSpeed) {
             physicsControl.setAngularVelocity(new Vector3f(angularVelocity.x, -maxRotationSpeed, angularVelocity.z));
         }
+        System.out.println("hauteur : " + droneHeight);
     }
 
     /**

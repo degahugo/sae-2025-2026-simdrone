@@ -65,7 +65,7 @@ public class Main extends SimpleApplication {
         this.lightingManager.initLighting();
         // Filter processor
         this.fpp = new FilterPostProcessor(assetManager);
-        this.droneManager = new DroneManager(assetManager,rootNode,physicsEngine,inputManager,cam);
+        this.droneManager = new DroneManager(assetManager,rootNode,physicsEngine,inputManager,cam, model);
 
         //this.cameraManager = new CameraManager(cam, flyCam);
         // Set false to disable flying camera
@@ -84,8 +84,8 @@ public class Main extends SimpleApplication {
             droneCameraManager = droneManager.getDroneCameraManager();
             droneController = droneManager.getDroneController();
             // Creates the water filter
-            //WaterFilterManager waterFilterManager = new WaterFilterManager(fpp, viewPort, rootNode, model);
-            //this.waterDistortionManager = new WaterDistortionManager(fpp, viewPort, drone, model);
+            WaterFilterManager waterFilterManager = new WaterFilterManager(fpp, viewPort, rootNode, model);
+            this.waterDistortionManager = new WaterDistortionManager(fpp, viewPort, droneManager.getDrone(), model);
 
             // End of the loading, will execute the simpleUpdate
             loading = false;

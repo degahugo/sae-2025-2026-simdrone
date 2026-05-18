@@ -18,13 +18,15 @@ public class DroneManager {
     private DroneCameraManager droneCameraManager;
     private Camera cam;
     private Drone drone;
+    private WorldView model;
 
-    public DroneManager(AssetManager assetManager, Node rootNode, PhysicsEngine physicsEngine, InputManager inputManager, Camera cam){
+    public DroneManager(AssetManager assetManager, Node rootNode, PhysicsEngine physicsEngine, InputManager inputManager, Camera cam, WorldView worldView){
         this.assetManager = assetManager;
         this.rootNode = rootNode;
         this.physicsEngine = physicsEngine;
         this.inputManager = inputManager;
         this.cam = cam;
+        this.model = worldView;
     }
 
     public void CreateDrone(String name){
@@ -41,7 +43,7 @@ public class DroneManager {
         rootNode.attachChild(droneNode);
         drone = new Drone(droneNode);
         this.physicsEngine.CreateDroneHitbox(drone, name);
-        this.droneController = new DroneController(inputManager, drone);
+        this.droneController = new DroneController(inputManager, drone, model);
         this.droneController.setUpKeys();
         this.droneCameraManager = new DroneCameraManager(cam, drone);
     }

@@ -127,11 +127,7 @@ public class WaterFilterExample extends SimpleApplication {
 
         drone = new Drone(vehicleANode);
 
-        droneController =
-                new DroneController(
-                        inputManager,
-                        drone
-                );
+        //droneController = new DroneController(inputManager, drone);
 
         droneController.setUpKeys();
 
