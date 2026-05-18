@@ -5,6 +5,7 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.scene.*;
 import com.jme3.system.AppSettings;
+import fr.app.model.DroneManager;
 import fr.app.model.PhysicsEngine;
 import fr.app.model.WorldView;
 import fr.app.view.CameraManager;
@@ -31,8 +32,10 @@ public class Main extends SimpleApplication {
     private DroneController droneController;
     private DroneCameraManager droneCameraManager;
     private WaterDistortionManager waterDistortionManager;
+    private DroneManager droneManager;
     private FilterPostProcessor fpp;
     private boolean debugMode = false;
+    private boolean loading = true;
 
 
     public static void main(String[] args) {
@@ -62,6 +65,7 @@ public class Main extends SimpleApplication {
         this.lightingManager.initLighting();
         // Filter processor
         this.fpp = new FilterPostProcessor(assetManager);
+        this.droneManager = new DroneManager(assetManager,rootNode,physicsEngine,inputManager,cam);
 
         //this.cameraManager = new CameraManager(cam, flyCam);
         // Set false to disable flying camera
@@ -75,6 +79,8 @@ public class Main extends SimpleApplication {
             //physicsEngine.SpawnTestCube(rootNode, -4f, 15f, 0f, ColorRGBA.Red);
             //physicsEngine.SpawnTestCube(rootNode, 0f, 2f, 0f, ColorRGBA.Yellow);
             // Create a drone
+
+/*
             Node droneNode = new Node("Drone");
             //String droneName = "bluerobotics/br2r4/br2-r4-vehicle.j3o";
             String droneName = "subseatech/guardian/guardian-vehicle.j3o";
@@ -87,9 +93,17 @@ public class Main extends SimpleApplication {
             this.droneController = new DroneController(inputManager, drone);
             this.droneController.setUpKeys();
             this.droneCameraManager = new DroneCameraManager(cam, drone);
+*/
+            droneManager.CreateDrone("BR2R4");
+            // Gets the manager and controller te be used here
+            droneCameraManager = droneManager.getDroneCameraManager();
+            droneController = droneManager.getDroneController();
             // Creates the water filter
             //WaterFilterManager waterFilterManager = new WaterFilterManager(fpp, viewPort, rootNode, model);
             //this.waterDistortionManager = new WaterDistortionManager(fpp, viewPort, drone, model);
+
+            // End of the loading, will execute the simpleUpdate
+            loading = false;
         });
         // Attach scene to node
         rootNode.attachChild(sceneNode);
@@ -97,7 +111,7 @@ public class Main extends SimpleApplication {
 
     @Override
     public void simpleUpdate(float tpf){
-        if (this.drone == null) {
+        if (loading) {
             return;
         }
         if (droneController != null){

@@ -21,9 +21,9 @@ public class DroneController {
     // Speed for the physic mode
     private float thrustPower = 10f;
     // Rotation speed for the physic mode
-    private float torquePower = 0.5f;
+    private float torquePower = 0.2f;
     // Max speed, rotation speed dans height
-    private float maxRotationSpeed = 2.0f;
+    private float maxRotationSpeed = 1.0f;
     private float waterHeight;
     private float maxSpeed = 20f;
 
@@ -57,9 +57,6 @@ public class DroneController {
     DroneMovement rotateRight = DroneMovement.ROTATERIGHT;
     DroneMovement moveUp = DroneMovement.UP;
     DroneMovement moveDown = DroneMovement.DOWN;
-
-
-
 
     public DroneController(InputManager inputManager, Drone drone) {
         this.inputManager = inputManager;
@@ -103,7 +100,7 @@ public class DroneController {
 
 
     /**
-     *
+     * Set up the key mappings
      */
     public void setUpKeys() {
         // Key mappings

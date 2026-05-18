@@ -302,10 +302,10 @@ public class PhysicsEngine{
         CollisionShape droneHitbox = switch(mode){
             case "BR2R4" :
                 System.out.println("Manual hitbox for the " + mode + ".");
-                yield new BoxCollisionShape(new Vector3f(0.2f, 0.1f, 0.2f));
+                yield new BoxCollisionShape(new Vector3f(0.18f, 0.15f, 0.23f));
             case "Guardian" :
                 System.out.println("Manual hitbox for the " + mode + ".");
-                yield new BoxCollisionShape(new Vector3f(0.25f, 0.15f, 0.2f));
+                yield new BoxCollisionShape(new Vector3f(0.22f, 0.13f, 0.4f));
             default :
                 System.out.println("Automatic box.");
                 yield CollisionShapeFactory.createBoxShape(drone.getDroneSpatial());
@@ -313,7 +313,7 @@ public class PhysicsEngine{
         // Set mass to 0 to have the drone float
         RigidBodyControl dronePhysics = new RigidBodyControl(droneHitbox, 5.0f);
         dronePhysics.setFriction(0.3f);
-        dronePhysics.setRestitution(0.1f);
+        dronePhysics.setRestitution(0.5f);
         // Inertia
         dronePhysics.setLinearDamping(0.4f);
         dronePhysics.setAngularDamping(0.6f);
