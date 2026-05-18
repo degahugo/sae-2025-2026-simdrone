@@ -13,7 +13,7 @@ public class MainTestClient {
 
             client.connect();
 
-            client.sendCommand(PilotCommand.FORWARD);
+            client.sendCommand("drone1", PilotCommand.FORWARD);
 
             DroneStatus status = client.receiveStatus();
 

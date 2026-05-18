@@ -9,6 +9,8 @@ import java.util.Arrays;
 import fr.app.model.CommandeMessage;
 import fr.app.model.DroneStatus;
 import fr.app.model.PilotCommand;
+import fr.app.model.MessageType;
+import fr.utln.dronsim.viewer.example.WaterFilterExample;
 
 import fr.app.structure.JsonSerializer;
 import fr.app.structure.SerialisationException;
@@ -23,6 +25,8 @@ public class UdpServeurTransport implements Runnable{
     private final JsonSerializer serializer=new JsonSerializer();
 
     private final RegistreDesSessions registre;
+
+    private WaterFilterExample simulation;
 
     public UdpServeurTransport(int port, RegistreDesSessions registre)throws SocketException {
         // Crée un socket UDP en écoute sur le port spécifié
@@ -57,7 +61,42 @@ public class UdpServeurTransport implements Runnable{
                 byte[] donneesBrutes = protocole.decrypt(data);
                 System.out.println("[UDP Serveur] Commande déchiffrée : " + new String(donneesBrutes));
                 CommandeMessage message = serializer.deserisation(donneesBrutes,CommandeMessage.class);
+                String droneId = message.getDroneId();
                 PilotCommand command=message.getCommand();
+                MessageType type = message.getType();
+                if (type == MessageType.START_SIMULATION) {
+                    if (simulation == null) {
+                        simulation = new WaterFilterExample();
+
+                        com.jme3.system.AppSettings settings =
+                                new com.jme3.system.AppSettings(true);
+
+                        settings.setTitle("DronSim - Simulation 3D");
+                        settings.setWidth(1024);
+                        settings.setHeight(768);
+
+                        simulation.setShowSettings(false);
+                        simulation.setSettings(settings);
+                        simulation.setPauseOnLostFocus(false);
+
+                        simulation.start();
+
+                        System.out.println("[UDP Serveur] Simulation lancée pour " + droneId);
+                    } else {
+                        System.out.println("[UDP Serveur] Simulation déjà lancée.");
+                    }
+                }
+
+                if (type == MessageType.COMMAND) {
+                    if (simulation == null) {
+                        System.out.println("[UDP Serveur] Impossible d'appliquer la commande : simulation non lancée.");
+                    } else {
+                        simulation.enqueue(() -> {
+                            simulation.executeNetworkCommand(droneId, command);
+                            return null;
+                        });
+                    }
+                }
                 System.out.println("[UDP Serveur] Objet désérialisé    : " + command);
 
                 DroneStatus droneStatus = new DroneStatus();

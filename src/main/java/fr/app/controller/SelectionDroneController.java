@@ -1,6 +1,6 @@
 package fr.app.controller;
 
-import fr.app.network.Client;
+import fr.app.network.NetworkClient;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -11,12 +11,12 @@ public class SelectionDroneController {
     @FXML
     private ComboBox<String> droneComboBox;
 
-    private Client client;
+    private NetworkClient client;
 
     /*
      * Reçoit le client déjà connecté
      */
-    public void setClient(Client client) {
+    public void setClient(NetworkClient client) {
 
         this.client = client;
 

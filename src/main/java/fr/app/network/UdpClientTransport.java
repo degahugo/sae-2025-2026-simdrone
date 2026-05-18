@@ -12,6 +12,7 @@ import fr.app.model.DroneStatus;
 import fr.app.model.PilotCommand;
 
 import fr.app.structure.JsonSerializer;
+import fr.app.model.MessageType;
 import fr.app.structure.SerialisationException;
 
 // Classe utilisant le protocole UDP du coté Client
@@ -42,8 +43,8 @@ public class UdpClientTransport {
     }
 
     //Envoie une commande de pilotage au serveur
-    public void sendCommand(PilotCommand command) throws Exception{
-        CommandeMessage message = new CommandeMessage(command);
+    public void sendCommand(String droneId, PilotCommand command) throws Exception{
+        CommandeMessage message = new CommandeMessage(MessageType.COMMAND,droneId,command);
         // on sérialise le message en le transformant en tableau de byte
         byte[] data =serializer.serialisation(message);
         // Tableau de bytes
@@ -76,6 +77,23 @@ public class UdpClientTransport {
         DroneStatus status = serializer.deserisation(donneesBrutes, DroneStatus.class);
         System.out.println("[UDP Client] Statut désérialisé    : " + status.getState());
         return status;
+    }
+
+    // Envoie une demande de lancement de simulation au serveur en UDP
+    public void sendStartSimulation(String droneId) throws Exception {
+
+        CommandeMessage msg = new CommandeMessage(
+                MessageType.START_SIMULATION,
+                droneId,
+                null
+        );
+
+        byte[] data = serializer.serialisation(msg);
+        byte[] donneesChiffrees = protocole.encrypt(data);
+
+        DatagramPacket packet = new DatagramPacket(donneesChiffrees, donneesChiffrees.length, adresseServeur, port);
+        socket.send(packet);
+        System.out.println("[UDP Client] Start simulation envoyé : " + new String(data));
     }
 
     // Ferme le socket UDP

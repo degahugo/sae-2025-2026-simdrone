@@ -37,9 +37,13 @@ public class NetworkClient {
         System.out.println("[NetworkClient] Client prêt.");
     }
 
-    public void sendCommand(PilotCommand command) throws Exception {
+    public void sendCommand(String droneId, PilotCommand command) throws Exception {
         // L'envoie des commandes de base se fait via UDP
-        udpClientTransport.sendCommand(command);
+        udpClientTransport.sendCommand(droneId, command);
+    }
+
+    public void sendStartSimulation(String droneId) throws Exception {
+        udpClientTransport.sendStartSimulation(droneId);
     }
 
     public DroneStatus receiveStatus() throws Exception {

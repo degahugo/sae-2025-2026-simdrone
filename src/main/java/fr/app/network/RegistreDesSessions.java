@@ -21,13 +21,14 @@ public class RegistreDesSessions {
         protocole.setAesKey(cleAes);
 
         String cle = construireCle(ipClient, portUdp);
-        sessions.put(cle, protocole);
+        sessions.put(ipClient, protocole);
         System.out.println("[RegistreDesSessions] Session enregistrée : " + ipClient );
     }
 
     // Supprime la session d'un client à sa déconnexion TCP
     public void supprimer(String ipClient) {
-        sessions.remove(ipClient);
+        //sessions.remove(ipClient);
+        sessions.entrySet().removeIf(e -> e.getKey().startsWith(ipClient + ":"));
         System.out.println("[RegistreDesSessions] Session supprimée pour : " + ipClient);
     }
 

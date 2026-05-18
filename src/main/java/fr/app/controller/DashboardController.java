@@ -2,7 +2,7 @@ package fr.app.controller;
 
 import fr.app.model.PilotCommand;
 import fr.app.network.NetworkClient;
-import fr.app.network.Client;
+//import fr.app.network.Client;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextArea;
 
@@ -12,14 +12,14 @@ public class DashboardController {
     private TextArea logArea;
     //private NetworkClient client;
 
-    private Client client;
+    private NetworkClient client;
     private String droneId;
 
     public void setDroneId(String droneId) {
         this.droneId = droneId;
     }
 
-    public void setClient(Client client) {
+    public void setClient(NetworkClient client) {
         this.client = client;
     }
 

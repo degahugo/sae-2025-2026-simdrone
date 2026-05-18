@@ -1,6 +1,6 @@
 package fr.app.controller;
 
-import fr.app.network.Client;
+import fr.app.network.NetworkClient;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -22,9 +22,9 @@ public class ConfigurationSimulationController {
     @FXML
     private Label statusLabel;
 
-    private Client client;
+    private NetworkClient client;
 
-    public void setClient(Client client) {
+    public void setClient(NetworkClient client) {
         this.client = client;
     }
 
