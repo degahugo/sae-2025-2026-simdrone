@@ -109,10 +109,10 @@ public class DroneController {
         inputManager.addMapping(moveRight.name(),
                 new KeyTrigger(KeyInput.KEY_L));
         inputManager.addMapping(moveUp.name(),
-                new KeyTrigger(KeyInput.KEY_B));
+                new KeyTrigger(KeyInput.KEY_N));
 
         inputManager.addMapping(moveDown.name(),
-                new KeyTrigger(KeyInput.KEY_N));
+                new KeyTrigger(KeyInput.KEY_B));
 
         // listeners
         inputManager.addListener(actionListener,
@@ -162,11 +162,11 @@ public class DroneController {
         switch (command) {
 
             case FORWARD:
-                drone.getDroneSpatial().move(forward.negate().mult(step));
+                drone.getDroneSpatial().move(forward.mult(step));
                 break;
 
             case BACKWARD:
-                drone.getDroneSpatial().move(forward.mult(step));
+                drone.getDroneSpatial().move(forward.negate().mult(step));
                 break;
 
             case LEFT:
@@ -178,11 +178,11 @@ public class DroneController {
                 break;
 
             case UP:
-                drone.getDroneSpatial().move(up.negate().mult(step));
+                drone.getDroneSpatial().move(up.mult(step));
                 break;
 
             case DOWN:
-                drone.getDroneSpatial().move(up.mult(step));
+                drone.getDroneSpatial().move(up.negate().mult(step));
                 break;
 
             case STOP:

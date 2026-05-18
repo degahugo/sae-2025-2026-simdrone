@@ -22,10 +22,10 @@ public class TemperatureSensor implements Sensor {
         float profondeur = -position.y;
 
         // température de surface
-        float tempSurface = 25f;
+        float tempSurface = 22f;
 
         // baisse avec profondeur
-        temperature = tempSurface - profondeur * 0.5f;
+        temperature = Math.max(1.0f, tempSurface - profondeur * 0.5f);
 
         // simulation courant marin
         float courant =
