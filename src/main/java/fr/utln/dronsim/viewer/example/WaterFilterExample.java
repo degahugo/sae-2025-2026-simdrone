@@ -23,7 +23,7 @@ import fr.utln.dronsim.viewer.primitives.ReferentialNode;
 import fr.app.model.PilotCommand;
 
 import fr.app.controller.DroneController;
-import fr.app.model.Drone;
+import fr.app.model.Drone;import fr.app.model.DroneStatus;
 
 /**
  * An example that illustrate a complete scene with water simulation.
@@ -218,6 +218,28 @@ public class WaterFilterExample extends SimpleApplication {
 		sun.setDirection(new Vector3f(-.5f,-.5f,-.5f).normalizeLocal());
 		rootNode.addLight(sun);
 	}
+
+
+
+    public DroneStatus getDroneStatus(String droneId) {
+
+        DroneStatus status = new DroneStatus();
+
+        if (drone == null || !drone.getId().equals(droneId)) {
+            status.setState("Drone inconnu");
+            return status;
+        }
+
+        Vector3f position = drone.getDroneSpatial().getLocalTranslation();
+
+        status.setX(position.x);
+        status.setY(position.y);
+        status.setZ(position.z);
+        status.setSpeed(0.0);
+        status.setState("En vol");
+
+        return status;
+    }
 
 
 

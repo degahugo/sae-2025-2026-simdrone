@@ -7,6 +7,7 @@ public class DroneStatus {
     private double z;
     private double speed;
     private String state;
+    private double temperature;
 
     public DroneStatus() {
         this.x = 0;
@@ -14,6 +15,7 @@ public class DroneStatus {
         this.z = 0;
         this.speed = 0;
         this.state = "En attente";
+        this.temperature = 0;
     }
 
     //Getter
@@ -21,12 +23,18 @@ public class DroneStatus {
     public double getY() { return y; }
     public double getZ() { return z; }
     public double getSpeed() { return speed; }
+    public double getTemperature() {
+        return temperature;
+    }
 
     //Setter
     public void setX(double x) { this.x = x; }
     public void setY(double y) { this.y = y; }
     public void setZ(double z) { this.z = z; }
     public void setSpeed(double speed) { this.speed = speed; }
+    public void setTemperature(double temperature) {
+        this.temperature = temperature;
+    }
 
     public String getPositionText() {
         return "x=" + x + " | y=" + y + " | z=" + z;
@@ -42,5 +50,9 @@ public class DroneStatus {
 
     public void setState(String state) {
         this.state = state;
+    }
+
+    public String getTemperatureText() {
+        return temperature + " °C";
     }
 }

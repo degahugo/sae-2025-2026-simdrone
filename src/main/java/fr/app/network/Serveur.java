@@ -13,7 +13,8 @@ import fr.app.network.ProtocoleDeChiffrement;
 import fr.app.structure.JsonSerializer;
 import fr.app.model.MessageType;
 import fr.utln.dronsim.viewer.example.WaterFilterExample;
-
+import fr.app.model.DroneStatus;
+import fr.app.Main;
 import java.security.PublicKey;
 
 
@@ -27,8 +28,7 @@ public class Serveur {
 
     private final int port;
     private ServerSocket serverSocket;
-    private WaterFilterExample simulation;
-    //  Ajout du protocole de chiffrement
+    private Main simulation;    //  Ajout du protocole de chiffrement
     private ProtocoleDeChiffrement protocole = new ProtocoleDeChiffrement();
 
     // Serialisation
@@ -112,8 +112,7 @@ public class Serveur {
 
                     if (simulation == null) {
 
-                        simulation = new WaterFilterExample();
-
+                        simulation = new Main();
                         com.jme3.system.AppSettings settings =
                                 new com.jme3.system.AppSettings(true);
 
@@ -150,8 +149,29 @@ public class Serveur {
                     }
                 }
                 // Construit le statut du drone à renvoyer
-                DroneStatus status = new DroneStatus();
-                status.setState("En vol");
+                DroneStatus status;
+
+                if (type == MessageType.START_SIMULATION) {
+
+                    status = new DroneStatus();
+                    status.setState("Simulation lancée");
+
+                } else if (simulation != null) {
+
+                    final DroneStatus[] statusHolder = new DroneStatus[1];
+
+                    simulation.enqueue(() -> {
+                        statusHolder[0] = simulation.getDroneStatus(droneId);
+                        return null;
+                    }).get();
+
+                    status = statusHolder[0];
+
+                } else {
+
+                    status = new DroneStatus();
+                    status.setState("Simulation non lancée");
+                }
 
                 // Sérialise et envoie le statut au client : conversion en Json
                 byte[] data = serializer.serialisation(status);

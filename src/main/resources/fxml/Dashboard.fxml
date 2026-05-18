@@ -32,14 +32,20 @@
                    style="-fx-text-fill: white;
                           -fx-font-size: 18px;
                           -fx-font-weight: bold;"/>
-
-            <Label text="Position : x=0 | y=0 | z=0"
+            <Label fx:id="positionLabel"
+                   text="Position : x=0 | y=0 | z=0"
                    style="-fx-text-fill: white;"/>
 
-            <Label text="Vitesse : 0 m/s"
+            <Label fx:id="speedLabel"
+                   text="Vitesse : 0 m/s"
                    style="-fx-text-fill: white;"/>
 
-            <Label text="État : En attente"
+            <Label fx:id="temperatureLabel"
+                   text="Température : 0 °C"
+                   style="-fx-text-fill: white;"/>
+
+            <Label fx:id="stateLabel"
+                   text="État : En attente"
                    style="-fx-text-fill: white;"/>
 
             <Label text="Batterie : 100%"
