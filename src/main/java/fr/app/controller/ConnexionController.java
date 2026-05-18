@@ -1,6 +1,6 @@
 package fr.app.controller;
 
-import fr.app.network.Client;
+import fr.app.network.NetworkClient;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -21,7 +21,7 @@ public class ConnexionController {
     @FXML private Label statusLabel;
 
     // On garde le client pour pouvoir l’utiliser après (Dashboard / commandes)
-    private Client client;
+    private NetworkClient client;
 
     @FXML
     private void ConnexionClique() {
@@ -36,36 +36,35 @@ public class ConnexionController {
         }
 
         // Validation port entre 49152 et 65535 (on choisira le port 62500)
-        int port;
+        int portTcp;
         try {
-            port = Integer.parseInt(portText);
-            if (port < 49152 || port > 65535) throw new NumberFormatException();
+            portTcp = Integer.parseInt(portText);
+            if (portTcp < 49152 || portTcp > 65535) throw new NumberFormatException();
         } catch (NumberFormatException e) {
             setStatus("Port invalide (doit être entre 49152 et 65535).", "red");
             return;
         }
-
+        int portUdp = portTcp + 1;
         setStatus("Connexion en cours...", "orange");
 
-        final int finalPort = port;
 
         // Connexion en arrière-plan pour ne pas bloquer l'interface (thread séparé)
-        Task<Client> task = new Task<>() {
+        Task<NetworkClient> task = new Task<>() {
             @Override
-            protected Client call() throws Exception {
+            protected NetworkClient call() throws Exception {
 
                 // Ce code s'exécute dans un thread séparé (pas sur JavaFX thread)
                 // On crée le client TCP avec l'IP et le port saisis
-                client = new Client(ip, finalPort);
-                client.connect();
+                NetworkClient networkClient = new NetworkClient(ip, portTcp, portUdp);
+                networkClient.connect();
 
-                return client;
+                return networkClient;
             }
         };
 
         task.setOnSucceeded(e -> {
-
-            setStatus("Connecté à " + ip + ":" + port, "green");
+            client = task.getValue();
+            setStatus("Connecté à " + ip + ":" + portTcp, "green");
 
             try {
                 // Chargement de la vue Selection de drone après connexion réussie
@@ -128,3 +127,119 @@ public class ConnexionController {
         statusLabel.setText(message);
     }
 }
+
+/*package fr.app.controller;
+
+import fr.app.network.NetworkClient;
+import javafx.concurrent.Task;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.stage.Stage;
+
+public class ConnexionController {
+
+    @FXML private TextField ipField;
+    @FXML private TextField portField;
+    @FXML private Label statusLabel;
+
+    private NetworkClient client;
+
+    @FXML
+    private void ConnexionClique() {
+
+        String ip = ipField.getText().trim();
+        String portText = portField.getText().trim();
+
+        if (!isValidIpv4(ip)) {
+            setStatus("Adresse IPv4 invalide.", "red");
+            return;
+        }
+
+        int portTcp;
+        try {
+            portTcp = Integer.parseInt(portText);
+            if (portTcp < 49152 || portTcp > 65535) {
+                throw new NumberFormatException();
+            }
+        } catch (NumberFormatException e) {
+            setStatus("Port invalide (doit être entre 49152 et 65535).", "red");
+            return;
+        }
+
+        int portUdp = portTcp + 1;
+
+        setStatus("Connexion en cours...", "orange");
+
+        Task<NetworkClient> task = new Task<>() {
+            @Override
+            protected NetworkClient call() throws Exception {
+
+                NetworkClient networkClient =
+                        new NetworkClient(ip, portTcp, portUdp);
+
+                networkClient.connect();
+
+                return networkClient;
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+
+            client = task.getValue();
+
+            setStatus("Connecté à " + ip + ":" + portTcp, "green");
+
+            try {
+                FXMLLoader loader = new FXMLLoader(
+                        getClass().getResource("/fxml/Dashboard.fxml")
+                );
+
+                Parent root = loader.load();
+
+                DashboardController controller = loader.getController();
+                controller.setClient(client);
+
+                Stage stage = (Stage) ipField.getScene().getWindow();
+                stage.setScene(new Scene(root));
+
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                setStatus("Erreur chargement interface", "red");
+            }
+        });
+
+        task.setOnFailed(e -> {
+            Throwable ex = task.getException();
+            ex.printStackTrace();
+            setStatus("Échec : " + ex.getMessage(), "red");
+        });
+
+        new Thread(task).start();
+    }
+
+    private boolean isValidIpv4(String ip) {
+        String[] parts = ip.split("\\.");
+
+        if (parts.length != 4) return false;
+
+        for (String part : parts) {
+            try {
+                int val = Integer.parseInt(part);
+                if (val < 0 || val > 255) return false;
+            } catch (NumberFormatException e) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private void setStatus(String message, String color) {
+        statusLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: " + color + ";");
+        statusLabel.setText(message);
+    }
+}*/

@@ -1,6 +1,7 @@
 package fr.app.controller;
 
 import fr.app.model.PilotCommand;
+import fr.app.network.NetworkClient;
 import fr.app.network.Client;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextArea;
@@ -9,6 +10,7 @@ public class DashboardController {
 
     @FXML
     private TextArea logArea;
+    //private NetworkClient client;
 
     private Client client;
     private String droneId;
@@ -35,6 +37,9 @@ public class DashboardController {
             logArea.appendText("❌ Client non connecté\n");
         }
     }
+    /*public void setClient(NetworkClient client) {
+        this.client = client;
+    }*/
 
     @FXML
     private void startSimulation() {

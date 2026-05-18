@@ -1,5 +1,7 @@
 package fr.app.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class DroneStatus {
 
     private double x;
@@ -28,10 +30,14 @@ public class DroneStatus {
     public void setZ(double z) { this.z = z; }
     public void setSpeed(double speed) { this.speed = speed; }
 
+    // @JsonIgnore -> Jackson ignorera cette méthode lors de la sérialisation/désérialisation
+    @JsonIgnore
     public String getPositionText() {
         return "x=" + x + " | y=" + y + " | z=" + z;
     }
 
+    // @JsonIgnore -> Jackson ignorera cette méthode lors de la sérialisation/désérialisation
+    @JsonIgnore
     public String getSpeedText() {
         return speed + " m/s";
     }
