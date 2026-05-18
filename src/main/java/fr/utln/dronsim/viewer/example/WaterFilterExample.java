@@ -17,6 +17,8 @@ import com.jme3.system.AppSettings;
 import com.jme3.util.SkyFactory;
 import com.jme3.water.WaterFilter;
 
+import fr.app.model.sensor.Sensor;
+import fr.app.model.sensor.TemperatureSensor;
 import fr.utln.dronsim.viewer.primitives.ReferentialNode;
 import fr.app.model.PilotCommand;
 
@@ -73,27 +75,29 @@ public class WaterFilterExample extends SimpleApplication {
 
         droneController.updateMovement(tpf);
 
-        Vector3f dronePosition =
-                drone.getDroneSpatial()
-                        .getWorldTranslation();
+        Vector3f dronePosition = drone.getDroneSpatial().getWorldTranslation();
 
-        Vector3f droneForward =
-                drone.getDroneSpatial()
-                        .getWorldRotation()
-                        .mult(Vector3f.UNIT_Z);
+        Vector3f droneForward = drone.getDroneSpatial().getWorldRotation().mult(Vector3f.UNIT_Z);
 
-        Vector3f cameraOffset =
-                droneForward.negate().mult(6f)
-                        .add(0f, 3f, 2f);
+        Vector3f cameraOffset = droneForward.negate().mult(6f).add(0f, 3f, 2f);
 
-        cam.setLocation(
-                dronePosition.add(cameraOffset)
-        );
+        cam.setLocation(dronePosition.add(cameraOffset));
 
-        cam.lookAt(
-                dronePosition,
-                Vector3f.UNIT_Y
-        );
+        cam.lookAt(dronePosition, Vector3f.UNIT_Y);
+
+        for (Sensor sensor : drone.getSensors()) {
+
+            sensor.update(drone);
+
+            if (sensor instanceof TemperatureSensor) {
+
+                TemperatureSensor ts = (TemperatureSensor) sensor;
+
+                ts.affectDrone(drone);
+
+                System.out.println("Temperature : " + ts.getTemperature());
+            }
+        }
     }
 
 	/**

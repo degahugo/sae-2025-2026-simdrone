@@ -66,7 +66,7 @@
                           -fx-font-weight: bold;
                           -fx-text-fill: #4a6275;"/>
             <TextField fx:id="portField"
-                       promptText="62500"
+                       promptText="62501"
                        prefHeight="42"
                        maxWidth="Infinity"
                        style="-fx-font-size: 14px;

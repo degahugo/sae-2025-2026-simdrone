@@ -12,14 +12,16 @@ public class MainClient {
         // Connexion + échange RSA/AES
         client.connect();
 
-        // Envoi d’un message test
-        //client.send("Bonjour serveur !");
-        client.sendCommand("drone1", PilotCommand.FORWARD);        DroneStatus status = client.receiveStatus();
-        String reponse = client.receive();
+        // Envoi d’une commande test vers le drone1
+        client.sendCommand("drone1", PilotCommand.FORWARD);
 
-        System.out.println("[Client] Réponse du serveur : " + reponse);
+        // Réception du statut renvoyé par le serveur
+        DroneStatus status = client.receiveStatus();
+
+        System.out.println("[Client] Position reçue : " + status.getPositionText());
+        System.out.println("[Client] Vitesse reçue : " + status.getSpeedText());
+        System.out.println("[Client] État reçu : " + status.getState());
 
         client.disconnect();
     }
 }
-
