@@ -1,6 +1,7 @@
 package fr.app.controller;
 
 import fr.app.model.PilotCommand;
+import fr.app.network.NetworkClient;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextArea;
 import fr.app.network.Client;
@@ -9,6 +10,7 @@ public class DashboardController {
 
     @FXML
     private TextArea logArea;
+    private NetworkClient client;
 
     private void send(PilotCommand cmd) {
 
@@ -25,9 +27,8 @@ public class DashboardController {
             logArea.appendText("❌ Client non connecté\n");
         }
     }
-    private Client client;
 
-    public void setClient(Client client) {
+    public void setClient(NetworkClient client) {
         this.client = client;
     }
 
