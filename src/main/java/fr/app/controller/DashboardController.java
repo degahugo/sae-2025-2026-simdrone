@@ -2,10 +2,11 @@ package fr.app.controller;
 
 import fr.app.model.DroneStatus;
 import fr.app.model.PilotCommand;
-import fr.app.network.Client;
+import fr.app.network.NetworkClient;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
+import fr.app.network.NetworkClient;
 
 public class DashboardController {
 
@@ -24,17 +25,16 @@ public class DashboardController {
     @FXML
     private Label temperatureLabel;
 
-    private Client client;
+    private NetworkClient client;
     private String droneId;
 
     public void setDroneId(String droneId) {
         this.droneId = droneId;
     }
 
-    public void setClient(Client client) {
+    public void setClient(NetworkClient client) {
         this.client = client;
     }
-
     private void updateTelemetry(DroneStatus status) {
 
         if (status == null) {

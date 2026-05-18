@@ -13,6 +13,7 @@ import fr.app.model.MessageType;
 import fr.utln.dronsim.viewer.example.WaterFilterExample;
 
 import fr.app.structure.JsonSerializer;
+import fr.app.Main;
 import fr.app.structure.SerialisationException;
 
 // Gère le transport UDP côté serveur.
@@ -26,7 +27,7 @@ public class UdpServeurTransport implements Runnable{
 
     private final RegistreDesSessions registre;
 
-    private WaterFilterExample simulation;
+    private Main simulation;
 
     public UdpServeurTransport(int port, RegistreDesSessions registre)throws SocketException {
         // Crée un socket UDP en écoute sur le port spécifié
@@ -66,7 +67,7 @@ public class UdpServeurTransport implements Runnable{
                 MessageType type = message.getType();
                 if (type == MessageType.START_SIMULATION) {
                     if (simulation == null) {
-                        simulation = new WaterFilterExample();
+                        simulation = new Main();
 
                         com.jme3.system.AppSettings settings =
                                 new com.jme3.system.AppSettings(true);
