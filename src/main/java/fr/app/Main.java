@@ -81,8 +81,7 @@ public class Main extends SimpleApplication {
 
         sceneNode.attachChild(droneNode);
 
-        this.drone = new Drone(droneNode);
-
+        this.drone = new Drone("drone1", droneNode);
         this.temperatureSensor = new TemperatureSensor("TempSensor");
         drone.addSensor(temperatureSensor);
 
