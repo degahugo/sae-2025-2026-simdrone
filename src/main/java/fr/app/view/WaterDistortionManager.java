@@ -1,6 +1,7 @@
 package fr.app.view;
 
 import com.jme3.material.Material;
+import com.jme3.asset.AssetManager;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.renderer.ViewPort;
 import fr.app.model.Drone;
@@ -16,36 +17,57 @@ public class WaterDistortionManager {
     private final DynamicDistortionFilter distortionFilter;
     FilterPostProcessor fpp;
 
-    public WaterDistortionManager(FilterPostProcessor fpp, ViewPort viewPort, Drone drone, WorldView world) {
-        this.fpp = fpp;
+    public WaterDistortionManager(AssetManager assetManager, ViewPort viewPort, Drone drone, WorldView world) {
+        this.fpp = new FilterPostProcessor(assetManager);
         this.drone = drone;
         this.world = world;
+
+        // =====================================
         // DISTORTION MODEL
+        // =====================================
+
         distortionModel = new DistortionModel(0f, 0f, 0f, 0f, 0f);
         //K1 à K3 distorsion radiale   P1,P2 distorsion temporelle
         //Tout à 0, image normale sans distorsion
         distortionFilter = new DynamicDistortionFilter(distortionModel);
         //On donne le modèle au filtre
+
+        // =====================================
         // FILTER POST PROCESSOR
-        fpp.addFilter(distortionFilter);
-        viewPort.addProcessor(fpp);
+        // =====================================
+
+        this.fpp.addFilter(distortionFilter);
+
+        viewPort.addProcessor(this.fpp);
     }
 
     /**
      * Mise à jour distorsion eau
      */
     public void update() {
+
         float droneHeight = drone.getDroneSpatial().getWorldTranslation().y;
+
         float waterHeight = world.getWaterHeight();
+
+        // =====================================
+        // DRONE SOUS L'EAU
+        // =====================================
+
+        if (droneHeight < waterHeight) {
+            //test immersion, si immergée on continue
+
         float profondeur = waterHeight - droneHeight;
         float intensity = Math.min(profondeur * 0.03f, 0.35f);
-        if (droneHeight < waterHeight) {
         // test immersion, si immergée on continue
             System.out.println("profondeur : " + profondeur);
             System.out.println("intensity : "+intensity);
             // profondeur *0;03f car l'image ne doit pas être trop grande pour qu'on puisse la voir.
             //profondeur -> intensité visuelle
-            // Distortion radiale
+
+            // =====================================
+            // DISTORSION RADIALE
+            // =====================================
             //k1 grosse distorsion globale
             //k2 raffinement
             //k3 minime

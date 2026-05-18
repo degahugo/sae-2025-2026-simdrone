@@ -18,6 +18,7 @@ public class DroneController {
     // vitesse
     private float droneSpeed = 0.2f;
 
+
     // intentions
     private boolean forwardIntention = false;
     private boolean backwardIntention = false;
@@ -71,7 +72,6 @@ public class DroneController {
 
         inputManager.addMapping(moveDown.name(),
                 new KeyTrigger(KeyInput.KEY_N));
-
 
         // listeners
         inputManager.addListener(actionListener,
@@ -211,7 +211,7 @@ public class DroneController {
         Vector3f nextPosition =
                 drone.getDroneSpatial()
                         .getLocalTranslation()
-                        .add(moveDirection.mult(droneSpeed * tpf * 60f));
+                        .add(moveDirection.mult(droneSpeed * drone.getState().getSpeedFactor() * tpf * 60f));
         drone.getDroneSpatial()
                 .setLocalTranslation(nextPosition);
     }
