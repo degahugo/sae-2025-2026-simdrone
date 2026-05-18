@@ -79,21 +79,6 @@ public class Main extends SimpleApplication {
             //physicsEngine.SpawnTestCube(rootNode, -4f, 15f, 0f, ColorRGBA.Red);
             //physicsEngine.SpawnTestCube(rootNode, 0f, 2f, 0f, ColorRGBA.Yellow);
             // Create a drone
-
-/*
-            Node droneNode = new Node("Drone");
-            //String droneName = "bluerobotics/br2r4/br2-r4-vehicle.j3o";
-            String droneName = "subseatech/guardian/guardian-vehicle.j3o";
-            Spatial droneModel = assetManager.loadModel("vehicle/" + droneName);
-            droneNode.attachChild(droneModel);
-            droneNode.move(0f, 1f, 0f);
-            rootNode.attachChild(droneNode);
-            this.drone = new Drone(droneNode);
-            physicsEngine.CreateDroneHitbox(drone, "Guardian");
-            this.droneController = new DroneController(inputManager, drone);
-            this.droneController.setUpKeys();
-            this.droneCameraManager = new DroneCameraManager(cam, drone);
-*/
             droneManager.CreateDrone("BR2R4");
             // Gets the manager and controller te be used here
             droneCameraManager = droneManager.getDroneCameraManager();
