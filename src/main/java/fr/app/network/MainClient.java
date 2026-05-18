@@ -14,8 +14,7 @@ public class MainClient {
 
         // Envoi d’un message test
         //client.send("Bonjour serveur !");
-        client.sendCommand(PilotCommand.FORWARD);
-        DroneStatus status = client.receiveStatus();
+        client.sendCommand("drone1", PilotCommand.FORWARD);        DroneStatus status = client.receiveStatus();
         String reponse = client.receive();
 
         System.out.println("[Client] Réponse du serveur : " + reponse);

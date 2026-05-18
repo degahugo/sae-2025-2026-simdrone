@@ -8,6 +8,12 @@ public class PilotController {
     private Client client;
     private boolean connected = false;
 
+    private String droneId;
+
+    public void setDroneId(String droneId) {
+        this.droneId = droneId;
+    }
+
     // Connexion réelle au serveur
     public boolean connect(String ip, String port) {
 
@@ -50,12 +56,16 @@ public class PilotController {
             return;
         }
 
-        //client.send(command.toString());
-        //System.out.println("Commande envoyée : " + command);
+        if (droneId == null || droneId.isBlank()) {
+            System.out.println("Impossible d'envoyer : aucun drone sélectionné");
+            return;
+        }
+
         try {
-            // Envoie la commande sérialisée en JSON : {"command":"RIGHT"}
-            client.sendCommand(command);
-            System.out.println("Commande envoyée : " + command);
+            // Envoie la commande sérialisée en JSON :
+            // {"type":"COMMAND","droneId":"drone1","command":"RIGHT"}
+            client.sendCommand(droneId, command);
+
         } catch (Exception e) {
             System.out.println("Erreur envoi commande : " + e.getMessage());
         }

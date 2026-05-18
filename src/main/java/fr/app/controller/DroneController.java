@@ -133,37 +133,63 @@ public class DroneController {
                              boolean keyPressed,
                              float tpf) {
 
-            switch (name) {
-
-                    case "FORWARD":
-                        forwardIntention = keyPressed;
-                        break;
-
-                    case "BACKWARD":
-                        backwardIntention = keyPressed;
-                        break;
-
-                    case "LEFT":
-                        leftIntention = keyPressed;
-                        break;
-
-                    case "RIGHT":
-                        rightIntention = keyPressed;
-                        break;
-
-                    case "UP":
-                        upIntention = keyPressed;
-                        break;
-
-                    case "DOWN":
-                        downIntention = keyPressed;
-                        break;
-
-
-
+            try {
+                PilotCommand command = PilotCommand.valueOf(name);
+                executeCommand(command, keyPressed);
+            } catch (IllegalArgumentException e) {
+                System.out.println("Commande inconnue : " + name);
             }
         }
     };
+
+
+
+    public void applyCommandOnce(PilotCommand command) {
+
+        float step = 0.6f;
+        float rotationStep = 0.25f;
+
+        Vector3f forward =
+                drone.getDroneSpatial()
+                        .getLocalRotation()
+                        .mult(Vector3f.UNIT_Z);
+
+        Vector3f up =
+                drone.getDroneSpatial()
+                        .getLocalRotation()
+                        .mult(Vector3f.UNIT_Y);
+
+        switch (command) {
+
+            case FORWARD:
+                drone.getDroneSpatial().move(forward.negate().mult(step));
+                break;
+
+            case BACKWARD:
+                drone.getDroneSpatial().move(forward.mult(step));
+                break;
+
+            case LEFT:
+                drone.getDroneSpatial().rotate(0f, rotationStep, 0f);
+                break;
+
+            case RIGHT:
+                drone.getDroneSpatial().rotate(0f, -rotationStep, 0f);
+                break;
+
+            case UP:
+                drone.getDroneSpatial().move(up.negate().mult(step));
+                break;
+
+            case DOWN:
+                drone.getDroneSpatial().move(up.mult(step));
+                break;
+
+            case STOP:
+                executeCommand(PilotCommand.STOP, true);
+                break;
+        }
+    }
 
     public void updateMovement(float tpf) {
 

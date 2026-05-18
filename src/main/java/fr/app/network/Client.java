@@ -14,6 +14,8 @@ import fr.app.structure.SerialisationException;
 
 import java.security.PublicKey;
 import javax.crypto.SecretKey;
+import fr.app.model.MessageType;
+import fr.app.model.MessageType;
 //Client TCP pour se connecter au serveur de simulation DronSim.
 
 public class Client {
@@ -113,8 +115,8 @@ public class Client {
     }
 
     //Envoie une commande de pilotage au serveur
-    public void sendCommand(PilotCommand command) throws SerialisationException {
-        CommandeMessage msg = new CommandeMessage(command);
+    public void sendCommand(String droneId, PilotCommand command) throws SerialisationException {
+        CommandeMessage msg = new CommandeMessage(MessageType.COMMAND,droneId, command);
         // on sérialise le message en le transformant en tableau de byte
         byte[] data = serializer.serialisation(msg);
         // Tableau de bytes
@@ -123,6 +125,25 @@ public class Client {
         // on transforme le tableau de byte en String correspondant au format JSON : {"command":"RIGHT"}
         String json = new String(data);
         System.out.println("[Client] Commande sérialisée : " + command + " -> " + json);
+        writer.println(json);
+    }
+
+
+    // Envoie une demande de lancement de simulation au serveur
+    public void sendStartSimulation(String droneId) throws SerialisationException {
+
+        CommandeMessage msg = new CommandeMessage(
+                MessageType.START_SIMULATION,
+                droneId,
+                null
+        );
+
+        byte[] data = serializer.serialisation(msg);
+
+        String json = new String(data);
+
+        System.out.println("[Client] Lancement simulation sérialisé : " + json);
+
         writer.println(json);
     }
 

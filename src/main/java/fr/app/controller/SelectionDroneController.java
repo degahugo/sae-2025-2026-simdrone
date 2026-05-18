@@ -51,9 +51,9 @@ public class SelectionDroneController {
             /*
              * Informe le serveur
              */
-            client.send(
+            /*client.send(
                     "SELECT;" + selectedDrone
-            );
+            );*/
 
             /*
              * Chargement du dashboard

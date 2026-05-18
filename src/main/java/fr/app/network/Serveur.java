@@ -11,6 +11,8 @@ import fr.app.model.DroneStatus;
 import fr.app.model.PilotCommand;
 import fr.app.network.ProtocoleDeChiffrement;
 import fr.app.structure.JsonSerializer;
+import fr.app.model.MessageType;
+import fr.utln.dronsim.viewer.example.WaterFilterExample;
 
 import java.security.PublicKey;
 
@@ -25,6 +27,7 @@ public class Serveur {
 
     private final int port;
     private ServerSocket serverSocket;
+    private WaterFilterExample simulation;
     //  Ajout du protocole de chiffrement
     private ProtocoleDeChiffrement protocole = new ProtocoleDeChiffrement();
 
@@ -96,10 +99,56 @@ public class Serveur {
 
                 // Désérialisation : bytes vers objet Java (ici un enum de PilotCommand)
                 CommandeMessage msg = serializer.deserisation(bytes, CommandeMessage.class);
+
+                String droneId = msg.getDroneId();
                 PilotCommand command = msg.getCommand();
-                System.out.println("[Serveur] Objet désérialisé   : " + command);
+                MessageType type = msg.getType();
 
+                System.out.println("[Serveur] Type message       : " + type);
+                System.out.println("[Serveur] Drone ciblé        : " + droneId);
+                System.out.println("[Serveur] Commande reçue     : " + command);
 
+                if (type == MessageType.START_SIMULATION) {
+
+                    if (simulation == null) {
+
+                        simulation = new WaterFilterExample();
+
+                        com.jme3.system.AppSettings settings =
+                                new com.jme3.system.AppSettings(true);
+
+                        settings.setTitle("DronSim - Simulation 3D");
+                        settings.setWidth(1024);
+                        settings.setHeight(768);
+
+                        simulation.setShowSettings(false);
+                        simulation.setSettings(settings);
+
+                        // IMPORTANT :
+                        // la simulation continue même sans focus
+                        simulation.setPauseOnLostFocus(false);
+
+                        simulation.start();
+
+                        System.out.println("[Serveur] Simulation lancée pour " + droneId);
+
+                    } else {
+
+                        System.out.println("[Serveur] Simulation déjà lancée.");
+                    }
+                }
+
+                if (type == MessageType.COMMAND) {
+
+                    if (simulation == null) {
+                        System.out.println("[Serveur] Impossible d'appliquer la commande : simulation non lancée.");
+                    } else {
+                        simulation.enqueue(() -> {
+                            simulation.executeNetworkCommand(droneId, command);
+                            return null;
+                        });
+                    }
+                }
                 // Construit le statut du drone à renvoyer
                 DroneStatus status = new DroneStatus();
                 status.setState("En vol");

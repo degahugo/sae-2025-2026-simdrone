@@ -117,6 +117,12 @@
                 GridPane.columnIndex="2"
                 GridPane.rowIndex="4"/>
 
+        <Button text="Lancer simulation"
+                onAction="#startSimulation"
+                GridPane.columnIndex="0"
+                GridPane.rowIndex="5"
+                GridPane.columnSpan="3"/>
+
     </GridPane>
 
     <Label text="Journal des actions"

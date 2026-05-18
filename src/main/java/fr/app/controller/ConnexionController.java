@@ -70,14 +70,13 @@ public class ConnexionController {
             try {
                 // Chargement de la vue Selection de drone après connexion réussie
                 FXMLLoader loader = new FXMLLoader(
-                        getClass().getResource("/fxml/SelectionDrone.fxml")
+                        getClass().getResource("/fxml/ConfigurationSimulation.fxml")
                 );
 
                 Parent root = loader.load();
 
-                SelectionDroneController controller = loader.getController();
+                ConfigurationSimulationController controller = loader.getController();
                 controller.setClient(client);
-
                 // Récupération de la fenêtre actuelle et changement de scène
                 Stage stage = (Stage) ipField.getScene().getWindow();
                 stage.setScene(new Scene(root));
