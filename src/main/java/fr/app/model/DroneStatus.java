@@ -10,6 +10,8 @@ public class DroneStatus {
     private double speed;
     private String state;
     private double temperature;
+    private double depth; // profondeur
+    private double intensity; // intensité de la distorsion
 
     public DroneStatus() {
         this.x = 0;
@@ -28,6 +30,8 @@ public class DroneStatus {
     public double getTemperature() {
         return temperature;
     }
+    public double getDepth() { return depth; }
+    public double getIntensity() { return intensity; }
 
     //Setter
     public void setX(double x) { this.x = x; }
@@ -37,6 +41,8 @@ public class DroneStatus {
     public void setTemperature(double temperature) {
         this.temperature = temperature;
     }
+    public void setDepth(double depth) { this.depth = depth; }
+    public void setIntensity(double intensity) { this.intensity = intensity; }
 
     // @JsonIgnore -> Jackson ignorera cette méthode lors de la sérialisation/désérialisation
     @JsonIgnore
@@ -58,6 +64,8 @@ public class DroneStatus {
         this.state = state;
     }
 
+    // @JsonIgnore -> Jackson ignorera cette méthode lors de la sérialisation/désérialisation
+    @JsonIgnore
     public String getTemperatureText() {
         return temperature + " °C";
     }

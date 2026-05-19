@@ -309,7 +309,7 @@ public class DroneController {
         } else if (angularVelocity.y < -maxRotationSpeed) {
             physicsControl.setAngularVelocity(new Vector3f(angularVelocity.x, -maxRotationSpeed, angularVelocity.z));
         }
-        System.out.println("hauteur : " + droneHeight);
+        //System.out.println("hauteur : " + droneHeight);
     }
 
     /**

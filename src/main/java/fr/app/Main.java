@@ -44,6 +44,9 @@ public class Main extends SimpleApplication {
     private TemperatureSensor temperatureSensor;
     private boolean debugMode = false;
     private boolean loading = true;
+    private float lastTemperature = Float.NaN; // dernière température enregistré
+
+    private volatile boolean initialized = false;
 
 
     public static void main(String[] args) {
@@ -76,7 +79,7 @@ public class Main extends SimpleApplication {
         this.lightingManager = new LightingManager(rootNode, cam, assetManager);
         this.lightingManager.initLighting();
         // Filter processor
-        this.fpp = new FilterPostProcessor(assetManager);
+        fpp = new FilterPostProcessor(assetManager);
         this.droneManager = new DroneManager(assetManager,rootNode,physicsEngine,inputManager,cam, model);
 
         //this.cameraManager = new CameraManager(cam, flyCam);
@@ -105,9 +108,16 @@ public class Main extends SimpleApplication {
 
             // End of the loading, will execute the simpleUpdate
             loading = false;
+            initialized = true;
         });
         // Attach scene to node
         rootNode.attachChild(sceneNode);
+        //this.initialized = true;
+        //System.out.println("[Simulation] Initialisation terminée.");
+
+    }
+    public boolean isInitialized() {
+        return initialized;
     }
 
     @Override
@@ -130,9 +140,14 @@ public class Main extends SimpleApplication {
             if (sensor instanceof TemperatureSensor) {
                 TemperatureSensor ts = (TemperatureSensor) sensor;
                 ts.affectDrone(drone);
-                System.out.println(
+                /*System.out.println(
                         "Température : " + ts.getTemperature()
-                );
+                );*/
+                float temp = ts.getTemperature();
+                if (Math.abs(temp - lastTemperature) > 0.01f) {
+                    lastTemperature = temp;
+                    System.out.println("Température : " + temp);
+                }
             }
         }
 
@@ -150,7 +165,7 @@ public class Main extends SimpleApplication {
             return;
         }
 
-        droneController.applyCommandOnce(command);
+        droneController.executeCommand(command,true);
 
         System.out.println("[Simulation] Commande appliquée à " + droneId + " : " + command);
     }
@@ -175,6 +190,10 @@ public class Main extends SimpleApplication {
 
         if (temperatureSensor != null) {
             status.setTemperature(temperatureSensor.getTemperature());
+        }
+        if (waterDistortionManager != null) {
+            status.setDepth(waterDistortionManager.getProfondeur());
+            status.setIntensity(waterDistortionManager.getIntensity());
         }
 
         return status;
