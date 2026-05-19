@@ -9,18 +9,15 @@ public class Battery {
         this.niveau = maxNiveau;
     }
 
-    public void consume(float quantiteconsomme) {
-
+    public void consommation(float quantiteconsomme) {
         niveau -= quantiteconsomme;
         if (niveau < 0f) {
             niveau = 0f;
         }
     }
 
-    public void recharge(float quantiterecharge) {
-
+    public void rechargement(float quantiterecharge) {
         niveau += quantiterecharge;
-
         if (niveau > maxNiveau) {
             niveau = maxNiveau;
         }
