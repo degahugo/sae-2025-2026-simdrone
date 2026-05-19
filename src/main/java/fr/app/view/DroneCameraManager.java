@@ -13,21 +13,13 @@ public class DroneCameraManager {
     private final Node cameraNode;
 
 
-    private final Vector3f cameraOffset =
-            new Vector3f(0f, 0f, 0f);
+    private final Vector3f cameraOffset = new Vector3f(0f, 0f, 0f);
 
-    public DroneCameraManager(Camera cam,
-                              Drone drone) {
-
+    public DroneCameraManager(Camera cam, Drone drone) {
         this.cam = cam;
         this.drone = drone;
-
         this.cameraNode = new Node("CameraNode");
-
-        drone.getDroneSpatial()
-                .attachChild(cameraNode);
-
-
+        drone.getDroneSpatial().attachChild(cameraNode);
         cameraNode.setLocalTranslation(cameraOffset);
     }
 
@@ -52,7 +44,7 @@ public class DroneCameraManager {
         Vector3f lookTarget =
                 dronePosition
                         .add(forward.mult(6f))
-                        .add(0f, -2f, 0f);
+                        .add(0f, 0f, 0f);
 
         cam.lookAt(
                 lookTarget,

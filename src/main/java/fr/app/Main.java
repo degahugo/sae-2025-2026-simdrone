@@ -93,11 +93,12 @@ public class Main extends SimpleApplication {
             // Create a drone
             droneManager.CreateDrone("BR2R4");
             // Gets the manager and controller te be used here
-            droneCameraManager = droneManager.getDroneCameraManager();
-            droneController = droneManager.getDroneController();
+            this.droneCameraManager = droneManager.getDroneCameraManager();
+            this.droneController = droneManager.getDroneController();
             // Adding captors
             this.temperatureSensor = new TemperatureSensor("TempSensor");
-            drone.addSensor(temperatureSensor);
+            this.drone = droneManager.getDrone();
+            this.drone.addSensor(temperatureSensor);
             // Creates the water filter
             WaterFilterManager waterFilterManager = new WaterFilterManager(fpp, viewPort, rootNode, model);
             this.waterDistortionManager = new WaterDistortionManager(fpp, viewPort, droneManager.getDrone(), model);

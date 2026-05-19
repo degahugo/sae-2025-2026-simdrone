@@ -13,5 +13,6 @@ public enum DroneMovement {
     PITCHUP,
     PITCHDOWN,
     ROLLLEFT,
-    ROLLRIGHT
+    ROLLRIGHT,
+    STOP
 }

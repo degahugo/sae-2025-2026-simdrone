@@ -41,7 +41,7 @@ public class DroneManager {
         droneNode.attachChild(droneModel);
         droneNode.move(0f, 1f, 0f);
         rootNode.attachChild(droneNode);
-        drone = new Drone(droneNode);
+        drone = new Drone("1", droneNode);
         this.physicsEngine.CreateDroneHitbox(drone, name);
         this.droneController = new DroneController(inputManager, drone, model);
         this.droneController.setUpKeys();
