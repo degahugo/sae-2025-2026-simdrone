@@ -36,7 +36,7 @@ public class Main extends SimpleApplication {
 
     public static void main(String[] args) {
 
-        AppSettings settings=new AppSettings(true);
+        AppSettings settings = new AppSettings(true);
         settings.setWidth(1024);
         settings.setHeight(768);
         settings.setVSync(false);
@@ -93,7 +93,6 @@ public class Main extends SimpleApplication {
         this.droneCameraManager = new DroneCameraManager(cam, drone);
 
 
-
         // Creates the water filter
         WaterFilterManager waterFilterManager = new WaterFilterManager(assetManager, viewPort, rootNode, model);
         this.waterDistortionManager = new WaterDistortionManager(assetManager, viewPort, drone, model);
@@ -104,17 +103,17 @@ public class Main extends SimpleApplication {
     }
 
     @Override
-    public void simpleUpdate(float tpf){
+    public void simpleUpdate(float tpf) {
 
-        if (droneController != null){
+        if (droneController != null) {
             droneController.updateMovement(tpf);
         }
 
-        if (droneCameraManager != null){
+        if (droneCameraManager != null) {
             droneCameraManager.update(tpf);
         }
 
-        if (waterDistortionManager != null){
+        if (waterDistortionManager != null) {
             waterDistortionManager.update();
         }
 
@@ -127,20 +126,24 @@ public class Main extends SimpleApplication {
                         "Température : " + ts.getTemperature()
                 );
             }
+            if (sensor instanceof DepthSensor) {
+                DepthSensor ds = (DepthSensor) sensor;
+                System.out.println("Profondeur : " + ds.getDepth() + " m");
+            }
+
+            if (drone.getBattery() != null) {
+                float consumption = 0.5f * tpf;
+                //Donc plus le temps passe,plus la batterie diminue
+
+                drone.getBattery().consommation(consumption);
+                //retire de l'énergie à la batterie
+                System.out.println(
+                        "Batterie : " + drone.getBattery().getPercentage() + "%"
+                );
+            }
+
+
         }
-
-        if (drone.getBattery() != null) {
-            float consumption = 0.5f * tpf;
-            //Donc plus le temps passe,plus la batterie diminue
-
-            drone.getBattery().consommation(consumption);
-            //retire de l'énergie à la batterie
-            System.out.println(
-                    "Batterie : " + drone.getBattery().getPercentage() + "%"
-            );
-        }
-
 
     }
-
 }
