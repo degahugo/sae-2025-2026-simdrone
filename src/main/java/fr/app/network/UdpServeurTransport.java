@@ -100,8 +100,22 @@ public class UdpServeurTransport implements Runnable{
                 }
                 System.out.println("[UDP Serveur] Objet désérialisé    : " + command);
 
-                DroneStatus droneStatus = new DroneStatus();
-                droneStatus.setState("En vol");
+                //DroneStatus droneStatus= new DroneStatus();
+                //droneStatus.setState("En vol");
+
+                DroneStatus droneStatus;
+
+                if (simulation != null) {
+                    final DroneStatus[] statusHolder = new DroneStatus[1];
+                    simulation.enqueue(() -> {
+                        statusHolder[0] = simulation.getDroneStatus(droneId);
+                        return null;
+                    }).get(); // attend la réponse du thread JME3
+                    droneStatus = statusHolder[0];
+                } else {
+                    droneStatus = new DroneStatus();
+                    droneStatus.setState("Simulation non lancée");
+                }
 
                 // Sérialisation
                 byte[] responseBrute    = serializer.serialisation(droneStatus);

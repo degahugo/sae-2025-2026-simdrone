@@ -20,6 +20,12 @@ public class DashboardController {
     private Label speedLabel;
 
     @FXML
+    private Label depthLabel;
+
+    @FXML
+    private Label intensityLabel;
+
+    @FXML
     private Label stateLabel;
 
     @FXML
@@ -41,10 +47,12 @@ public class DashboardController {
             return;
         }
 
-        positionLabel.setText("Position : " + status.getPositionText());
-        speedLabel.setText("Vitesse : " + status.getSpeedText());
+        positionLabel.setText(String.format("Position : x=%.2f | y=%.2f | z=%.2f", status.getX(), status.getY(), status.getZ()));
+        speedLabel.setText(String.format("Vitesse : %.2f m/s", status.getSpeed()));
         stateLabel.setText("État : " + status.getState());
-        temperatureLabel.setText("Température : " + status.getTemperatureText());
+        temperatureLabel.setText(String.format("Température : %.1f °C", status.getTemperature()));
+        depthLabel.setText(String.format("Profondeur : %.2f m", status.getDepth()));
+        intensityLabel.setText(String.format("Intensité : %.3f", status.getIntensity()));
     }
 
     private void send(PilotCommand cmd) {

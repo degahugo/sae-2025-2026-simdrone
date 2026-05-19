@@ -44,6 +44,14 @@
                    text="Température : 0 °C"
                    style="-fx-text-fill: white;"/>
 
+            <Label fx:id="depthLabel"
+                   text="Profondeur : 0 m"
+                   style="-fx-text-fill: white;"/>
+
+            <Label fx:id="intensityLabel"
+                   text="Intensité : 0"
+                   style="-fx-text-fill: white;"/>
+
             <Label fx:id="stateLabel"
                    text="État : En attente"
                    style="-fx-text-fill: white;"/>

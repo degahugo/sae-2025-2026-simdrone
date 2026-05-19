@@ -17,6 +17,13 @@ public class WaterDistortionManager {
     private final DynamicDistortionFilter distortionFilter;
     FilterPostProcessor fpp;
 
+    private float profondeur=0f;
+    private float intensity=0f;
+
+    private float lastProfondeur = Float.NaN;
+    private float lastIntensity = Float.NaN;
+
+
     public WaterDistortionManager(AssetManager assetManager, ViewPort viewPort, Drone drone, WorldView world) {
         this.fpp = new FilterPostProcessor(assetManager);
         this.drone = drone;
@@ -57,11 +64,17 @@ public class WaterDistortionManager {
         if (droneHeight < waterHeight) {
             //test immersion, si immergée on continue
 
-        float profondeur = waterHeight - droneHeight;
-        float intensity = Math.min(profondeur * 0.03f, 0.35f);
+        this.profondeur = waterHeight - droneHeight;
+        this.intensity = Math.min(profondeur * 0.03f, 0.35f);
         // test immersion, si immergée on continue
-            System.out.println("profondeur : " + profondeur);
-            System.out.println("intensity : "+intensity);
+            //System.out.println("profondeur : " + profondeur);
+            //System.out.println("intensity : "+intensity);
+            if (Math.abs(profondeur - lastProfondeur) > 0.01f || Math.abs(intensity - lastIntensity) > 0.001f) {
+                lastProfondeur = profondeur;
+                lastIntensity = intensity;
+                System.out.println("profondeur : " + profondeur);
+                System.out.println("intensity : " + intensity);
+            }
             // profondeur *0;03f car l'image ne doit pas être trop grande pour qu'on puisse la voir.
             //profondeur -> intensité visuelle
 
@@ -79,11 +92,20 @@ public class WaterDistortionManager {
             distortionFilter.setP1(intensity * 0.01f);
             distortionFilter.setP2(intensity * 0.01f);
         } else {
+            this.profondeur = 0f;
+            this.intensity = 0f;
             // Reset distortion when out of water
             distortionFilter.setK1(0f);
             distortionFilter.setK2(0f);
             distortionFilter.setP1(0f);
             distortionFilter.setP2(0f);
         }
+    }
+    public float getProfondeur() {
+        return profondeur;
+    }
+
+    public float getIntensity() {
+        return intensity;
     }
 }

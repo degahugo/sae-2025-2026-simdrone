@@ -36,6 +36,7 @@ public class Main extends SimpleApplication {
     private FilterPostProcessor fpp;
     private Sensor sensor;
     private TemperatureSensor temperatureSensor;
+    private float lastTemperature = Float.NaN; // dernière température enregistré
 
 
     public static void main(String[] args) {
@@ -127,9 +128,14 @@ public class Main extends SimpleApplication {
             if (sensor instanceof TemperatureSensor) {
                 TemperatureSensor ts = (TemperatureSensor) sensor;
                 ts.affectDrone(drone);
-                System.out.println(
+                /*System.out.println(
                         "Température : " + ts.getTemperature()
-                );
+                );*/
+                float temp = ts.getTemperature();
+                if (Math.abs(temp - lastTemperature) > 0.01f) {
+                    lastTemperature = temp;
+                    System.out.println("Température : " + temp);
+                }
             }
         }
 
@@ -172,6 +178,10 @@ public class Main extends SimpleApplication {
 
         if (temperatureSensor != null) {
             status.setTemperature(temperatureSensor.getTemperature());
+        }
+        if (waterDistortionManager != null) {
+            status.setDepth(waterDistortionManager.getProfondeur());
+            status.setIntensity(waterDistortionManager.getIntensity());
         }
 
         return status;
