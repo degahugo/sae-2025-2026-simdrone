@@ -27,6 +27,7 @@ public class DroneController {
     private boolean upIntention = false;
     private boolean downIntention = false;
 
+
     // vecteurs
    // private Vector3f forwardMovement = new Vector3f(0, 0, -1);
     //private Vector3f backwardMovement = new Vector3f(0, 0, 1);
