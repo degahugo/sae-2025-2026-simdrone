@@ -127,7 +127,26 @@ public class DroneController {
 
     public void updateMovement(float tpf) {
 
-        Vector3f moveDirection = new Vector3f();
+            // Vérifie si la batterie est vide
+            if (drone.getBattery().isEmpty()) {
+
+                
+                // Réinitialise les commandes
+                forwardIntention = false;
+                backwardIntention = false;
+                leftIntention = false;
+                rightIntention = false;
+                upIntention = false;
+                downIntention = false;
+
+                System.out.println(
+                        "Batterie vide : drone arrêté"
+                );
+
+                return;
+            }
+
+            Vector3f moveDirection = new Vector3f();
 
         /*
          * Direction avant du drone
@@ -140,10 +159,7 @@ public class DroneController {
         /*
          * Direction verticale
          */
-        Vector3f up =
-                drone.getDroneSpatial()
-                        .getLocalRotation()
-                        .mult(Vector3f.UNIT_Y);
+        Vector3f up = drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Y);
 
         /*
          * Avancer / reculer

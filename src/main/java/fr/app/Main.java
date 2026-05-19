@@ -129,6 +129,17 @@ public class Main extends SimpleApplication {
             }
         }
 
+        if (drone.getBattery() != null) {
+            float consumption = 0.5f * tpf;
+            //Donc plus le temps passe,plus la batterie diminue
+
+            drone.getBattery().consommation(consumption);
+            //retire de l'énergie à la batterie
+            System.out.println(
+                    "Batterie : " + drone.getBattery().getPercentage() + "%"
+            );
+        }
+
 
     }
 

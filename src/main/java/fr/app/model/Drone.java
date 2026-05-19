@@ -5,6 +5,7 @@ import com.jme3.scene.Node;
 import java.util.ArrayList;
 import java.util.List;
 import fr.app.model.DroneState;
+import fr.app.model.Battery;
 
 import fr.app.model.sensor.Sensor;
 
@@ -13,12 +14,14 @@ public class Drone {
     private Node droneSpatial;
     private DroneState state;
     private List<Sensor> sensors;
+    private Battery battery;
 
     public Drone(Node droneSpatial) {
 
         this.droneSpatial = droneSpatial;
         this.sensors = new ArrayList<>();
         this.state = new DroneState();
+        this.battery=new Battery(100f);
     }
 
     public Node getDroneSpatial() {
@@ -50,4 +53,5 @@ public class Drone {
     public void setState(DroneState state) {
         this.state = state;
     }
+    public Battery getBattery() {return battery;}
 }
