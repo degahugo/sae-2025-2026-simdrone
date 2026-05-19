@@ -10,12 +10,18 @@ import fr.app.model.PhysicsEngine;
 import fr.app.model.WorldView;
 import fr.app.view.CameraManager;
 import fr.app.view.GUIManager;
+import fr.app.view.CameraManager;
+import fr.app.model.sensor.Sensor;
+import fr.app.model.sensor.TemperatureSensor;
 import fr.app.view.LightingManager;
 import fr.app.view.WaterFilterManager;
 import fr.app.controller.DroneController;
 import fr.app.model.Drone;
 import fr.app.view.DroneCameraManager;
 import fr.app.view.WaterDistortionManager;
+import fr.app.model.PilotCommand;
+import fr.app.model.DroneStatus;
+import com.jme3.math.Vector3f;
 
 
 /**
@@ -34,6 +40,8 @@ public class Main extends SimpleApplication {
     private WaterDistortionManager waterDistortionManager;
     private DroneManager droneManager;
     private FilterPostProcessor fpp;
+    private Sensor sensor;
+    private TemperatureSensor temperatureSensor;
     private boolean debugMode = false;
     private boolean loading = true;
 
@@ -57,6 +65,10 @@ public class Main extends SimpleApplication {
         // Initialise model
         this.model = new WorldView();
         this.guiManager = new GUIManager(assetManager, settings, guiNode);
+
+        flyCam.setEnabled(false);
+        inputManager.setCursorVisible(true);
+        setPauseOnLostFocus(false);
 
         PhysicsEngine physicsEngine = new PhysicsEngine(this, this.model, this.guiManager, debugMode);
 
@@ -83,6 +95,9 @@ public class Main extends SimpleApplication {
             // Gets the manager and controller te be used here
             droneCameraManager = droneManager.getDroneCameraManager();
             droneController = droneManager.getDroneController();
+            // Adding captors
+            this.temperatureSensor = new TemperatureSensor("TempSensor");
+            drone.addSensor(temperatureSensor);
             // Creates the water filter
             WaterFilterManager waterFilterManager = new WaterFilterManager(fpp, viewPort, rootNode, model);
             this.waterDistortionManager = new WaterDistortionManager(fpp, viewPort, droneManager.getDrone(), model);
@@ -108,5 +123,60 @@ public class Main extends SimpleApplication {
         if (waterDistortionManager != null){
             waterDistortionManager.update();
         }
+
+        for (Sensor sensor : drone.getSensors()) {
+            sensor.update(drone);
+            if (sensor instanceof TemperatureSensor) {
+                TemperatureSensor ts = (TemperatureSensor) sensor;
+                ts.affectDrone(drone);
+                System.out.println(
+                        "Température : " + ts.getTemperature()
+                );
+            }
+        }
+
+
     }
+
+    public void executeNetworkCommand(String droneId, PilotCommand command) {
+
+        if (drone == null || droneController == null) {
+            return;
+        }
+
+        if (!drone.getId().equals(droneId)) {
+            System.out.println("[Simulation] Drone inconnu : " + droneId);
+            return;
+        }
+
+        droneController.applyCommandOnce(command);
+
+        System.out.println("[Simulation] Commande appliquée à " + droneId + " : " + command);
+    }
+
+
+    public DroneStatus getDroneStatus(String droneId) {
+
+        DroneStatus status = new DroneStatus();
+
+        if (drone == null || !drone.getId().equals(droneId)) {
+            status.setState("Drone inconnu");
+            return status;
+        }
+
+        Vector3f position = drone.getDroneSpatial().getLocalTranslation();
+
+        status.setX(position.x);
+        status.setY(position.y);
+        status.setZ(position.z);
+        status.setSpeed(0.0);
+        status.setState("En vol");
+
+        if (temperatureSensor != null) {
+            status.setTemperature(temperatureSensor.getTemperature());
+        }
+
+        return status;
+    }
+
 }

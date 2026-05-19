@@ -11,6 +11,7 @@ import com.jme3.scene.control.UpdateControl;
 import fr.app.model.Drone;
 import fr.app.model.DroneMovement;
 import fr.app.model.WorldView;
+import fr.app.model.PilotCommand;
 
 public class DroneController {
 
@@ -116,6 +117,35 @@ public class DroneController {
     /**
      * Set up the key mappings
      */
+    public void executeCommand(PilotCommand command,
+                               boolean pressed) {
+
+        switch (command) {
+
+            case FORWARD: forwardIntention = pressed;break;
+            case BACKWARD: backwardIntention = pressed;break;
+            case LEFT: leftIntention = pressed;break;
+            case RIGHT: rightIntention = pressed;break;
+            case ROTATELEFT: rotateLeftIntention = pressed;break;
+            case ROTATERIGHT: rotateRightIntention = pressed;break;
+            case UP: upIntention = pressed;break;
+            case DOWN: downIntention = pressed;break;
+            case PITCHUP:pitchForwardIntention = pressed;break;
+            case PITCHDOWN: pitchBackwardIntention = pressed; break;
+            case ROLLLEFT: rollLeftIntention = pressed; break;
+            case ROLLRIGHT: rollRightIntention = pressed; break;
+
+            case STOP:
+                forwardIntention = false;
+                backwardIntention = false;
+                leftIntention = false;
+                rightIntention = false;
+                upIntention = false;
+                downIntention = false;
+                break;
+        }
+    }
+
     public void setUpKeys() {
         // Key mappings
         // Moving horizontally
@@ -157,22 +187,64 @@ public class DroneController {
         public void onAction(String name,
                              boolean keyPressed,
                              float tpf) {
-            switch (name) {
-                    case "FORWARD": forwardIntention = keyPressed;break;
-                    case "BACKWARD": backwardIntention = keyPressed;break;
-                    case "LEFT": leftIntention = keyPressed;break;
-                    case "RIGHT": rightIntention = keyPressed;break;
-                    case "ROTATELEFT": rotateLeftIntention = keyPressed;break;
-                    case "ROTATERIGHT": rotateRightIntention = keyPressed;break;
-                    case "UP": upIntention = keyPressed;break;
-                    case "DOWN": downIntention = keyPressed;break;
-                    case "PITCHUP":pitchForwardIntention = keyPressed;break;
-                    case "PITCHDOWN": pitchBackwardIntention = keyPressed; break;
-                    case "ROLLLEFT": rollLeftIntention = keyPressed; break;
-                    case "ROLLRIGHT": rollRightIntention = keyPressed; break;
+
+            try {
+                PilotCommand command = PilotCommand.valueOf(name);
+                executeCommand(command, keyPressed);
+            } catch (IllegalArgumentException e) {
+                System.out.println("Commande inconnue : " + name);
             }
         }
     };
+
+
+
+    public void applyCommandOnce(PilotCommand command) {
+
+        float step = 0.6f;
+        float rotationStep = 0.25f;
+
+        Vector3f forward =
+                drone.getDroneSpatial()
+                        .getLocalRotation()
+                        .mult(Vector3f.UNIT_Z);
+
+        Vector3f up =
+                drone.getDroneSpatial()
+                        .getLocalRotation()
+                        .mult(Vector3f.UNIT_Y);
+
+        switch (command) {
+
+            case FORWARD:
+                drone.getDroneSpatial().move(forward.mult(step));
+                break;
+
+            case BACKWARD:
+                drone.getDroneSpatial().move(forward.negate().mult(step));
+                break;
+
+            case LEFT:
+                drone.getDroneSpatial().rotate(0f, rotationStep, 0f);
+                break;
+
+            case RIGHT:
+                drone.getDroneSpatial().rotate(0f, -rotationStep, 0f);
+                break;
+
+            case UP:
+                drone.getDroneSpatial().move(up.mult(step));
+                break;
+
+            case DOWN:
+                drone.getDroneSpatial().move(up.negate().mult(step));
+                break;
+
+            case STOP:
+                executeCommand(PilotCommand.STOP, true);
+                break;
+        }
+    }
 
     /**
      * Method to calculate the movement of a physic object.

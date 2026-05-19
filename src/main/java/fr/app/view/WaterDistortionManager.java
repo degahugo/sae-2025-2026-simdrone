@@ -38,9 +38,9 @@ public class WaterDistortionManager {
         float droneHeight = drone.getDroneSpatial().getWorldTranslation().y;
         float waterHeight = world.getWaterHeight();
         float profondeur = waterHeight - droneHeight;
-        float intensity = Math.min(profondeur * 0.03f, 0.35f);
         if (droneHeight < waterHeight) {
         // test immersion, si immergée on continue
+            float intensity = Math.min(profondeur * 0.03f, 0.35f);
             // profondeur *0;03f car l'image ne doit pas être trop grande pour qu'on puisse la voir.
             // profondeur -> intensité visuelle
             // Distortion radiale
