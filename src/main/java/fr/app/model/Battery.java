@@ -30,8 +30,7 @@ public class Battery {
         return niveau;
     }
     public float getMaxNiveau() {
-        return maxNiveau;
-    }
+        return maxNiveau;}
     public float getPercentage() {
         return (niveau / maxNiveau) * 100f;
     }
