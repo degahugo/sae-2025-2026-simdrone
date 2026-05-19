@@ -99,12 +99,14 @@
                GridPane.columnSpan="3"/>
 
         <Button text="▲ Avancer"
-                onAction="#moveForward"
+                onMousePressed="#moveForward"
+                onMouseReleased="#stopDrone"
                 GridPane.columnIndex="1"
                 GridPane.rowIndex="1"/>
 
         <Button text="◀ Gauche"
-                onAction="#moveLeft"
+                onMousePressed="#moveLeft"
+                onMouseReleased="#stopDrone"
                 GridPane.rowIndex="2"/>
 
         <Button text="STOP"
@@ -113,21 +115,25 @@
                 GridPane.rowIndex="2"/>
 
         <Button text="Droite ▶"
-                onAction="#moveRight"
+                onMousePressed="#moveRight"
+                onMouseReleased="#stopDrone"
                 GridPane.columnIndex="2"
                 GridPane.rowIndex="2"/>
 
         <Button text="▼ Reculer"
-                onAction="#moveBackward"
+                onMousePressed="#moveBackward"
+                onMouseReleased="#stopDrone"
                 GridPane.columnIndex="1"
                 GridPane.rowIndex="3"/>
 
         <Button text="Monter"
-                onAction="#moveUp"
+                onMousePressed="#moveUp"
+                onMouseReleased="#stopDrone"
                 GridPane.rowIndex="4"/>
 
         <Button text="Descendre"
-                onAction="#moveDown"
+                onMousePressed="#moveDown"
+                onMouseReleased="#stopDrone"
                 GridPane.columnIndex="2"
                 GridPane.rowIndex="4"/>
 

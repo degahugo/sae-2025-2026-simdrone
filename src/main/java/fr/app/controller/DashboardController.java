@@ -90,7 +90,7 @@ public class DashboardController {
                 logArea.appendText("Erreur lancement simulation : " + e.getMessage() + "\n");
             }
         } else {
-            logArea.appendText("❌ Client non connecté\n");
+            logArea.appendText(" Client non connecté\n");
         }
     }
 
