@@ -7,6 +7,7 @@ import com.jme3.system.AppSettings;
 import fr.app.model.PhysicsEngine;
 import fr.app.model.WorldView;
 //import fr.app.view.CameraManager;
+import fr.app.model.sensor.DepthSensor;
 import fr.app.model.sensor.Sensor;
 import fr.app.model.sensor.TemperatureSensor;
 import fr.app.view.LightingManager;
@@ -82,6 +83,10 @@ public class Main extends SimpleApplication {
 
         this.temperatureSensor = new TemperatureSensor("TempSensor");
         drone.addSensor(temperatureSensor);
+
+        DepthSensor depthSensor = new DepthSensor("DepthSensor");
+        drone.addSensor(depthSensor);
+
 
         this.droneController = new DroneController(inputManager, drone);
         this.droneController.setUpKeys();
