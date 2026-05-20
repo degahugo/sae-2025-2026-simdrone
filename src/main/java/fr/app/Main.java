@@ -7,10 +7,7 @@ import com.jme3.system.AppSettings;
 import fr.app.model.PhysicsEngine;
 import fr.app.model.WorldView;
 //import fr.app.view.CameraManager;
-import fr.app.model.sensor.CompassSensor;
-import fr.app.model.sensor.DepthSensor;
-import fr.app.model.sensor.Sensor;
-import fr.app.model.sensor.TemperatureSensor;
+import fr.app.model.sensor.*;
 import fr.app.view.LightingManager;
 import fr.app.view.WaterFilterManager;
 import fr.app.controller.DroneController;
@@ -33,6 +30,8 @@ public class Main extends SimpleApplication {
     private WaterDistortionManager waterDistortionManager;
     private Sensor sensor;
     private TemperatureSensor temperatureSensor;
+    private DepthSensor depthSensor;
+    private PressureSensor pressureSensor;
 
     /**
      * Point d'entrée de l'application.
@@ -92,6 +91,10 @@ public class Main extends SimpleApplication {
         // Capteur de compas
         CompassSensor compassSensor = new CompassSensor("CompassSensor");
         drone.addSensor(compassSensor);
+        // Capteur de pression
+        PressureSensor pressureSensor = new PressureSensor("PressureSensor", depthSensor);
+        drone.addSensor(pressureSensor);
+
 
 
 
@@ -137,6 +140,9 @@ public class Main extends SimpleApplication {
             }
             if (sensor instanceof CompassSensor cs) {
                 System.out.println("Cap : " + cs.getHeading() + "°");
+            }
+            if (sensor instanceof PressureSensor cs) {
+                System.out.println("Pression : " + cs.getPressure() + "bar");
             }
 
 
