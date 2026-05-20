@@ -34,9 +34,7 @@ public class Main extends SimpleApplication {
     private Sensor sensor;
     private TemperatureSensor temperatureSensor;
 
-    /**
-     * Point d'entrée de l'application.
-     */
+
     public static void main(String[] args) {
 
         AppSettings settings = new AppSettings(true);
