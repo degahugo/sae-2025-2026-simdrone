@@ -4,6 +4,7 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.asset.AssetManager;
 import com.jme3.asset.plugins.FileLocator;
 import com.jme3.bullet.BulletAppState;
+import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.collision.shapes.MeshCollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
@@ -16,6 +17,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.*;
 import com.jme3.scene.shape.Box;
 import com.jme3.util.BufferUtils;
+import fr.app.view.GUIManager;
 import fr.utln.dronsim.viewer.primitives.ReferentialNode;
 
 public class PhysicsEngine{
@@ -25,56 +27,125 @@ public class PhysicsEngine{
     private AssetManager assetManager;
     private WorldView model;
     private Node rootNode;
+    private GUIManager guiManager;
 
-    public PhysicsEngine(SimpleApplication app, WorldView model) {
+    public PhysicsEngine(SimpleApplication app, WorldView model, GUIManager guiManager, boolean debugMode) {
         this.model = model;
         this.app = app;
         // Getting the asset manager
         this.assetManager = this.app.getAssetManager();
+        // Getting the gui manager
+        this.guiManager = guiManager;
         // Initialize bullet engine
         this.bulletAppState = new BulletAppState();
-        //
         this.rootNode = this.app.getRootNode();
-        // Configure le mode de threading (SEQUENTIAL est d'ailleurs le mode par défaut)
+        // Threading mode : SEQUENTIAL (by default)
         this.bulletAppState.setThreadingType(BulletAppState.ThreadingType.SEQUENTIAL);
         // Attach it to the global manager
         this.app.getStateManager().attach(bulletAppState);
-        // true pour voir les boites de collision en bleu (nom nom les performances)
-        this.bulletAppState.setDebugEnabled(false);
-        System.out.println("PhysicsEngine : Initialisé avec succès !");
+        // true to see the blue wireframe, false if you want FPS
+        this.bulletAppState.setDebugEnabled(debugMode);
+        System.out.println("PhysicsEngine : Successfully initialized");
     }
 
     /**
      * Create the terrain node
+     * @param terrain : 1 = line, 2 = spiral, 3 = point_borlo
      * @return A node
      */
-    public Node createTerrainScene() {
+    /*public Node CreateTerrainScene() {
+        // Old way of doing it, here for legacy and because I didn't commited it before changing it because the issue wasn't fixed
         Node node = new Node("TerrainNode");
-
         // Locators config, path of the assets
         assetManager.registerLocator("data/asset", FileLocator.class);
         assetManager.registerLocator("data/asset/terrain/military", FileLocator.class);
-
+        System.out.println("Loading terrain");
         // Load terrain with texture
-        Spatial terrain = assetManager.loadModel("terrain/military/target-approach-line-terrain.j3o");
+        Spatial terrainVisuel = assetManager.loadModel("terrain/military/target-approach-line-terrain.j3o");
+        Spatial terrainLowPoly = assetManager.loadModel("terrain/military/target-approach-line-terrain-lowpoly.j3o");
+        System.out.println("Terrain loaded");
         // Generates a terrain using a custom-made method to choose the method used (better for testing)
-        //CollisionShape sceneShape = GenerateLandscape(terrain, "DynamicMesh");
-
+        CollisionShape sceneShape = GenerateLandscape(terrainLowPoly, "Mesh");
         // Generates a custom-made mesh
-        MeshCollisionShape sceneShape = createCustomCollisionMesh();
-
+        //MeshCollisionShape sceneShape = createCustomCollisionMesh();
         RigidBodyControl landscape = new RigidBodyControl(sceneShape, 0); // masse 0 = objet statique
         landscape.setFriction(0.1f);
         landscape.setRestitution(0.2f);
-        terrain.addControl(landscape);
+        terrainVisuel.addControl(landscape);
         bulletAppState.getPhysicsSpace().add(landscape);
-
         // Correct axes for water rendering (Y = vertical)
-        terrain.rotate(-FastMath.HALF_PI, 0.0f, 0.0f);
-        landscape.setPhysicsRotation(terrain.getWorldRotation());
+        terrainVisuel.rotate(-FastMath.HALF_PI, 0.0f, 0.0f);
+        landscape.setPhysicsRotation(terrainVisuel.getWorldRotation());
+        node.attachChild(terrainVisuel);
+        return node;
+    }*/
+    public Node CreateTerrainScene(int terrain, Runnable onTerrainReady) {
+        Node node = new Node("TerrainNode");
+        // Configuration des locators
+        assetManager.registerLocator("data/asset", FileLocator.class);
+        String name;
+        /*
+        terrain =
+                1 : target-approach-line-terrain
+                2 : target-approach-spiral-terrain
+                3 : point_borlo
+         */
+        if(terrain==1){
+            assetManager.registerLocator("data/asset/terrain/military", FileLocator.class);
+            name = "terrain/military/target-approach-line-terrain";
+        } else if (terrain==2) {
+            assetManager.registerLocator("data/asset/terrain/military", FileLocator.class);
+            name = "terrain/military/target-approach-spiral-terrain";
+        } else {
+            name = "";
+            if(terrain==3){
+                // Add point_borlo things
+            }
+        }
+        guiManager.CreateWaitingGUI();
+        // Using thread to launch the simulator faster
+        new Thread(() -> {
+            // On charge les fichiers
+            System.out.println("Loading terrain " + name + " in the background");
+            Spatial terrainVisuel = assetManager.loadModel(name+".j3o"); // Visuel
+            Spatial terrainLowPoly = assetManager.loadModel(name+"-lowpoly.j3o"); // Physique
+            System.out.println("Terrain loaded");
+            System.out.println("Beggining mesh generation");
+            // Generating mesh
+            CollisionShape sceneShape = CollisionShapeFactory.createMeshShape(terrainLowPoly);
+            // JMonkey stuff
+            RigidBodyControl landscape = new RigidBodyControl(sceneShape, 0);
+            /*
+            A bit of friction to avoid things getting stuck in odd ways and a bit bouncy
+            Both should be adjusted to get a realistic underwater physic
+             */
+            landscape.setFriction(0.1f);
+            landscape.setRestitution(0.2f);
+            // Correct axes
+            terrainVisuel.rotate(-FastMath.HALF_PI, 0.0f, 0.0f);
+            landscape.setPhysicsRotation(terrainVisuel.getWorldRotation());
+            // Once the processing is finished, we can inject it cleanly
+            // app should be a reference to JME application (SimpleApplication)
+            app.enqueue(() -> {
+                terrainVisuel.addControl(landscape);
+                bulletAppState.getPhysicsSpace().add(landscape);
+                node.attachChild(terrainVisuel);
+                System.out.println("Terrain visual and physic injected succesfully");
+                guiManager.RemoveWaitingGUI();
+                // Callback to generate cubes or drones
+                if (onTerrainReady != null) {
+                    // The physics engine knows it has something to do but it doesn't know what it is
+                    onTerrainReady.run();
+                }
+                return null;
+            });
+        }).start();
 
-        node.attachChild(terrain);
-
+        /*
+        Return the node without the RigidBodyControl to accelerate loading and avoiding freezes on low end computers.
+        Side effect : now you can go through the ground while it's still processing.
+         */
+        System.out.println("Returning node early without the mesh done");
         return node;
     }
 
@@ -83,7 +154,8 @@ public class PhysicsEngine{
      * les 11 millions de triangles du modèle visuel.
      * @return MeshCollisionShape La forme de collision simplifiée
      */
-    private MeshCollisionShape createCustomCollisionMesh() {
+    @Deprecated
+    private MeshCollisionShape CreateCustomCollisionMesh() {
         System.out.println("Creating a custom mesh for the terrain");
         // Dimensions
         System.out.println("Defining dimensions");
@@ -183,7 +255,7 @@ public class PhysicsEngine{
                 yield CollisionShapeFactory.createBoxShape(terrain);
             }
         };
-        System.out.println("finished terrain mesh");
+        System.out.println("Finished terrain mesh using the " + type + " method");
         return sceneShape;
     }
 
@@ -194,16 +266,14 @@ public class PhysicsEngine{
      * @param z the z coordinate
      * @param color the color of the cube
      */
-    public void spawnTestCube(float x, float y, float z, ColorRGBA color) {
+    public void SpawnTestCube(Node cubeNode, float x, float y, float z, ColorRGBA color) {
         // Cube of 0.5m
         Box boxMesh = new Box(0.5f, 0.5f, 0.5f);
         Geometry cubeGeo = new Geometry("TestCube", boxMesh);
-
         // Red material
         Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
         mat.setColor("Color", color);
         cubeGeo.setMaterial(mat);
-
         // Position and angle
         cubeGeo.setLocalTranslation(new Vector3f(x, y, z));
         Quaternion rotation = new Quaternion();
@@ -211,26 +281,65 @@ public class PhysicsEngine{
                 0,
                 20 * FastMath.DEG_TO_RAD);
         cubeGeo.setLocalRotation(rotation);
-        rootNode.attachChild(cubeGeo);
-
+        cubeNode.attachChild(cubeGeo);
         // Cube physics
         RigidBodyControl cubePhys = new RigidBodyControl(1.0f);
         cubeGeo.addControl(cubePhys);
-
         // Added restitution and a friction to avoid it balancing at unrealistic angles
         cubePhys.setRestitution(0.2f);
         cubePhys.setFriction(0.1f);
-
         // Add to physic space
         bulletAppState.getPhysicsSpace().add(cubePhys);
     }
 
+    /**
+     * Creates a hitbox for the drone
+     * @param drone The drone that need to get a hitbox generated
+     * @param mode Type of hitbox, "BR2R4" and "Guardian" are manual and anything else is an automatic box (not very good)
+     */
+    public void CreateDroneHitbox(Drone drone, String mode){
+        System.out.println("Generating the drone hitbox using the ");
+        CollisionShape droneHitbox = switch(mode){
+            case "BR2R4" :
+                System.out.println("Manual hitbox for the " + mode + ".");
+                yield new BoxCollisionShape(new Vector3f(0.18f, 0.15f, 0.23f));
+            case "Guardian" :
+                System.out.println("Manual hitbox for the " + mode + ".");
+                yield new BoxCollisionShape(new Vector3f(0.22f, 0.13f, 0.4f));
+            default :
+                System.out.println("Automatic box.");
+                yield CollisionShapeFactory.createBoxShape(drone.getDroneSpatial());
+        };
+        // Set mass to 0 to have the drone float
+        RigidBodyControl dronePhysics = new RigidBodyControl(droneHitbox, 5.0f);
+        dronePhysics.setFriction(0.3f);
+        dronePhysics.setRestitution(0.5f);
+        // Inertia
+        dronePhysics.setLinearDamping(0.4f);
+        dronePhysics.setAngularDamping(0.6f);
+        // Attach the physic to the visual
+        drone.getDroneSpatial().addControl(dronePhysics);
+        // Add the rigid body to the physic space
+        bulletAppState.getPhysicsSpace().add(dronePhysics);
+    }
+
+    public void CreateDroneHitbox(Drone drone){
+        CreateDroneHitbox(drone, "Auto");
+    }
+
+    /**
+     * Create a referential
+     * @param node node where the referential should be created
+     */
     public void createRefNode(Node node){
         ReferentialNode refNode = new ReferentialNode(assetManager);
         node.attachChild(refNode);
     }
 
-    // Accesseur pour permettre à d'autres classes d'ajouter des objets physiques (ex: ton drone)
+    /**
+     * Getter to add physics objects
+     * @return BulletAppState
+     */
     public BulletAppState getBulletAppState() {
         return bulletAppState;
     }

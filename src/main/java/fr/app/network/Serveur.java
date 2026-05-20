@@ -5,7 +5,16 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+
+import fr.app.model.CommandeMessage;
+import fr.app.model.DroneStatus;
+import fr.app.model.PilotCommand;
 import fr.app.network.ProtocoleDeChiffrement;
+import fr.app.structure.JsonSerializer;
+import fr.app.model.MessageType;
+import fr.utln.dronsim.viewer.example.WaterFilterExample;
+import fr.app.model.DroneStatus;
+import fr.app.Main;
 import java.security.PublicKey;
 
 
@@ -19,10 +28,11 @@ public class Serveur {
 
     private final int port;
     private ServerSocket serverSocket;
-    //  Ajout du protocole de chiffrement
+    private Main simulation;    //  Ajout du protocole de chiffrement
     private ProtocoleDeChiffrement protocole = new ProtocoleDeChiffrement();
 
-
+    // Serialisation
+    private JsonSerializer serializer = new JsonSerializer();
 
     public Serveur(int port) {
         this.port = port;
@@ -56,6 +66,7 @@ public class Serveur {
     }
 
     private void handleClient(Socket socket) {
+        String clientIp = socket.getInetAddress().getHostAddress();
         try {
             //  Envoi de la clé publique RSA au client
             ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
@@ -74,20 +85,106 @@ public class Serveur {
             PrintWriter writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
 
             String line;
-            while ((line = reader.readLine()) != null) {
+
+            /*while ((line = reader.readLine()) != null) {
                 System.out.println("[Serveur] Reçu : " + line);
                 writer.println("ACK: " + line);
+            }*/
+            while ((line = reader.readLine()) != null) {
+                System.out.println("[Serveur] " + clientIp + " -> " + line);
+
+                //Conversion String en bytes pour la désérialisation
+                byte[] bytes = line.getBytes();
+                System.out.println("[Serveur] Bytes reçus         : " + java.util.Arrays.toString(bytes));
+
+                // Désérialisation : bytes vers objet Java (ici un enum de PilotCommand)
+                CommandeMessage msg = serializer.deserisation(bytes, CommandeMessage.class);
+
+                String droneId = msg.getDroneId();
+                PilotCommand command = msg.getCommand();
+                MessageType type = msg.getType();
+
+                System.out.println("[Serveur] Type message       : " + type);
+                System.out.println("[Serveur] Drone ciblé        : " + droneId);
+                System.out.println("[Serveur] Commande reçue     : " + command);
+
+                if (type == MessageType.START_SIMULATION) {
+
+                    if (simulation == null) {
+
+                        simulation = new Main();
+                        com.jme3.system.AppSettings settings =
+                                new com.jme3.system.AppSettings(true);
+
+                        settings.setTitle("DronSim - Simulation 3D");
+                        settings.setWidth(1024);
+                        settings.setHeight(768);
+
+                        simulation.setShowSettings(false);
+                        simulation.setSettings(settings);
+
+                        // IMPORTANT :
+                        // la simulation continue même sans focus
+                        simulation.setPauseOnLostFocus(false);
+
+                        simulation.start();
+
+                        System.out.println("[Serveur] Simulation lancée pour " + droneId);
+
+                    } else {
+
+                        System.out.println("[Serveur] Simulation déjà lancée.");
+                    }
+                }
+
+                if (type == MessageType.COMMAND) {
+
+                    if (simulation == null) {
+                        System.out.println("[Serveur] Impossible d'appliquer la commande : simulation non lancée.");
+                    } else {
+                        simulation.enqueue(() -> {
+                            simulation.executeNetworkCommand(droneId, command);
+                            return null;
+                        });
+                    }
+                }
+                // Construit le statut du drone à renvoyer
+                DroneStatus status;
+
+                if (type == MessageType.START_SIMULATION) {
+
+                    status = new DroneStatus();
+                    status.setState("Simulation lancée");
+
+                } else if (simulation != null) {
+
+                    final DroneStatus[] statusHolder = new DroneStatus[1];
+
+                    simulation.enqueue(() -> {
+                        statusHolder[0] = simulation.getDroneStatus(droneId);
+                        return null;
+                    }).get();
+
+                    status = statusHolder[0];
+
+                } else {
+
+                    status = new DroneStatus();
+                    status.setState("Simulation non lancée");
+                }
+
+                // Sérialise et envoie le statut au client : conversion en Json
+                byte[] data = serializer.serialisation(status);
+                String jsonStatus = new String(data);
+                System.out.println("[Serveur] Statut sérialisé envoyé : " + jsonStatus);
+                //System.out.println("[Serveur] Bytes statut envoyé : " + java.util.Arrays.toString(data));
+
+                writer.println(jsonStatus);
             }
 
         } catch (Exception e) {
-            System.out.println("[Serveur] Client déconnecté : " + e.getMessage());
-        }
+            System.out.println("[Serveur] Client déconnecté (" + clientIp + ") : " + e.getMessage());        }
     }
-
-
-
-
-
 
     // Arrête proprement le serveur en fermant le ServerSocket
     // Cela interrompt aussi le accept() bloquant dans start()

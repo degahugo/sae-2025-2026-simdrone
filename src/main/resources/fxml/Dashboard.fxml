@@ -32,14 +32,28 @@
                    style="-fx-text-fill: white;
                           -fx-font-size: 18px;
                           -fx-font-weight: bold;"/>
-
-            <Label text="Position : x=0 | y=0 | z=0"
+            <Label fx:id="positionLabel"
+                   text="Position : x=0 | y=0 | z=0"
                    style="-fx-text-fill: white;"/>
 
-            <Label text="Vitesse : 0 m/s"
+            <Label fx:id="speedLabel"
+                   text="Vitesse : 0 m/s"
                    style="-fx-text-fill: white;"/>
 
-            <Label text="État : En attente"
+            <Label fx:id="temperatureLabel"
+                   text="Température : 0 °C"
+                   style="-fx-text-fill: white;"/>
+
+            <Label fx:id="depthLabel"
+                   text="Profondeur : 0 m"
+                   style="-fx-text-fill: white;"/>
+
+            <Label fx:id="intensityLabel"
+                   text="Intensité : 0"
+                   style="-fx-text-fill: white;"/>
+
+            <Label fx:id="stateLabel"
+                   text="État : En attente"
                    style="-fx-text-fill: white;"/>
 
             <Label text="Batterie : 100%"
@@ -85,12 +99,14 @@
                GridPane.columnSpan="3"/>
 
         <Button text="▲ Avancer"
-                onAction="#moveForward"
+                onMousePressed="#moveForward"
+                onMouseReleased="#stopDrone"
                 GridPane.columnIndex="1"
                 GridPane.rowIndex="1"/>
 
         <Button text="◀ Gauche"
-                onAction="#moveLeft"
+                onMousePressed="#moveLeft"
+                onMouseReleased="#stopDrone"
                 GridPane.rowIndex="2"/>
 
         <Button text="STOP"
@@ -99,23 +115,33 @@
                 GridPane.rowIndex="2"/>
 
         <Button text="Droite ▶"
-                onAction="#moveRight"
+                onMousePressed="#moveRight"
+                onMouseReleased="#stopDrone"
                 GridPane.columnIndex="2"
                 GridPane.rowIndex="2"/>
 
         <Button text="▼ Reculer"
-                onAction="#moveBackward"
+                onMousePressed="#moveBackward"
+                onMouseReleased="#stopDrone"
                 GridPane.columnIndex="1"
                 GridPane.rowIndex="3"/>
 
         <Button text="Monter"
-                onAction="#moveUp"
+                onMousePressed="#moveUp"
+                onMouseReleased="#stopDrone"
                 GridPane.rowIndex="4"/>
 
         <Button text="Descendre"
-                onAction="#moveDown"
+                onMousePressed="#moveDown"
+                onMouseReleased="#stopDrone"
                 GridPane.columnIndex="2"
                 GridPane.rowIndex="4"/>
+
+        <Button text="Lancer simulation"
+                onAction="#startSimulation"
+                GridPane.columnIndex="0"
+                GridPane.rowIndex="5"
+                GridPane.columnSpan="3"/>
 
     </GridPane>
 

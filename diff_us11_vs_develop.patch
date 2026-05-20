@@ -1,0 +1,1303 @@
+diff --git a/src/main/java/fr/app/Main.java b/src/main/java/fr/app/Main.java
+index 3f6f062..36955e3 100644
+--- a/src/main/java/fr/app/Main.java
++++ b/src/main/java/fr/app/Main.java
+@@ -5,12 +5,9 @@ import com.jme3.math.ColorRGBA;
+ import com.jme3.post.FilterPostProcessor;
+ import com.jme3.scene.*;
+ import com.jme3.system.AppSettings;
+-import fr.app.model.DroneManager;
+ import fr.app.model.PhysicsEngine;
+ import fr.app.model.WorldView;
+-import fr.app.view.CameraManager;
+-import fr.app.view.GUIManager;
+-import fr.app.view.CameraManager;
++//import fr.app.view.CameraManager;
+ import fr.app.model.sensor.Sensor;
+ import fr.app.model.sensor.TemperatureSensor;
+ import fr.app.view.LightingManager;
+@@ -31,19 +28,15 @@ public class Main extends SimpleApplication {
+ 
+     private WorldView model;
+     private LightingManager lightingManager;
+-    private CameraManager cameraManager;
+-    private Node cubesNode = new Node("CubesNode");
+-    private GUIManager guiManager;
++    //private CameraManager cameraManager;
+     private Drone drone;
+     private DroneController droneController;
+     private DroneCameraManager droneCameraManager;
+     private WaterDistortionManager waterDistortionManager;
+-    private DroneManager droneManager;
+     private FilterPostProcessor fpp;
+     private Sensor sensor;
+     private TemperatureSensor temperatureSensor;
+-    private boolean debugMode = false;
+-    private boolean loading = true;
++    private float lastTemperature = Float.NaN; // dernière température enregistré
+ 
+ 
+     public static void main(String[] args) {
+@@ -64,63 +57,68 @@ public class Main extends SimpleApplication {
+     public void simpleInitApp() {
+         // Initialise model
+         this.model = new WorldView();
+-        this.guiManager = new GUIManager(assetManager, settings, guiNode);
+ 
+         flyCam.setEnabled(false);
+         inputManager.setCursorVisible(true);
+         setPauseOnLostFocus(false);
+ 
+-        PhysicsEngine physicsEngine = new PhysicsEngine(this, this.model, this.guiManager, debugMode);
++        PhysicsEngine physicsEngine = new PhysicsEngine(this, this.model);
+ 
+         // Configure scene
+         this.lightingManager = new LightingManager(rootNode, cam, assetManager);
+         this.lightingManager.initLighting();
+         // Filter processor
+-        this.fpp = new FilterPostProcessor(assetManager);
+-        this.droneManager = new DroneManager(assetManager,rootNode,physicsEngine,inputManager,cam, model);
++        fpp = new FilterPostProcessor(assetManager);
+ 
+         //this.cameraManager = new CameraManager(cam, flyCam);
+         // Set false to disable flying camera
+         //this.cameraManager.configureCamera(false);
+ 
+-        // Creates scene and with a callback add the rest of the physics objects
+-        Node sceneNode = physicsEngine.CreateTerrainScene(1, () -> {
+-            // Only executes when the terrain is ready
+-            // Add all physics objects here to avoid issues with the terrain not being finished
+-            System.out.println("Terrain ready : adding the CUBES");
+-            //physicsEngine.SpawnTestCube(rootNode, -4f, 15f, 0f, ColorRGBA.Red);
+-            //physicsEngine.SpawnTestCube(rootNode, 0f, 2f, 0f, ColorRGBA.Yellow);
+-            // Create a drone
+-            droneManager.CreateDrone("BR2R4");
+-            // Gets the manager and controller te be used here
+-            this.droneCameraManager = droneManager.getDroneCameraManager();
+-            this.droneController = droneManager.getDroneController();
+-            // Adding captors
+-            this.temperatureSensor = new TemperatureSensor("TempSensor");
+-            this.drone = droneManager.getDrone();
+-            this.drone.addSensor(temperatureSensor);
+-            // Creates the water filter
+-            WaterFilterManager waterFilterManager = new WaterFilterManager(fpp, viewPort, rootNode, model);
+-            this.waterDistortionManager = new WaterDistortionManager(fpp, viewPort, droneManager.getDrone(), model);
+-
+-            // End of the loading, will execute the simpleUpdate
+-            loading = false;
+-        });
++        // Creates scene
++        Node sceneNode = physicsEngine.createTerrainScene();
+         // Attach scene to node
+         rootNode.attachChild(sceneNode);
++        // Create a drone
++        Node droneNode = new Node("Drone");
++
++        Spatial droneModel = assetManager.loadModel("vehicle/bluerobotics/br2r4/br2-r4-vehicle.j3o");
++
++        droneNode.attachChild(droneModel);
++
++        droneNode.move(0f, 1f, 0f);
++
++        sceneNode.attachChild(droneNode);
++
++        this.drone = new Drone("drone1", droneNode);
++        this.temperatureSensor = new TemperatureSensor("TempSensor");
++        drone.addSensor(temperatureSensor);
++
++        this.droneController = new DroneController(inputManager, drone);
++
++        this.droneController.setUpKeys();
++
++        this.droneCameraManager = new DroneCameraManager(cam, drone);
++
++        // Creates the water filter
++        WaterFilterManager waterFilterManager = new WaterFilterManager(fpp, viewPort, rootNode, model);
++        this.waterDistortionManager = new WaterDistortionManager(assetManager, viewPort, drone, model);
++        // Add tests cubes to test collisions, should be commented or removed later
++        physicsEngine.spawnTestCube(0, 10f, 0, ColorRGBA.Red);
++        physicsEngine.spawnTestCube(0, 2f, 0, ColorRGBA.Yellow);
++
+     }
+ 
+     @Override
+     public void simpleUpdate(float tpf){
+-        if (loading) {
+-            return;
+-        }
++
+         if (droneController != null){
+-            droneController.updateMovement();
++            droneController.updateMovement(tpf);
+         }
++
+         if (droneCameraManager != null){
+             droneCameraManager.update(tpf);
+         }
++
+         if (waterDistortionManager != null){
+             waterDistortionManager.update();
+         }
+@@ -130,9 +128,14 @@ public class Main extends SimpleApplication {
+             if (sensor instanceof TemperatureSensor) {
+                 TemperatureSensor ts = (TemperatureSensor) sensor;
+                 ts.affectDrone(drone);
+-                System.out.println(
++                /*System.out.println(
+                         "Température : " + ts.getTemperature()
+-                );
++                );*/
++                float temp = ts.getTemperature();
++                if (Math.abs(temp - lastTemperature) > 0.01f) {
++                    lastTemperature = temp;
++                    System.out.println("Température : " + temp);
++                }
+             }
+         }
+ 
+@@ -176,6 +179,10 @@ public class Main extends SimpleApplication {
+         if (temperatureSensor != null) {
+             status.setTemperature(temperatureSensor.getTemperature());
+         }
++        if (waterDistortionManager != null) {
++            status.setDepth(waterDistortionManager.getProfondeur());
++            status.setIntensity(waterDistortionManager.getIntensity());
++        }
+ 
+         return status;
+     }
+diff --git a/src/main/java/fr/app/controller/DashboardController.java b/src/main/java/fr/app/controller/DashboardController.java
+index cb4e142..267c4cd 100644
+--- a/src/main/java/fr/app/controller/DashboardController.java
++++ b/src/main/java/fr/app/controller/DashboardController.java
+@@ -19,6 +19,12 @@ public class DashboardController {
+     @FXML
+     private Label speedLabel;
+ 
++    @FXML
++    private Label depthLabel;
++
++    @FXML
++    private Label intensityLabel;
++
+     @FXML
+     private Label stateLabel;
+ 
+@@ -41,10 +47,12 @@ public class DashboardController {
+             return;
+         }
+ 
+-        positionLabel.setText("Position : " + status.getPositionText());
+-        speedLabel.setText("Vitesse : " + status.getSpeedText());
++        positionLabel.setText(String.format("Position : x=%.2f | y=%.2f | z=%.2f", status.getX(), status.getY(), status.getZ()));
++        speedLabel.setText(String.format("Vitesse : %.2f m/s", status.getSpeed()));
+         stateLabel.setText("État : " + status.getState());
+-        temperatureLabel.setText("Température : " + status.getTemperatureText());
++        temperatureLabel.setText(String.format("Température : %.1f °C", status.getTemperature()));
++        depthLabel.setText(String.format("Profondeur : %.2f m", status.getDepth()));
++        intensityLabel.setText(String.format("Intensité : %.3f", status.getIntensity()));
+     }
+ 
+     private void send(PilotCommand cmd) {
+diff --git a/src/main/java/fr/app/controller/DroneController.java b/src/main/java/fr/app/controller/DroneController.java
+index d87c957..5267c33 100644
+--- a/src/main/java/fr/app/controller/DroneController.java
++++ b/src/main/java/fr/app/controller/DroneController.java
+@@ -1,6 +1,5 @@
+ package fr.app.controller;
+ 
+-import com.jme3.bullet.control.RigidBodyControl;
+ import com.jme3.input.InputManager;
+ import com.jme3.input.KeyInput;
+ import com.jme3.input.controls.ActionListener;
+@@ -10,44 +9,24 @@ import com.jme3.math.Vector3f;
+ import com.jme3.scene.control.UpdateControl;
+ import fr.app.model.Drone;
+ import fr.app.model.DroneMovement;
+-import fr.app.model.WorldView;
+ import fr.app.model.PilotCommand;
+ 
+ public class DroneController {
+ 
+     private InputManager inputManager;
+     private Drone drone;
+-    private WorldView model;
+ 
+-    // Speed for cinematic mode
++    // vitesse
+     private float droneSpeed = 0.2f;
+-    // Speed for the physic mode
+-    private float thrustPower = 7f;
+-    // Rotation speed for the physic mode
+-    private float torquePower = 0.1f;
+-    // Max speed, rotation speed dans height
+-    private float maxRotationSpeed = 0.5f;
+-    private float waterHeight;
+-    private float maxSpeed = 10f;
+-    private boolean isSubmerged;
+-    private float submersionHysteresis = 0.1f;
++
+ 
+     // intentions
+     private boolean forwardIntention = false;
+     private boolean backwardIntention = false;
+     private boolean leftIntention = false;
+     private boolean rightIntention = false;
+-    private boolean rotateLeftIntention = false;
+-    private boolean rotateRightIntention = false;
+     private boolean upIntention = false;
+     private boolean downIntention = false;
+-    private boolean pitchForwardIntention = false;
+-    private boolean pitchBackwardIntention = false;
+-    private boolean rollLeftIntention = false;
+-    private boolean rollRightIntention = false;
+-    private RigidBodyControl physicsControl;
+-    private float mass;
+-    private float gravityCounterForce;
+ 
+     // vecteurs
+    // private Vector3f forwardMovement = new Vector3f(0, 0, -1);
+@@ -62,78 +41,47 @@ public class DroneController {
+     DroneMovement moveBackward = DroneMovement.BACKWARD;
+     DroneMovement moveLeft = DroneMovement.LEFT;
+     DroneMovement moveRight = DroneMovement.RIGHT;
+-    DroneMovement rotateLeft = DroneMovement.ROTATELEFT;
+-    DroneMovement rotateRight = DroneMovement.ROTATERIGHT;
+     DroneMovement moveUp = DroneMovement.UP;
+     DroneMovement moveDown = DroneMovement.DOWN;
+-    DroneMovement pitchUp = DroneMovement.PITCHUP;
+-    DroneMovement pitchDown = DroneMovement.PITCHDOWN;
+-    DroneMovement rollLeft = DroneMovement.ROLLLEFT;
+-    DroneMovement rollRight = DroneMovement.ROLLRIGHT;
+ 
+-    public DroneController(InputManager inputManager, Drone drone, WorldView worldView) {
+-        this.inputManager = inputManager;
+-        this.drone = drone;
+-        this.model = worldView;
+-        this.waterHeight = model.getWaterHeight();
+-        physicsControl = drone.getDroneSpatial().getControl(RigidBodyControl.class);
+-        mass = physicsControl.getMass();
+-        gravityCounterForce = mass * 9.81f;
+-    }
+ 
+-    /**
+-     * Getter
+-     * @return Mass of the drone
+-     */
+-    public float getMass(){
+-        return this.mass;
+-    }
+ 
+-    /**
+-     * Setter
+-     * @param newMass New mass of the drone
+-     */
+-    public void setMass(float newMass){
+-        this.mass = newMass;
+-    }
+ 
+-    /**
+-     * Getter
+-     * @return Speed multiplier of the drone
+-     */
+-    public float getDroneSpeed(){
+-        return this.droneSpeed;
+-    }
++    public DroneController(InputManager inputManager,
++                           Drone drone) {
+ 
+-    /**
+-     * Setter
+-     * @param newSpeed New speed of the drone
+-     */
+-    public void setDroneSpeed(float newSpeed){
+-        this.droneSpeed = newSpeed;
++        this.inputManager = inputManager;
++        this.drone = drone;
+     }
+ 
+-
+-    /**
+-     * Set up the key mappings
+-     */
+     public void executeCommand(PilotCommand command,
+                                boolean pressed) {
+ 
+         switch (command) {
+ 
+-            case FORWARD: forwardIntention = pressed;break;
+-            case BACKWARD: backwardIntention = pressed;break;
+-            case LEFT: leftIntention = pressed;break;
+-            case RIGHT: rightIntention = pressed;break;
+-            case ROTATELEFT: rotateLeftIntention = pressed;break;
+-            case ROTATERIGHT: rotateRightIntention = pressed;break;
+-            case UP: upIntention = pressed;break;
+-            case DOWN: downIntention = pressed;break;
+-            case PITCHUP:pitchForwardIntention = pressed;break;
+-            case PITCHDOWN: pitchBackwardIntention = pressed; break;
+-            case ROLLLEFT: rollLeftIntention = pressed; break;
+-            case ROLLRIGHT: rollRightIntention = pressed; break;
++            case FORWARD:
++                forwardIntention = pressed;
++                break;
++
++            case BACKWARD:
++                backwardIntention = pressed;
++                break;
++
++            case LEFT:
++                leftIntention = pressed;
++                break;
++
++            case RIGHT:
++                rightIntention = pressed;
++                break;
++
++            case UP:
++                upIntention = pressed;
++                break;
++
++            case DOWN:
++                downIntention = pressed;
++                break;
+ 
+             case STOP:
+                 forwardIntention = false;
+@@ -147,41 +95,38 @@ public class DroneController {
+     }
+ 
+     public void setUpKeys() {
+-        // Key mappings
+-        // Moving horizontally
+-        inputManager.addMapping(moveForward.name(), new KeyTrigger(KeyInput.KEY_W));
+-        inputManager.addMapping(moveBackward.name(), new KeyTrigger(KeyInput.KEY_S));
+-        inputManager.addMapping(moveLeft.name(), new KeyTrigger(KeyInput.KEY_Q));
+-        inputManager.addMapping(moveRight.name(), new KeyTrigger(KeyInput.KEY_E));
+-        // Moving vertically
+-        inputManager.addMapping(moveUp.name(), new KeyTrigger(KeyInput.KEY_R));
+-        inputManager.addMapping(moveDown.name(), new KeyTrigger(KeyInput.KEY_F));
+-        // Moving on an axis
+-        inputManager.addMapping(rotateRight.name(), new KeyTrigger(KeyInput.KEY_D));
+-        inputManager.addMapping(rotateLeft.name(), new KeyTrigger(KeyInput.KEY_A));
+-        inputManager.addMapping(rollLeft.name(), new KeyTrigger(KeyInput.KEY_J));
+-        inputManager.addMapping(rollRight.name(), new KeyTrigger(KeyInput.KEY_L));
+-        inputManager.addMapping(pitchUp.name(), new KeyTrigger(KeyInput.KEY_I));
+-        inputManager.addMapping(pitchDown.name(), new KeyTrigger(KeyInput.KEY_K));
+-
+-        // Listeners
++
++        // touches
++        inputManager.addMapping(moveForward.name(),
++                new KeyTrigger(KeyInput.KEY_K));
++
++        inputManager.addMapping(moveBackward.name(),
++                new KeyTrigger(KeyInput.KEY_I));
++
++        inputManager.addMapping(moveLeft.name(),
++                new KeyTrigger(KeyInput.KEY_J));
++
++        inputManager.addMapping(moveRight.name(),
++                new KeyTrigger(KeyInput.KEY_L));
++        inputManager.addMapping(moveUp.name(),
++                new KeyTrigger(KeyInput.KEY_N));
++
++        inputManager.addMapping(moveDown.name(),
++                new KeyTrigger(KeyInput.KEY_B));
++
++        // listeners
+         inputManager.addListener(actionListener,
+                 moveForward.name(),
+                 moveBackward.name(),
+                 moveLeft.name(),
+                 moveRight.name(),
+-                rotateLeft.name(),
+-                rotateRight.name(),
+                 moveDown.name(),
+-                moveUp.name(),
+-                pitchUp.name(),
+-                pitchDown.name(),
+-                rollLeft.name(),
+-                rollRight.name()
++                moveUp.name()
+         );
+     }
+ 
+     private final ActionListener actionListener = new ActionListener() {
++
+         //une touche après l'autre
+         @Override
+         public void onAction(String name,
+@@ -246,78 +191,10 @@ public class DroneController {
+         }
+     }
+ 
+-    /**
+-     * Method to calculate the movement of a physic object.
+-     */
+-    public void updateMovement(){
+-        // Main vector
+-        Vector3f totalForce = new Vector3f();
+-        // Local direction
+-        Vector3f forward = drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Z);
+-        Vector3f left = drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_X);
+-        Vector3f up = drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Y);
+-        Vector3f angularVelocity = physicsControl.getAngularVelocity(); // Used to avoid the beyblade spin
+-        Vector3f linearVelocity = physicsControl.getLinearVelocity(); // Used to avoid infinite acceleration
+-        Vector3f totalTorque = new Vector3f();
+-        float droneHeight = drone.getDroneSpatial().getLocalTranslation().getY();
+-        if(isSubmerged) {
+-            if(droneHeight >= waterHeight + submersionHysteresis) isSubmerged = false;
+-        } else{
+-            if(droneHeight <= waterHeight) isSubmerged = true;
+-        }
+-        if(isSubmerged){
+-            totalForce.setY(gravityCounterForce);
+-            // Forward
+-            if (forwardIntention) totalForce.addLocal(forward.mult(thrustPower));
+-            // Backward
+-            if (backwardIntention) totalForce.addLocal(forward.negate().mult(thrustPower));
+-            // Move left
+-            if (leftIntention) totalForce.addLocal(left.mult(thrustPower));
+-            // Move right
+-            if (rightIntention) totalForce.addLocal(left.negate().mult(thrustPower));
+-            // Up - Add force to push the drone upward
+-            if (upIntention) totalForce.addLocal(up.mult(thrustPower));
+-            // Down - Reducing force to let the drone sink
+-            if (downIntention) totalForce.addLocal(up.negate().mult(thrustPower));
+-            // Yaw
+-            if (rotateLeftIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Y).mult(torquePower));
+-            else if (rotateRightIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Y).mult(-torquePower));
+-            // Pitch
+-            if (pitchForwardIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_X).mult(-torquePower));
+-            else if (pitchBackwardIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_X).mult(torquePower));
+-            // Roll
+-            if (rollLeftIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Z).mult(-torquePower));
+-            else if (rollRightIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Z).mult(torquePower));
+-        } else {
+-            if (linearVelocity.y > 0) {
+-                physicsControl.setLinearVelocity(new Vector3f(linearVelocity.x, linearVelocity.y * 0.9f, linearVelocity.z));
+-            }
+-        }
+-        // Apply forces and torques
+-        physicsControl.applyCentralForce(totalForce);
+-        physicsControl.applyTorque(totalTorque);
+-        // SPEED MANAGEMENT :
+-        // Cap the speed to avoid infinite acceleration
+-        if (linearVelocity.length() > maxSpeed) {
+-            // On conserve la direction du déplacement, mais on force sa taille à maxLinearSpeed
+-            Vector3f clampedVelocity = linearVelocity.normalize().mult(maxSpeed);
+-            physicsControl.setLinearVelocity(clampedVelocity);
+-        }
+-        // Cap the angular speed on the Y axis (yaw)
+-        if (angularVelocity.y > maxRotationSpeed) {
+-            physicsControl.setAngularVelocity(new Vector3f(angularVelocity.x, maxRotationSpeed, angularVelocity.z));
+-        } else if (angularVelocity.y < -maxRotationSpeed) {
+-            physicsControl.setAngularVelocity(new Vector3f(angularVelocity.x, -maxRotationSpeed, angularVelocity.z));
+-        }
+-        System.out.println("hauteur : " + droneHeight);
+-    }
++    public void updateMovement(float tpf) {
+ 
+-    /**
+-     * Method to calculate the movement of an non physic object.
+-     * @param tpf Time per frame, requiered to work properly
+-     */
+-    public void updateMovementCinematic(float tpf) {
+         Vector3f moveDirection = new Vector3f();
++
+         /*
+          * Direction avant du drone
+          */
+@@ -325,37 +202,57 @@ public class DroneController {
+                 drone.getDroneSpatial()
+                         .getLocalRotation()
+                         .mult(Vector3f.UNIT_Z);
+-        // Direction verticale
++
++        /*
++         * Direction verticale
++         */
+         Vector3f up =
+                 drone.getDroneSpatial()
+                         .getLocalRotation()
+                         .mult(Vector3f.UNIT_Y);
+-        // Avancer
++
++        /*
++         * Avancer / reculer
++         */
++
+         if (forwardIntention) {
++
+             moveDirection.addLocal(
+-                    forward
++                    forward.negate()
+             );
+         }
+-        // Reculer
++
+         if (backwardIntention) {
++
+             moveDirection.addLocal(
+-                    forward.negate()
++                    forward
+             );
+         }
+-        // Monter
++
++        /*
++         * Monter / descendre
++         */
++
+         if (upIntention) {
++
+             moveDirection.addLocal(
+                     up.negate()
+             );
+         }
+-        // Descendre
++
+         if (downIntention) {
++
+             moveDirection.addLocal(
+                     up
+             );
+         }
+-        // Rotation gauche
+-        if (rotateLeftIntention) {
++
++        /*
++         * Rotation gauche / droite
++         */
++
++        if (leftIntention) {
++
+             drone.getDroneSpatial()
+                     .rotate(
+                             0f,
+@@ -363,8 +260,9 @@ public class DroneController {
+                             0f
+                     );
+         }
+-        // Rotation droite
+-        if (rotateRightIntention) {
++
++        if (rightIntention) {
++
+             drone.getDroneSpatial()
+                     .rotate(
+                             0f,
+@@ -372,11 +270,15 @@ public class DroneController {
+                             0f
+                     );
+         }
+-        // Déplacement fluide
++
++        /*
++         * Déplacement fluide
++         */
++
+         Vector3f nextPosition =
+                 drone.getDroneSpatial()
+                         .getLocalTranslation()
+-                        .add(moveDirection.mult(droneSpeed * tpf));
++                        .add(moveDirection.mult(droneSpeed * drone.getState().getSpeedFactor() * tpf * 60f));
+         drone.getDroneSpatial()
+                 .setLocalTranslation(nextPosition);
+     }
+diff --git a/src/main/java/fr/app/model/DroneManager.java b/src/main/java/fr/app/model/DroneManager.java
+deleted file mode 100644
+index 06f2d8c..0000000
+--- a/src/main/java/fr/app/model/DroneManager.java
++++ /dev/null
+@@ -1,62 +0,0 @@
+-package fr.app.model;
+-
+-import com.jme3.asset.AssetManager;
+-import com.jme3.input.InputManager;
+-import com.jme3.renderer.Camera;
+-import com.jme3.scene.Node;
+-import com.jme3.scene.Spatial;
+-import fr.app.controller.DroneController;
+-import fr.app.view.CameraManager;
+-import fr.app.view.DroneCameraManager;
+-
+-public class DroneManager {
+-    private AssetManager assetManager;
+-    private Node rootNode;
+-    private PhysicsEngine physicsEngine;
+-    private InputManager inputManager;
+-    private DroneController droneController;
+-    private DroneCameraManager droneCameraManager;
+-    private Camera cam;
+-    private Drone drone;
+-    private WorldView model;
+-
+-    public DroneManager(AssetManager assetManager, Node rootNode, PhysicsEngine physicsEngine, InputManager inputManager, Camera cam, WorldView worldView){
+-        this.assetManager = assetManager;
+-        this.rootNode = rootNode;
+-        this.physicsEngine = physicsEngine;
+-        this.inputManager = inputManager;
+-        this.cam = cam;
+-        this.model = worldView;
+-    }
+-
+-    public void CreateDrone(String name){
+-        String droneName;
+-        if(name=="BR2R4"){
+-            droneName = "bluerobotics/br2r4/br2-r4-vehicle.j3o";
+-        } else{
+-            droneName = "subseatech/guardian/guardian-vehicle.j3o";
+-        }
+-        Node droneNode = new Node("Drone");
+-        Spatial droneModel = assetManager.loadModel("vehicle/" + droneName);
+-        droneNode.attachChild(droneModel);
+-        droneNode.move(0f, 1f, 0f);
+-        rootNode.attachChild(droneNode);
+-        drone = new Drone("1", droneNode);
+-        this.physicsEngine.CreateDroneHitbox(drone, name);
+-        this.droneController = new DroneController(inputManager, drone, model);
+-        this.droneController.setUpKeys();
+-        this.droneCameraManager = new DroneCameraManager(cam, drone);
+-    }
+-
+-    public Drone getDrone(){
+-        return this.drone;
+-    }
+-
+-    public DroneCameraManager getDroneCameraManager(){
+-        return this.droneCameraManager;
+-    }
+-
+-    public DroneController getDroneController(){
+-        return this.droneController;
+-    }
+-}
+diff --git a/src/main/java/fr/app/model/DroneMovement.java b/src/main/java/fr/app/model/DroneMovement.java
+index 2553e05..5949785 100644
+--- a/src/main/java/fr/app/model/DroneMovement.java
++++ b/src/main/java/fr/app/model/DroneMovement.java
+@@ -7,12 +7,5 @@ public enum DroneMovement {
+     LEFT,
+     RIGHT,
+     UP,
+-    DOWN,
+-    ROTATELEFT,
+-    ROTATERIGHT,
+-    PITCHUP,
+-    PITCHDOWN,
+-    ROLLLEFT,
+-    ROLLRIGHT,
+-    STOP
++    DOWN
+ }
+diff --git a/src/main/java/fr/app/model/DroneStatus.java b/src/main/java/fr/app/model/DroneStatus.java
+index e4f29b8..adceac8 100644
+--- a/src/main/java/fr/app/model/DroneStatus.java
++++ b/src/main/java/fr/app/model/DroneStatus.java
+@@ -10,6 +10,8 @@ public class DroneStatus {
+     private double speed;
+     private String state;
+     private double temperature;
++    private double depth; // profondeur
++    private double intensity; // intensité de la distorsion
+ 
+     public DroneStatus() {
+         this.x = 0;
+@@ -28,6 +30,8 @@ public class DroneStatus {
+     public double getTemperature() {
+         return temperature;
+     }
++    public double getDepth() { return depth; }
++    public double getIntensity() { return intensity; }
+ 
+     //Setter
+     public void setX(double x) { this.x = x; }
+@@ -37,6 +41,8 @@ public class DroneStatus {
+     public void setTemperature(double temperature) {
+         this.temperature = temperature;
+     }
++    public void setDepth(double depth) { this.depth = depth; }
++    public void setIntensity(double intensity) { this.intensity = intensity; }
+ 
+     // @JsonIgnore -> Jackson ignorera cette méthode lors de la sérialisation/désérialisation
+     @JsonIgnore
+@@ -58,6 +64,8 @@ public class DroneStatus {
+         this.state = state;
+     }
+ 
++    // @JsonIgnore -> Jackson ignorera cette méthode lors de la sérialisation/désérialisation
++    @JsonIgnore
+     public String getTemperatureText() {
+         return temperature + " °C";
+     }
+diff --git a/src/main/java/fr/app/model/PhysicsEngine.java b/src/main/java/fr/app/model/PhysicsEngine.java
+index 1f813da..1009d83 100644
+--- a/src/main/java/fr/app/model/PhysicsEngine.java
++++ b/src/main/java/fr/app/model/PhysicsEngine.java
+@@ -4,7 +4,6 @@ import com.jme3.app.SimpleApplication;
+ import com.jme3.asset.AssetManager;
+ import com.jme3.asset.plugins.FileLocator;
+ import com.jme3.bullet.BulletAppState;
+-import com.jme3.bullet.collision.shapes.BoxCollisionShape;
+ import com.jme3.bullet.collision.shapes.CollisionShape;
+ import com.jme3.bullet.collision.shapes.MeshCollisionShape;
+ import com.jme3.bullet.control.RigidBodyControl;
+@@ -17,7 +16,6 @@ import com.jme3.math.Vector3f;
+ import com.jme3.scene.*;
+ import com.jme3.scene.shape.Box;
+ import com.jme3.util.BufferUtils;
+-import fr.app.view.GUIManager;
+ import fr.utln.dronsim.viewer.primitives.ReferentialNode;
+ 
+ public class PhysicsEngine{
+@@ -27,125 +25,56 @@ public class PhysicsEngine{
+     private AssetManager assetManager;
+     private WorldView model;
+     private Node rootNode;
+-    private GUIManager guiManager;
+ 
+-    public PhysicsEngine(SimpleApplication app, WorldView model, GUIManager guiManager, boolean debugMode) {
++    public PhysicsEngine(SimpleApplication app, WorldView model) {
+         this.model = model;
+         this.app = app;
+         // Getting the asset manager
+         this.assetManager = this.app.getAssetManager();
+-        // Getting the gui manager
+-        this.guiManager = guiManager;
+         // Initialize bullet engine
+         this.bulletAppState = new BulletAppState();
++        //
+         this.rootNode = this.app.getRootNode();
+-        // Threading mode : SEQUENTIAL (by default)
++        // Configure le mode de threading (SEQUENTIAL est d'ailleurs le mode par défaut)
+         this.bulletAppState.setThreadingType(BulletAppState.ThreadingType.SEQUENTIAL);
+         // Attach it to the global manager
+         this.app.getStateManager().attach(bulletAppState);
+-        // true to see the blue wireframe, false if you want FPS
+-        this.bulletAppState.setDebugEnabled(debugMode);
+-        System.out.println("PhysicsEngine : Successfully initialized");
++        // true pour voir les boites de collision en bleu (nom nom les performances)
++        this.bulletAppState.setDebugEnabled(false);
++        System.out.println("PhysicsEngine : Initialisé avec succès !");
+     }
+ 
+     /**
+      * Create the terrain node
+-     * @param terrain : 1 = line, 2 = spiral, 3 = point_borlo
+      * @return A node
+      */
+-    /*public Node CreateTerrainScene() {
+-        // Old way of doing it, here for legacy and because I didn't commited it before changing it because the issue wasn't fixed
++    public Node createTerrainScene() {
+         Node node = new Node("TerrainNode");
++
+         // Locators config, path of the assets
+         assetManager.registerLocator("data/asset", FileLocator.class);
+         assetManager.registerLocator("data/asset/terrain/military", FileLocator.class);
+-        System.out.println("Loading terrain");
++
+         // Load terrain with texture
+-        Spatial terrainVisuel = assetManager.loadModel("terrain/military/target-approach-line-terrain.j3o");
+-        Spatial terrainLowPoly = assetManager.loadModel("terrain/military/target-approach-line-terrain-lowpoly.j3o");
+-        System.out.println("Terrain loaded");
++        Spatial terrain = assetManager.loadModel("terrain/military/target-approach-line-terrain.j3o");
+         // Generates a terrain using a custom-made method to choose the method used (better for testing)
+-        CollisionShape sceneShape = GenerateLandscape(terrainLowPoly, "Mesh");
++        //CollisionShape sceneShape = GenerateLandscape(terrain, "DynamicMesh");
++
+         // Generates a custom-made mesh
+-        //MeshCollisionShape sceneShape = createCustomCollisionMesh();
++        MeshCollisionShape sceneShape = createCustomCollisionMesh();
++
+         RigidBodyControl landscape = new RigidBodyControl(sceneShape, 0); // masse 0 = objet statique
+         landscape.setFriction(0.1f);
+         landscape.setRestitution(0.2f);
+-        terrainVisuel.addControl(landscape);
++        terrain.addControl(landscape);
+         bulletAppState.getPhysicsSpace().add(landscape);
++
+         // Correct axes for water rendering (Y = vertical)
+-        terrainVisuel.rotate(-FastMath.HALF_PI, 0.0f, 0.0f);
+-        landscape.setPhysicsRotation(terrainVisuel.getWorldRotation());
+-        node.attachChild(terrainVisuel);
+-        return node;
+-    }*/
+-    public Node CreateTerrainScene(int terrain, Runnable onTerrainReady) {
+-        Node node = new Node("TerrainNode");
+-        // Configuration des locators
+-        assetManager.registerLocator("data/asset", FileLocator.class);
+-        String name;
+-        /*
+-        terrain =
+-                1 : target-approach-line-terrain
+-                2 : target-approach-spiral-terrain
+-                3 : point_borlo
+-         */
+-        if(terrain==1){
+-            assetManager.registerLocator("data/asset/terrain/military", FileLocator.class);
+-            name = "terrain/military/target-approach-line-terrain";
+-        } else if (terrain==2) {
+-            assetManager.registerLocator("data/asset/terrain/military", FileLocator.class);
+-            name = "terrain/military/target-approach-spiral-terrain";
+-        } else {
+-            name = "";
+-            if(terrain==3){
+-                // Add point_borlo things
+-            }
+-        }
+-        guiManager.CreateWaitingGUI();
+-        // Using thread to launch the simulator faster
+-        new Thread(() -> {
+-            // On charge les fichiers
+-            System.out.println("Loading terrain " + name + " in the background");
+-            Spatial terrainVisuel = assetManager.loadModel(name+".j3o"); // Visuel
+-            Spatial terrainLowPoly = assetManager.loadModel(name+"-lowpoly.j3o"); // Physique
+-            System.out.println("Terrain loaded");
+-            System.out.println("Beggining mesh generation");
+-            // Generating mesh
+-            CollisionShape sceneShape = CollisionShapeFactory.createMeshShape(terrainLowPoly);
+-            // JMonkey stuff
+-            RigidBodyControl landscape = new RigidBodyControl(sceneShape, 0);
+-            /*
+-            A bit of friction to avoid things getting stuck in odd ways and a bit bouncy
+-            Both should be adjusted to get a realistic underwater physic
+-             */
+-            landscape.setFriction(0.1f);
+-            landscape.setRestitution(0.2f);
+-            // Correct axes
+-            terrainVisuel.rotate(-FastMath.HALF_PI, 0.0f, 0.0f);
+-            landscape.setPhysicsRotation(terrainVisuel.getWorldRotation());
+-            // Once the processing is finished, we can inject it cleanly
+-            // app should be a reference to JME application (SimpleApplication)
+-            app.enqueue(() -> {
+-                terrainVisuel.addControl(landscape);
+-                bulletAppState.getPhysicsSpace().add(landscape);
+-                node.attachChild(terrainVisuel);
+-                System.out.println("Terrain visual and physic injected succesfully");
+-                guiManager.RemoveWaitingGUI();
+-                // Callback to generate cubes or drones
+-                if (onTerrainReady != null) {
+-                    // The physics engine knows it has something to do but it doesn't know what it is
+-                    onTerrainReady.run();
+-                }
+-                return null;
+-            });
+-        }).start();
++        terrain.rotate(-FastMath.HALF_PI, 0.0f, 0.0f);
++        landscape.setPhysicsRotation(terrain.getWorldRotation());
++
++        node.attachChild(terrain);
+ 
+-        /*
+-        Return the node without the RigidBodyControl to accelerate loading and avoiding freezes on low end computers.
+-        Side effect : now you can go through the ground while it's still processing.
+-         */
+-        System.out.println("Returning node early without the mesh done");
+         return node;
+     }
+ 
+@@ -154,8 +83,7 @@ public class PhysicsEngine{
+      * les 11 millions de triangles du modèle visuel.
+      * @return MeshCollisionShape La forme de collision simplifiée
+      */
+-    @Deprecated
+-    private MeshCollisionShape CreateCustomCollisionMesh() {
++    private MeshCollisionShape createCustomCollisionMesh() {
+         System.out.println("Creating a custom mesh for the terrain");
+         // Dimensions
+         System.out.println("Defining dimensions");
+@@ -255,7 +183,7 @@ public class PhysicsEngine{
+                 yield CollisionShapeFactory.createBoxShape(terrain);
+             }
+         };
+-        System.out.println("Finished terrain mesh using the " + type + " method");
++        System.out.println("finished terrain mesh");
+         return sceneShape;
+     }
+ 
+@@ -266,14 +194,16 @@ public class PhysicsEngine{
+      * @param z the z coordinate
+      * @param color the color of the cube
+      */
+-    public void SpawnTestCube(Node cubeNode, float x, float y, float z, ColorRGBA color) {
++    public void spawnTestCube(float x, float y, float z, ColorRGBA color) {
+         // Cube of 0.5m
+         Box boxMesh = new Box(0.5f, 0.5f, 0.5f);
+         Geometry cubeGeo = new Geometry("TestCube", boxMesh);
++
+         // Red material
+         Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+         mat.setColor("Color", color);
+         cubeGeo.setMaterial(mat);
++
+         // Position and angle
+         cubeGeo.setLocalTranslation(new Vector3f(x, y, z));
+         Quaternion rotation = new Quaternion();
+@@ -281,65 +211,26 @@ public class PhysicsEngine{
+                 0,
+                 20 * FastMath.DEG_TO_RAD);
+         cubeGeo.setLocalRotation(rotation);
+-        cubeNode.attachChild(cubeGeo);
++        rootNode.attachChild(cubeGeo);
++
+         // Cube physics
+         RigidBodyControl cubePhys = new RigidBodyControl(1.0f);
+         cubeGeo.addControl(cubePhys);
++
+         // Added restitution and a friction to avoid it balancing at unrealistic angles
+         cubePhys.setRestitution(0.2f);
+         cubePhys.setFriction(0.1f);
++
+         // Add to physic space
+         bulletAppState.getPhysicsSpace().add(cubePhys);
+     }
+ 
+-    /**
+-     * Creates a hitbox for the drone
+-     * @param drone The drone that need to get a hitbox generated
+-     * @param mode Type of hitbox, "BR2R4" and "Guardian" are manual and anything else is an automatic box (not very good)
+-     */
+-    public void CreateDroneHitbox(Drone drone, String mode){
+-        System.out.println("Generating the drone hitbox using the ");
+-        CollisionShape droneHitbox = switch(mode){
+-            case "BR2R4" :
+-                System.out.println("Manual hitbox for the " + mode + ".");
+-                yield new BoxCollisionShape(new Vector3f(0.18f, 0.15f, 0.23f));
+-            case "Guardian" :
+-                System.out.println("Manual hitbox for the " + mode + ".");
+-                yield new BoxCollisionShape(new Vector3f(0.22f, 0.13f, 0.4f));
+-            default :
+-                System.out.println("Automatic box.");
+-                yield CollisionShapeFactory.createBoxShape(drone.getDroneSpatial());
+-        };
+-        // Set mass to 0 to have the drone float
+-        RigidBodyControl dronePhysics = new RigidBodyControl(droneHitbox, 5.0f);
+-        dronePhysics.setFriction(0.3f);
+-        dronePhysics.setRestitution(0.5f);
+-        // Inertia
+-        dronePhysics.setLinearDamping(0.4f);
+-        dronePhysics.setAngularDamping(0.6f);
+-        // Attach the physic to the visual
+-        drone.getDroneSpatial().addControl(dronePhysics);
+-        // Add the rigid body to the physic space
+-        bulletAppState.getPhysicsSpace().add(dronePhysics);
+-    }
+-
+-    public void CreateDroneHitbox(Drone drone){
+-        CreateDroneHitbox(drone, "Auto");
+-    }
+-
+-    /**
+-     * Create a referential
+-     * @param node node where the referential should be created
+-     */
+     public void createRefNode(Node node){
+         ReferentialNode refNode = new ReferentialNode(assetManager);
+         node.attachChild(refNode);
+     }
+ 
+-    /**
+-     * Getter to add physics objects
+-     * @return BulletAppState
+-     */
++    // Accesseur pour permettre à d'autres classes d'ajouter des objets physiques (ex: ton drone)
+     public BulletAppState getBulletAppState() {
+         return bulletAppState;
+     }
+diff --git a/src/main/java/fr/app/model/PilotCommand.java b/src/main/java/fr/app/model/PilotCommand.java
+index 6dcfd88..1447e95 100644
+--- a/src/main/java/fr/app/model/PilotCommand.java
++++ b/src/main/java/fr/app/model/PilotCommand.java
+@@ -7,11 +7,5 @@ public enum PilotCommand {
+     RIGHT,
+     UP,
+     DOWN,
+-    ROTATELEFT,
+-    ROTATERIGHT,
+-    PITCHUP,
+-    PITCHDOWN,
+-    ROLLLEFT,
+-    ROLLRIGHT,
+     STOP
+-}
++}
+\ No newline at end of file
+diff --git a/src/main/java/fr/app/network/UdpServeurTransport.java b/src/main/java/fr/app/network/UdpServeurTransport.java
+index 523e4d0..19219f6 100644
+--- a/src/main/java/fr/app/network/UdpServeurTransport.java
++++ b/src/main/java/fr/app/network/UdpServeurTransport.java
+@@ -100,8 +100,22 @@ public class UdpServeurTransport implements Runnable{
+                 }
+                 System.out.println("[UDP Serveur] Objet désérialisé    : " + command);
+ 
+-                DroneStatus droneStatus = new DroneStatus();
+-                droneStatus.setState("En vol");
++                //DroneStatus droneStatus= new DroneStatus();
++                //droneStatus.setState("En vol");
++
++                DroneStatus droneStatus;
++
++                if (simulation != null) {
++                    final DroneStatus[] statusHolder = new DroneStatus[1];
++                    simulation.enqueue(() -> {
++                        statusHolder[0] = simulation.getDroneStatus(droneId);
++                        return null;
++                    }).get(); // attend la réponse du thread JME3
++                    droneStatus = statusHolder[0];
++                } else {
++                    droneStatus = new DroneStatus();
++                    droneStatus.setState("Simulation non lancée");
++                }
+ 
+                 // Sérialisation
+                 byte[] responseBrute    = serializer.serialisation(droneStatus);
+diff --git a/src/main/java/fr/app/view/DroneCameraManager.java b/src/main/java/fr/app/view/DroneCameraManager.java
+index 485950b..d9e4e73 100644
+--- a/src/main/java/fr/app/view/DroneCameraManager.java
++++ b/src/main/java/fr/app/view/DroneCameraManager.java
+@@ -13,13 +13,21 @@ public class DroneCameraManager {
+     private final Node cameraNode;
+ 
+ 
+-    private final Vector3f cameraOffset = new Vector3f(0f, 0f, 0f);
++    private final Vector3f cameraOffset =
++            new Vector3f(0f, 0f, 0f);
++
++    public DroneCameraManager(Camera cam,
++                              Drone drone) {
+ 
+-    public DroneCameraManager(Camera cam, Drone drone) {
+         this.cam = cam;
+         this.drone = drone;
++
+         this.cameraNode = new Node("CameraNode");
+-        drone.getDroneSpatial().attachChild(cameraNode);
++
++        drone.getDroneSpatial()
++                .attachChild(cameraNode);
++
++
+         cameraNode.setLocalTranslation(cameraOffset);
+     }
+ 
+@@ -44,7 +52,7 @@ public class DroneCameraManager {
+         Vector3f lookTarget =
+                 dronePosition
+                         .add(forward.mult(6f))
+-                        .add(0f, 0f, 0f);
++                        .add(0f, -2f, 0f);
+ 
+         cam.lookAt(
+                 lookTarget,
+diff --git a/src/main/java/fr/app/view/GUIManager.java b/src/main/java/fr/app/view/GUIManager.java
+deleted file mode 100644
+index fa94fcb..0000000
+--- a/src/main/java/fr/app/view/GUIManager.java
++++ /dev/null
+@@ -1,41 +0,0 @@
+-package fr.app.view;
+-
+-import com.jme3.asset.AssetManager;
+-import com.jme3.font.BitmapFont;
+-import com.jme3.font.BitmapText;
+-import com.jme3.scene.Node;
+-import com.jme3.system.AppSettings;
+-
+-public class GUIManager {
+-    private AssetManager assetManager;
+-    private AppSettings settings;
+-    private Node guiNode;
+-    private BitmapText loadingText;
+-
+-    public GUIManager(AssetManager assetManager, AppSettings settings, Node guiNode){
+-        this.assetManager = assetManager;
+-        this.settings = settings;
+-        this.guiNode = guiNode;
+-    }
+-
+-    public void CreateWaitingGUI(){
+-        BitmapFont guiFont = assetManager.loadFont("Interface/Fonts/Default.fnt");
+-        loadingText = new com.jme3.font.BitmapText(guiFont, false);
+-        loadingText.setSize(guiFont.getCharSet().getRenderedSize() * 2); // Texte assez grand
+-        loadingText.setText("Chargement de la simulation...");
+-
+-        // On le centre sur l'écran d'un PC portable standard
+-        loadingText.setLocalTranslation(
+-                settings.getWidth() / 2f - loadingText.getLineWidth() / 2f,
+-                settings.getHeight() / 2f + loadingText.getLineHeight() / 2f,
+-                0
+-        );
+-
+-        // On l'affiche immédiatement à l'écran
+-        guiNode.attachChild(loadingText);
+-    }
+-
+-    public void RemoveWaitingGUI(){
+-        guiNode.detachChild(loadingText);
+-    }
+-}
+diff --git a/src/main/java/fr/app/view/WaterDistortionManager.java b/src/main/java/fr/app/view/WaterDistortionManager.java
+index 5b61308..656a1a8 100644
+--- a/src/main/java/fr/app/view/WaterDistortionManager.java
++++ b/src/main/java/fr/app/view/WaterDistortionManager.java
+@@ -1,6 +1,7 @@
+ package fr.app.view;
+ 
+ import com.jme3.material.Material;
++import com.jme3.asset.AssetManager;
+ import com.jme3.post.FilterPostProcessor;
+ import com.jme3.renderer.ViewPort;
+ import fr.app.model.Drone;
+@@ -16,43 +17,83 @@ public class WaterDistortionManager {
+     private final DynamicDistortionFilter distortionFilter;
+     FilterPostProcessor fpp;
+ 
+-    public WaterDistortionManager(FilterPostProcessor fpp, ViewPort viewPort, Drone drone, WorldView world) {
+-        this.fpp = fpp;
++    private float profondeur=0f;
++    private float intensity=0f;
++
++    private float lastProfondeur = Float.NaN;
++    private float lastIntensity = Float.NaN;
++
++
++    public WaterDistortionManager(AssetManager assetManager, ViewPort viewPort, Drone drone, WorldView world) {
++        this.fpp = new FilterPostProcessor(assetManager);
+         this.drone = drone;
+         this.world = world;
++
++        // =====================================
+         // DISTORTION MODEL
++        // =====================================
++
+         distortionModel = new DistortionModel(0f, 0f, 0f, 0f, 0f);
+         //K1 à K3 distorsion radiale   P1,P2 distorsion temporelle
+         //Tout à 0, image normale sans distorsion
+         distortionFilter = new DynamicDistortionFilter(distortionModel);
+         //On donne le modèle au filtre
++
++        // =====================================
+         // FILTER POST PROCESSOR
+-        fpp.addFilter(distortionFilter);
+-        viewPort.addProcessor(fpp);
++        // =====================================
++
++        this.fpp.addFilter(distortionFilter);
++
++        viewPort.addProcessor(this.fpp);
+     }
+ 
+     /**
+      * Mise à jour distorsion eau
+      */
+     public void update() {
++
+         float droneHeight = drone.getDroneSpatial().getWorldTranslation().y;
++
+         float waterHeight = world.getWaterHeight();
+-        float profondeur = waterHeight - droneHeight;
++
++        // =====================================
++        // DRONE SOUS L'EAU
++        // =====================================
++
+         if (droneHeight < waterHeight) {
++            //test immersion, si immergée on continue
++
++        this.profondeur = waterHeight - droneHeight;
++        this.intensity = Math.min(profondeur * 0.03f, 0.35f);
+         // test immersion, si immergée on continue
+-            float intensity = Math.min(profondeur * 0.03f, 0.35f);
++            //System.out.println("profondeur : " + profondeur);
++            //System.out.println("intensity : "+intensity);
++            if (Math.abs(profondeur - lastProfondeur) > 0.01f || Math.abs(intensity - lastIntensity) > 0.001f) {
++                lastProfondeur = profondeur;
++                lastIntensity = intensity;
++                System.out.println("profondeur : " + profondeur);
++                System.out.println("intensity : " + intensity);
++            }
+             // profondeur *0;03f car l'image ne doit pas être trop grande pour qu'on puisse la voir.
+-            // profondeur -> intensité visuelle
+-            // Distortion radiale
+-            // k1 grosse distorsion globale, k2 raffinement, k3 minime
++            //profondeur -> intensité visuelle
++
++            // =====================================
++            // DISTORSION RADIALE
++            // =====================================
++            //k1 grosse distorsion globale
++            //k2 raffinement
++            //k3 minime
+             // on utilise que k1 et k2 pour notre drone
+-            // K1 négatif car sous l'eau l'effet est bombé (vers l'extérieur) positif -> vers le centre
++            //K1 négatif car sous l'eau l'effet est bombé (vers l'extérieur) positif -> vers le centre
+             distortionFilter.setK1(-intensity); // k1 est le plus gros facteur, donc c'est lui qui sera négatif
+             distortionFilter.setK2(intensity * 0.4f);
+             // DISTORSION TANGENTIELLE
+             distortionFilter.setP1(intensity * 0.01f);
+             distortionFilter.setP2(intensity * 0.01f);
+         } else {
++            this.profondeur = 0f;
++            this.intensity = 0f;
+             // Reset distortion when out of water
+             distortionFilter.setK1(0f);
+             distortionFilter.setK2(0f);
+@@ -60,4 +101,11 @@ public class WaterDistortionManager {
+             distortionFilter.setP2(0f);
+         }
+     }
++    public float getProfondeur() {
++        return profondeur;
++    }
++
++    public float getIntensity() {
++        return intensity;
++    }
+ }
+\ No newline at end of file
+diff --git a/src/main/java/fr/utln/dronsim/viewer/example/WaterFilterExample.java b/src/main/java/fr/utln/dronsim/viewer/example/WaterFilterExample.java
+index ca44ada..825a51d 100644
+--- a/src/main/java/fr/utln/dronsim/viewer/example/WaterFilterExample.java
++++ b/src/main/java/fr/utln/dronsim/viewer/example/WaterFilterExample.java
+@@ -73,7 +73,7 @@ public class WaterFilterExample extends SimpleApplication {
+     @Override
+     public void simpleUpdate(float tpf) {
+ 
+-        droneController.updateMovement();
++        droneController.updateMovement(tpf);
+ 
+         Vector3f dronePosition = drone.getDroneSpatial().getWorldTranslation();
+ 
+@@ -135,7 +135,11 @@ public class WaterFilterExample extends SimpleApplication {
+ 
+         drone = new Drone("drone1",vehicleANode);
+ 
+-        //droneController = new DroneController(inputManager, drone);
++        droneController =
++                new DroneController(
++                        inputManager,
++                        drone
++                );
+ 
+         droneController.setUpKeys();
+ 
+diff --git a/src/main/resources/fxml/Dashboard.fxml b/src/main/resources/fxml/Dashboard.fxml
+index 6f75b71..fe47211 100644
+--- a/src/main/resources/fxml/Dashboard.fxml
++++ b/src/main/resources/fxml/Dashboard.fxml
+@@ -44,6 +44,14 @@
+                    text="Température : 0 °C"
+                    style="-fx-text-fill: white;"/>
+ 
++            <Label fx:id="depthLabel"
++                   text="Profondeur : 0 m"
++                   style="-fx-text-fill: white;"/>
++
++            <Label fx:id="intensityLabel"
++                   text="Intensité : 0"
++                   style="-fx-text-fill: white;"/>
++
+             <Label fx:id="stateLabel"
+                    text="État : En attente"
+                    style="-fx-text-fill: white;"/>

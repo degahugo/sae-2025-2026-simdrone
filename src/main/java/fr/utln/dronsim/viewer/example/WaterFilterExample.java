@@ -20,9 +20,10 @@ import com.jme3.water.WaterFilter;
 import fr.app.model.sensor.Sensor;
 import fr.app.model.sensor.TemperatureSensor;
 import fr.utln.dronsim.viewer.primitives.ReferentialNode;
+import fr.app.model.PilotCommand;
 
 import fr.app.controller.DroneController;
-import fr.app.model.Drone;
+import fr.app.model.Drone;import fr.app.model.DroneStatus;
 
 /**
  * An example that illustrate a complete scene with water simulation.
@@ -60,6 +61,9 @@ public class WaterFilterExample extends SimpleApplication {
 		cam.setLocation(new Vector3f(4.00f, 4.40f, 2.0f));
 		cam.lookAt(Vector3f.ZERO, Vector3f.UNIT_Y);
 		flyCam.setUpVector(Vector3f.UNIT_Y);
+        flyCam.setEnabled(false);
+        inputManager.setCursorVisible(true);
+
 
 		// Add a sky
 		rootNode.attachChild(SkyFactory.createSky(getAssetManager(), "Textures/Sky/Bright/BrightSky.dds", SkyFactory.EnvMapType.CubeMap));
@@ -69,7 +73,7 @@ public class WaterFilterExample extends SimpleApplication {
     @Override
     public void simpleUpdate(float tpf) {
 
-        droneController.updateMovement(tpf);
+        droneController.updateMovement();
 
         Vector3f dronePosition = drone.getDroneSpatial().getWorldTranslation();
 
@@ -129,13 +133,9 @@ public class WaterFilterExample extends SimpleApplication {
 		//   - Attach the vehicle node to the main scene
 		scene.attachChild(vehicleANode);
 
-        drone = new Drone(vehicleANode);
+        drone = new Drone("drone1",vehicleANode);
 
-        droneController =
-                new DroneController(
-                        inputManager,
-                        drone
-                );
+        //droneController = new DroneController(inputManager, drone);
 
         droneController.setUpKeys();
 
@@ -214,6 +214,61 @@ public class WaterFilterExample extends SimpleApplication {
 		sun.setDirection(new Vector3f(-.5f,-.5f,-.5f).normalizeLocal());
 		rootNode.addLight(sun);
 	}
+
+
+
+    public DroneStatus getDroneStatus(String droneId) {
+
+        DroneStatus status = new DroneStatus();
+
+        if (drone == null || !drone.getId().equals(droneId)) {
+            status.setState("Drone inconnu");
+            return status;
+        }
+
+        Vector3f position = drone.getDroneSpatial().getLocalTranslation();
+
+        status.setX(position.x);
+        status.setY(position.y);
+        status.setZ(position.z);
+        status.setSpeed(0.0);
+        status.setState("En vol");
+
+        return status;
+    }
+
+
+
+    public void executeNetworkCommand(String droneId,
+                                      PilotCommand command) {
+
+        if (drone == null || droneController == null) {
+            System.out.println("[Simulation] Drone ou controller non prêt.");
+            return;
+        }
+
+        if (!drone.getId().equals(droneId)) {
+            System.out.println("[Simulation] Drone inconnu : " + droneId);
+            return;
+        }
+
+        Vector3f before =
+                drone.getDroneSpatial()
+                        .getLocalTranslation()
+                        .clone();
+
+        droneController.applyCommandOnce(command);
+
+        Vector3f after =
+                drone.getDroneSpatial()
+                        .getLocalTranslation()
+                        .clone();
+
+        System.out.println("[Simulation] Commande appliquée à " + droneId + " : " + command);
+        System.out.println("[Simulation] Position avant : " + before);
+        System.out.println("[Simulation] Position après : " + after);
+    }
+
 
 	/**
 	 * The main method

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="fr.app.controller.SelectionDroneController"
+            prefWidth="900"
+            prefHeight="600"
+            style="-fx-background-color: linear-gradient(to bottom right, #071018, #0f2633, #101820);">
+
+    <center>
+        <VBox alignment="CENTER" spacing="22">
+
+            <VBox alignment="CENTER"
+                  spacing="18"
+                  maxWidth="430"
+                  style="-fx-background-color: rgba(255,255,255,0.08);
+                         -fx-border-color: rgba(0,229,255,0.65);
+                         -fx-border-width: 1.4;
+                         -fx-border-radius: 18;
+                         -fx-background-radius: 18;
+                         -fx-effect: dropshadow(gaussian, rgba(0,229,255,0.25), 28, 0, 0, 8);">
+
+                <padding>
+                    <Insets top="38" right="34" bottom="36" left="34"/>
+                </padding>
+
+                <Label text="DronSim"
+                       style="-fx-text-fill: white;
+                              -fx-font-size: 34px;
+                              -fx-font-weight: bold;"/>
+
+                <Label text="Sélection du drone"
+                       style="-fx-text-fill: #00e5ff;
+                              -fx-font-size: 18px;
+                              -fx-font-weight: bold;"/>
+
+                <Separator style="-fx-background-color: rgba(255,255,255,0.25);"/>
+
+                <Label text="Choisissez le drone que vous souhaitez contrôler"
+                       wrapText="true"
+                       alignment="CENTER"
+                       style="-fx-text-fill: #d8f6ff;
+                              -fx-font-size: 14px;"/>
+
+                <ComboBox fx:id="droneComboBox"
+                          promptText="Sélectionner un drone"
+                          prefHeight="46"
+                          maxWidth="Infinity"
+                          style="-fx-font-size: 15px;
+                                 -fx-background-color: #f7fafc;
+                                 -fx-border-color: #00bcd4;
+                                 -fx-border-radius: 8;
+                                 -fx-background-radius: 8;
+                                 -fx-padding: 0 8;"/>
+
+                <Button text="Contrôler ce drone"
+                        onAction="#handleSelectDrone"
+                        prefHeight="48"
+                        maxWidth="Infinity"
+                        style="-fx-background-color: linear-gradient(to right, #00bcd4, #2563eb);
+                               -fx-text-fill: white;
+                               -fx-font-size: 15px;
+                               -fx-font-weight: bold;
+                               -fx-background-radius: 10;
+                               -fx-cursor: hand;
+                               -fx-effect: dropshadow(gaussian, rgba(0,188,212,0.35), 14, 0, 0, 4);"/>
+
+                <Label text="Connexion sécurisée active"
+                       style="-fx-text-fill: #00ff99;
+                              -fx-font-size: 12px;
+                              -fx-font-weight: bold;"/>
+
+            </VBox>
+        </VBox>
+    </center>
+
+</BorderPane>

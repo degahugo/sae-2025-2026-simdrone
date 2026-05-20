@@ -7,5 +7,11 @@ public enum PilotCommand {
     RIGHT,
     UP,
     DOWN,
+    ROTATELEFT,
+    ROTATERIGHT,
+    PITCHUP,
+    PITCHDOWN,
+    ROLLLEFT,
+    ROLLRIGHT,
     STOP
 }
