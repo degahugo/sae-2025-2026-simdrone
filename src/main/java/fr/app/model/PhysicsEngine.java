@@ -10,6 +10,7 @@ import com.jme3.bullet.collision.shapes.MeshCollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
 import com.jme3.material.Material;
+import com.jme3.material.RenderState;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
@@ -83,7 +84,7 @@ public class PhysicsEngine{
         Node node = new Node("TerrainNode");
         // Configuration des locators
         assetManager.registerLocator("data/asset", FileLocator.class);
-        String name;
+        final String name;
         /*
         terrain =
                 1 : target-approach-line-terrain
@@ -96,34 +97,56 @@ public class PhysicsEngine{
         } else if (terrain==2) {
             assetManager.registerLocator("data/asset/terrain/military", FileLocator.class);
             name = "terrain/military/target-approach-spiral-terrain";
+        } else if(terrain==3){
+            // Add point_borlo things
+            assetManager.registerLocator("data/asset/terrain/cassidaigne/point_borloo", FileLocator.class);
+            name = "terrain/cassidaigne/point_borloo/scene-texture";
         } else {
-            name = "";
-            if(terrain==3){
-                // Add point_borlo things
-            }
+            System.out.println("Terrain does not exist. Using terrain 1");
+            return CreateTerrainScene(1,onTerrainReady);
         }
         guiManager.CreateWaitingGUI();
         // Using thread to launch the simulator faster
         new Thread(() -> {
             // On charge les fichiers
             System.out.println("Loading terrain " + name + " in the background");
-            Spatial terrainVisuel = assetManager.loadModel(name+".j3o"); // Visuel
-            Spatial terrainLowPoly = assetManager.loadModel(name+"-lowpoly.j3o"); // Physique
+            // Initialisation des Spatial
+            Spatial terrainVisuel;
+            Spatial terrainLowPoly;
+            terrainVisuel = assetManager.loadModel(name + ".j3o");
+            System.out.println("Visuel de la map chargé");
+            // Set a texture only for the 3rd map : point_borloo
+            if(terrain==3){
+                System.out.println("Chargement de la texture de point_borloo");
+                Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
+                mat.setTexture("DiffuseMap", assetManager.loadTexture("texdefrag_scene.ply_optimized_texture_1.png"));
+                mat.getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Off);
+                terrainVisuel.setMaterial(mat);
+                System.out.println("Texture de point_borloo terminé");
+            }
+            System.out.println("Chargement du modèle physique lowpoly");
+            terrainLowPoly = assetManager.loadModel(name + "-lowpoly.j3o");
             System.out.println("Terrain loaded");
             System.out.println("Beggining mesh generation");
             // Generating mesh
             CollisionShape sceneShape = CollisionShapeFactory.createMeshShape(terrainLowPoly);
+            System.out.println("Mesh generated\nGenerating RigidBodyControl with this mesh");
             // JMonkey stuff
             RigidBodyControl landscape = new RigidBodyControl(sceneShape, 0);
+            System.out.println("RigidBodyControl generated");
             /*
             A bit of friction to avoid things getting stuck in odd ways and a bit bouncy
             Both should be adjusted to get a realistic underwater physic
              */
             landscape.setFriction(0.1f);
             landscape.setRestitution(0.2f);
-            // Correct axes
-            terrainVisuel.rotate(-FastMath.HALF_PI, 0.0f, 0.0f);
-            landscape.setPhysicsRotation(terrainVisuel.getWorldRotation());
+            // Correct axes but not for point_borloo
+            if (terrain != 3) {
+                terrainVisuel.rotate(-FastMath.HALF_PI, 0.0f, 0.0f);
+                landscape.setPhysicsRotation(terrainVisuel.getWorldRotation());
+            } else {
+                landscape.setPhysicsRotation(terrainVisuel.getWorldRotation());
+            }
             // Once the processing is finished, we can inject it cleanly
             // app should be a reference to JME application (SimpleApplication)
             app.enqueue(() -> {

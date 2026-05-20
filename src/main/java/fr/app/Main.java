@@ -1,7 +1,6 @@
 package fr.app;
 
 import com.jme3.app.SimpleApplication;
-import com.jme3.math.ColorRGBA;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.scene.*;
 import com.jme3.system.AppSettings;
@@ -10,7 +9,6 @@ import fr.app.model.PhysicsEngine;
 import fr.app.model.WorldView;
 import fr.app.view.CameraManager;
 import fr.app.view.GUIManager;
-import fr.app.view.CameraManager;
 import fr.app.model.sensor.Sensor;
 import fr.app.model.sensor.TemperatureSensor;
 import fr.app.view.LightingManager;
@@ -67,6 +65,8 @@ public class Main extends SimpleApplication {
         this.guiManager = new GUIManager(assetManager, settings, guiNode);
 
         flyCam.setEnabled(false);
+        // Réduit la distance minimale d'affichage de la caméra pour ne plus voir à travers les murs ou le sol en s'approchant
+        cam.setFrustumPerspective(45f, (float) cam.getWidth() / cam.getHeight(), 0.01f, 1000f);
         inputManager.setCursorVisible(true);
         setPauseOnLostFocus(false);
 
@@ -91,7 +91,7 @@ public class Main extends SimpleApplication {
             //physicsEngine.SpawnTestCube(rootNode, -4f, 15f, 0f, ColorRGBA.Red);
             //physicsEngine.SpawnTestCube(rootNode, 0f, 2f, 0f, ColorRGBA.Yellow);
             // Create a drone
-            droneManager.CreateDrone("BR2R4");
+            droneManager.CreateDrone("Guardian");
             // Gets the manager and controller te be used here
             this.droneCameraManager = droneManager.getDroneCameraManager();
             this.droneController = droneManager.getDroneController();
