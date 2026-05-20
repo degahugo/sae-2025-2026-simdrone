@@ -7,6 +7,7 @@ import com.jme3.system.AppSettings;
 import fr.app.model.PhysicsEngine;
 import fr.app.model.WorldView;
 //import fr.app.view.CameraManager;
+import fr.app.model.sensor.CompassSensor;
 import fr.app.model.sensor.DepthSensor;
 import fr.app.model.sensor.Sensor;
 import fr.app.model.sensor.TemperatureSensor;
@@ -33,7 +34,9 @@ public class Main extends SimpleApplication {
     private Sensor sensor;
     private TemperatureSensor temperatureSensor;
 
-
+    /**
+     * Point d'entrée de l'application.
+     */
     public static void main(String[] args) {
 
         AppSettings settings = new AppSettings(true);
@@ -80,12 +83,16 @@ public class Main extends SimpleApplication {
         sceneNode.attachChild(droneNode);
 
         this.drone = new Drone(droneNode);
-
+        // Capteur de température
         this.temperatureSensor = new TemperatureSensor("TempSensor");
         drone.addSensor(temperatureSensor);
-
+        // Capteur de profondeur
         DepthSensor depthSensor = new DepthSensor("DepthSensor");
         drone.addSensor(depthSensor);
+        // Capteur de compas
+        CompassSensor compassSensor = new CompassSensor("CompassSensor");
+        drone.addSensor(compassSensor);
+
 
 
         this.droneController = new DroneController(inputManager, drone);
@@ -122,14 +129,16 @@ public class Main extends SimpleApplication {
             if (sensor instanceof TemperatureSensor) {
                 TemperatureSensor ts = (TemperatureSensor) sensor;
                 ts.affectDrone(drone);
-                System.out.println(
-                        "Température : " + ts.getTemperature()
-                );
+                System.out.println("Température : " + ts.getTemperature());
             }
             if (sensor instanceof DepthSensor) {
                 DepthSensor ds = (DepthSensor) sensor;
                 System.out.println("Profondeur : " + ds.getDepth() + " m");
             }
+            if (sensor instanceof CompassSensor cs) {
+                System.out.println("Cap : " + cs.getHeading() + "°");
+            }
+
 
             if (drone.getBattery() != null) {
                 float consumption = 0.5f * tpf;
