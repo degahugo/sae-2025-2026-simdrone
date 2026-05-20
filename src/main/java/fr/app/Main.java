@@ -125,8 +125,11 @@ public class Main extends SimpleApplication {
         }
 
         if (drone.getBattery() != null) {
-            float consumption = 0.5f * tpf;
+            float consumption = 0.05f * tpf;
             //Donc plus le temps passe,plus la batterie diminue
+            //La batterie commence à diminuer dès que l'on active le main
+            //Donc lorsqu'on commence à voir les données un peu de batterie a été consommé lors du lancement de l'application
+
 
             drone.getBattery().consommation(consumption);
             //retire de l'énergie à la batterie
