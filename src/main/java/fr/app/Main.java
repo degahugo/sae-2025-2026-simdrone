@@ -33,9 +33,7 @@ public class Main extends SimpleApplication {
     private DepthSensor depthSensor;
     private PressureSensor pressureSensor;
 
-    /**
-     * Point d'entrée de l'application.
-     */
+
     public static void main(String[] args) {
 
         AppSettings settings=new AppSettings(true);
