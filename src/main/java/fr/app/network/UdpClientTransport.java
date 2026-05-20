@@ -65,7 +65,7 @@ public class UdpClientTransport {
     public DroneStatus receiveStatus() throws Exception {
         byte[] buffer = new byte[4096];
         DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-        socket.setSoTimeout(5000);
+        socket.setSoTimeout(10000);
         socket.receive(packet);
 
         byte[] data = Arrays.copyOf(packet.getData(), packet.getLength());
