@@ -53,6 +53,7 @@ public class DroneController {
     // Hover mode
     private boolean isHoverModeOn = false;
     private boolean wasHoverModeCalculated = false;
+    private float hoverHeight = 0f;
 
     // vecteurs
    // private Vector3f forwardMovement = new Vector3f(0, 0, -1);
@@ -266,6 +267,8 @@ public class DroneController {
                 isHoverModeOn = !isHoverModeOn;
                 System.out.println("Hover mode is : " + isHoverModeOn);
                 wasHoverModeCalculated = true; // On bloque les futurs changements tant que la touche reste enfoncée
+                // Récupération de la hauteur à laquelle on va hover
+                hoverHeight = drone.getDroneSpatial().getLocalRotation().getW();
             }
         } else {
             // Dès que le joueur relâche la touche, on réinitialise le flag
