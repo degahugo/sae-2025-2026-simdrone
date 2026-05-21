@@ -303,12 +303,15 @@ public class DroneController {
             // Yaw
             if (rotateLeftIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Y).mult(torquePower));
             else if (rotateRightIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Y).mult(-torquePower));
-            // Pitch
-            if (pitchForwardIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_X).mult(-torquePower));
-            else if (pitchBackwardIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_X).mult(torquePower));
-            // Roll
-            if (rollLeftIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Z).mult(-torquePower));
-            else if (rollRightIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Z).mult(torquePower));
+            // If the hover mode is activated we block the pitch and roll to not disturb the hovermode
+            if(!isHoverModeOn){
+                // Pitch
+                if (pitchForwardIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_X).mult(-torquePower));
+                else if (pitchBackwardIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_X).mult(torquePower));
+                // Roll
+                if (rollLeftIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Z).mult(-torquePower));
+                else if (rollRightIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Z).mult(torquePower));
+            }
         } else {
             if (linearVelocity.y > 0) {
                 physicsControl.setLinearVelocity(new Vector3f(linearVelocity.x, linearVelocity.y * 0.9f, linearVelocity.z));
