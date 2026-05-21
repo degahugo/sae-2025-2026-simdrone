@@ -48,16 +48,26 @@ public class LightingManager {
         rootNode.addLight(spot);
 
         // Set up the ambient light
-        AmbientLight al = new AmbientLight();
-        al.setColor(ColorRGBA.White);
-        rootNode.addLight(al);
+        ambientLight = new AmbientLight();
+        ambientLight.setColor(ColorRGBA.White);
+        rootNode.addLight(ambientLight);
+        //on peut maintenant modifier la lumière depuis n'importe quelle méthode
 
         // Set up the directionnal light
-        DirectionalLight sun = new DirectionalLight();
-        sun.setColor(ColorRGBA.White);
-        sun.setDirection(new Vector3f(-.5f,-.5f,-.5f).normalizeLocal());
-        rootNode.addLight(sun);
+        sunLight = new DirectionalLight();
+        sunLight.setColor(ColorRGBA.White);
+        sunLight.setDirection(new Vector3f(-.5f,-.5f,-.5f).normalizeLocal());
+        rootNode.addLight(sunLight);
 
         rootNode.attachChild(SkyFactory.createSky(assetManager, "Textures/Sky/Bright/BrightSky.dds", SkyFactory.EnvMapType.CubeMap));
+    }
+
+
+
+    public void updateUnderwaterLighting(float depth) {
+        float intensity = Math.max(0.05f, 1.0f - (depth * 0.02f));
+
+        ambientLight.setColor(ColorRGBA.White.mult(intensity));
+        sunLight.setColor(ColorRGBA.White.mult(intensity * 0.8f));
     }
 }
