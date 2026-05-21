@@ -53,6 +53,7 @@ public class DroneManager {
         this.droneController.setUpKeys();
         this.droneCameraManager = new DroneCameraManager(cam, drone);
         this.droneCameraManager.setCameraOffset(camOffset);
+        //this.droneCameraManager = new DroneCameraManager(cam, drone);
     }
 
     public Drone getDrone(){

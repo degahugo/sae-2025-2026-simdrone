@@ -1,5 +1,8 @@
 package fr.app.controller;
 
+import fr.app.model.EnvironmentType;
+import fr.app.model.SensorType;
+import fr.app.model.SimulationConfiguration;
 import fr.app.network.NetworkClient;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -8,16 +11,18 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.stage.Stage;
 
+import java.util.List;
+
 public class ConfigurationSimulationController {
 
     @FXML
-    private ComboBox<String> environmentComboBox;
+    private ComboBox<EnvironmentType> environmentComboBox;
 
     @FXML
     private ComboBox<String> conditionComboBox;
 
     @FXML
-    private ComboBox<String> sensorComboBox;
+    private ComboBox<SensorType> sensorComboBox;
 
     @FXML
     private Label statusLabel;
@@ -31,32 +36,28 @@ public class ConfigurationSimulationController {
     @FXML
     private void initialize() {
 
-        environmentComboBox.getItems().addAll(
-                "Militaire",
-                "Sous-marin"
-        );
+        environmentComboBox.getItems().addAll(EnvironmentType.values());
 
         conditionComboBox.getItems().addAll(
                 "Aucune",
-                "Vent",
-                "Courant"
+                "Courant faible",
+                "Courant fort",
+                "Turbulence",
+                "Visibilité réduite"
         );
 
-        sensorComboBox.getItems().addAll(
-                "Caméra"
-        );
+        sensorComboBox.getItems().addAll(SensorType.values());
 
-        environmentComboBox.setValue("Sous-marin");
-        conditionComboBox.setValue("Aucune");
-        sensorComboBox.setValue("Caméra");
+        environmentComboBox.setValue(EnvironmentType.UNDERWATER_LINE);        conditionComboBox.setValue("Aucune");
+        sensorComboBox.setValue(SensorType.CAMERA);
     }
 
     @FXML
     private void handleContinue() {
 
-        String environment = environmentComboBox.getValue();
+        EnvironmentType environment = environmentComboBox.getValue();
         String condition = conditionComboBox.getValue();
-        String sensor = sensorComboBox.getValue();
+        SensorType sensor = sensorComboBox.getValue();
 
         if (environment == null || condition == null || sensor == null) {
             statusLabel.setText("Veuillez sélectionner tous les paramètres.");
@@ -64,34 +65,22 @@ public class ConfigurationSimulationController {
         }
 
         try {
-            /*
-             * Pour l'instant, on garde seulement la configuration côté interface.
-             * Plus tard, on l'enverra au serveur avec un message JSON structuré.
-             */
-            System.out.println("[Configuration] Environnement : " + environment);
-            System.out.println("[Configuration] Condition : " + condition);
-            System.out.println("[Configuration] Capteur : " + sensor);
+            SimulationConfiguration configuration = new SimulationConfiguration();
+            configuration.setEnvironmentType(environment);
+            configuration.setCondition(condition);
+            configuration.setSensors(List.of(sensor));
 
-            FXMLLoader loader =
-                    new FXMLLoader(
-                            getClass().getResource(
-                                    "/fxml/SelectionDrone.fxml"
-                            )
-                    );
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/fxml/SelectionDrone.fxml")
+            );
 
-            Scene scene =
-                    new Scene(loader.load());
+            Scene scene = new Scene(loader.load());
 
-            SelectionDroneController controller =
-                    loader.getController();
-
+            SelectionDroneController controller = loader.getController();
             controller.setClient(client);
+            controller.setConfiguration(configuration);
 
-            Stage stage =
-                    (Stage) environmentComboBox
-                            .getScene()
-                            .getWindow();
-
+            Stage stage = (Stage) environmentComboBox.getScene().getWindow();
             stage.setScene(scene);
 
         } catch (Exception e) {
