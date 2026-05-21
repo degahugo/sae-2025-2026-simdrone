@@ -268,7 +268,7 @@ public class DroneController {
                 isHoverModeOn = !isHoverModeOn;
                 if(isHoverModeOn){
                     // Récupération de la hauteur à laquelle on va hover
-                    hoverHeight = drone.getDroneSpatial().getLocalTranslation().getY();
+                    hoverHeight = min(drone.getDroneSpatial().getLocalTranslation().getY(),waterHeight); // On cap à la hauteur de l'eau
                     System.out.println("Hover at : " + hoverHeight);
                 }
                 System.out.println("Hover mode is : " + isHoverModeOn);
@@ -329,9 +329,9 @@ public class DroneController {
                 StabiliseDroneAttitude(totalTorque, angularVelocity);
             }
         } else {
-            if (linearVelocity.y > 0) {
-                physicsControl.setLinearVelocity(new Vector3f(linearVelocity.x, linearVelocity.y * 0.9f, linearVelocity.z));
-            }
+            // Make the drone float a little bit when it reaches surface
+            // Pretty simple and avoids all the complicated Archimede's stuff
+            totalForce.setY(gravityCounterForce * 0.7f);
         }
         // Apply forces and torques
         physicsControl.applyCentralForce(totalForce);

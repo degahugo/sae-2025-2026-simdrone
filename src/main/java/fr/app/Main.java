@@ -143,7 +143,7 @@ public class Main extends SimpleApplication {
         if (waterDistortionManager != null){
             waterDistortionManager.update();
         }
-
+/*
         for (Sensor sensor : drone.getSensors()) {
             sensor.update(drone);
             if (sensor instanceof TemperatureSensor) {
@@ -155,7 +155,6 @@ public class Main extends SimpleApplication {
                     lastTemperature = temp;
                     System.out.println("Température : " + temp);
                 }
-
             }
             if (sensor instanceof DepthSensor) {
                 DepthSensor ds = (DepthSensor) sensor;
@@ -177,17 +176,10 @@ public class Main extends SimpleApplication {
             //Donc plus le temps passe,plus la batterie diminue
             //La batterie commence à diminuer dès que l'on active le main
             //Donc lorsqu'on commence à voir les données un peu de batterie a été consommé lors du lancement de l'application
-
-
                 drone.getBattery().consommation(consumption);
                 //retire de l'énergie à la batterie
-                System.out.println(
-                        "Batterie : " + drone.getBattery().getPercentage() + "%"
-                );
-
-        }
-
-
+                System.out.println("Batterie : " + drone.getBattery().getPercentage() + "%");
+        }*/
     }
 
     public void executeNetworkCommand(String droneId, PilotCommand command) {
