@@ -9,8 +9,8 @@ import fr.app.model.PhysicsEngine;
 import fr.app.model.WorldView;
 import fr.app.view.CameraManager;
 import fr.app.view.GUIManager;
-import fr.app.model.sensor.Sensor;
-import fr.app.model.sensor.TemperatureSensor;
+import fr.app.view.CameraManager;
+import fr.app.model.sensor.*;
 import fr.app.view.LightingManager;
 import fr.app.view.WaterFilterManager;
 import fr.app.controller.DroneController;
@@ -45,6 +45,8 @@ public class Main extends SimpleApplication {
     private float lastTemperature = Float.NaN; // dernière température enregistré
 
     private volatile boolean initialized = false;
+    private DepthSensor depthSensor;
+    private PressureSensor pressureSensor;
 
 
     public static void main(String[] args) {
@@ -94,14 +96,22 @@ public class Main extends SimpleApplication {
             //physicsEngine.SpawnTestCube(rootNode, -4f, 15f, 0f, ColorRGBA.Red);
             //physicsEngine.SpawnTestCube(rootNode, 0f, 2f, 0f, ColorRGBA.Yellow);
             // Create a drone
-            droneManager.CreateDrone("Guardian");
+            droneManager.CreateDrone("BR2R4");
             // Gets the manager and controller te be used here
             this.droneCameraManager = droneManager.getDroneCameraManager();
             this.droneController = droneManager.getDroneController();
             // Adding captors
-            this.temperatureSensor = new TemperatureSensor("TempSensor");
+            // Getting the drone
             this.drone = droneManager.getDrone();
+            // Then adding the sensors
+            this.temperatureSensor = new TemperatureSensor("TempSensor");
             this.drone.addSensor(temperatureSensor);
+            this.depthSensor = new DepthSensor("DepthSensor");
+            drone.addSensor(this.depthSensor);
+            CompassSensor compassSensor = new CompassSensor("CompassSensor");
+            drone.addSensor(compassSensor);
+            this.pressureSensor = new PressureSensor("PressureSensor", this.depthSensor);
+            drone.addSensor(this.pressureSensor);
             // Creates the water filter
             WaterFilterManager waterFilterManager = new WaterFilterManager(fpp, viewPort, rootNode, model);
             this.waterDistortionManager = new WaterDistortionManager(fpp, viewPort, droneManager.getDrone(), model);
@@ -148,7 +158,36 @@ public class Main extends SimpleApplication {
                     lastTemperature = temp;
                     System.out.println("Température : " + temp);
                 }
+
             }
+            if (sensor instanceof DepthSensor) {
+                DepthSensor ds = (DepthSensor) sensor;
+                System.out.println("Profondeur : " + ds.getDepth() + " m");
+            }
+            if (sensor instanceof CompassSensor cs) {
+                System.out.println("Cap : " + cs.getHeading() + "°");
+            }
+            if (sensor instanceof PressureSensor cs) {
+                System.out.println("Pression : " + cs.getPressure() + "bar");
+            }
+            if (sensor instanceof TemperatureSensor ts) {
+                System.out.println("Temperature: " + ts.getTemperature() + "°C");
+            }
+        }
+
+        if (drone.getBattery() != null) {
+            float consumption = 0.05f * tpf;
+            //Donc plus le temps passe,plus la batterie diminue
+            //La batterie commence à diminuer dès que l'on active le main
+            //Donc lorsqu'on commence à voir les données un peu de batterie a été consommé lors du lancement de l'application
+
+
+                drone.getBattery().consommation(consumption);
+                //retire de l'énergie à la batterie
+                System.out.println(
+                        "Batterie : " + drone.getBattery().getPercentage() + "%"
+                );
+
         }
 
 
