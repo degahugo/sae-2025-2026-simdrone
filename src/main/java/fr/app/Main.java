@@ -135,7 +135,7 @@ public class Main extends SimpleApplication {
             return;
         }
         if (droneController != null){
-            droneController.updateMovement();
+            droneController.updateMovement(tpf);
         }
         if (droneCameraManager != null){
             droneCameraManager.update(tpf);

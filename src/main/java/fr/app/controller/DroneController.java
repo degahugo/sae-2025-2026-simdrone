@@ -6,12 +6,11 @@ import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.math.Vector3f;
-
-import com.jme3.scene.control.UpdateControl;
 import fr.app.model.Drone;
 import fr.app.model.DroneMovement;
 import fr.app.model.WorldView;
 import fr.app.model.PilotCommand;
+import static java.lang.Math.min;
 
 public class DroneController {
 
@@ -49,11 +48,12 @@ public class DroneController {
     // Physic
     private RigidBodyControl physicsControl;
     private float mass;
-    private float gravityCounterForce;
+    private float gravityCounterForce; // Force pour contrer la gravité
     // Hover mode
-    private boolean isHoverModeOn = false;
-    private boolean wasHoverModeCalculated = false;
+    private boolean isHoverModeOn = false; // Pour savoir si on est en mode hover
+    private boolean wasHoverModeCalculated = false; // Pour détecter quand on appuie sur la touche
     private float hoverHeight = 0f;
+    private float updateSpeedHoverMode = 0.5f; // Modification de la hauteur en mode hover
 
     // vecteurs
    // private Vector3f forwardMovement = new Vector3f(0, 0, -1);
@@ -259,19 +259,23 @@ public class DroneController {
 
     /**
      * Method to calculate the movement of a physic object.
+     * @param tpf Time per frame, used to adjust the height while hovering
      */
-    public void updateMovement(){
+    public void updateMovement(float tpf){
         if (toggleHoverModeIntention) {
-            // Si l'intention est vraie MAIS qu'elle ne l'était pas à la frame précédente
+            // Si l'intention est vraie mais qu'elle ne l'était pas à la frame précédente
             if (!wasHoverModeCalculated) {
                 isHoverModeOn = !isHoverModeOn;
+                if(isHoverModeOn){
+                    // Récupération de la hauteur à laquelle on va hover
+                    hoverHeight = drone.getDroneSpatial().getLocalTranslation().getY();
+                    System.out.println("Hover at : " + hoverHeight);
+                }
                 System.out.println("Hover mode is : " + isHoverModeOn);
                 wasHoverModeCalculated = true; // On bloque les futurs changements tant que la touche reste enfoncée
-                // Récupération de la hauteur à laquelle on va hover
-                hoverHeight = drone.getDroneSpatial().getLocalRotation().getW();
             }
         } else {
-            // Dès que le joueur relâche la touche, on réinitialise le flag
+            // Dès qu'on relâche la touche
             wasHoverModeCalculated = false;
         }
         // Main vector
@@ -299,21 +303,30 @@ public class DroneController {
             if (leftIntention) totalForce.addLocal(left.mult(thrustPower));
             // Move right
             if (rightIntention) totalForce.addLocal(left.negate().mult(thrustPower));
-            // Up - Add force to push the drone upward
-            if (upIntention) totalForce.addLocal(up.mult(thrustPower));
-            // Down - Reducing force to let the drone sink
-            if (downIntention) totalForce.addLocal(up.negate().mult(thrustPower));
             // Yaw
             if (rotateLeftIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Y).mult(torquePower));
             else if (rotateRightIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Y).mult(-torquePower));
             // If the hover mode is activated we block the pitch and roll to not disturb the hovermode
             if(!isHoverModeOn){
+                // Up - Add force to push the drone upward
+                if (upIntention) totalForce.addLocal(up.mult(thrustPower));
+                // Down - Reducing force to let the drone sink
+                if (downIntention) totalForce.addLocal(up.negate().mult(thrustPower));
                 // Pitch
                 if (pitchForwardIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_X).mult(-torquePower));
                 else if (pitchBackwardIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_X).mult(torquePower));
                 // Roll
                 if (rollLeftIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Z).mult(-torquePower));
                 else if (rollRightIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Z).mult(torquePower));
+            } else{
+                if (upIntention) {
+                    hoverHeight = min(hoverHeight + updateSpeedHoverMode * tpf, waterHeight);
+                }
+                if (downIntention) {
+                    hoverHeight -= updateSpeedHoverMode * tpf;
+                }
+                StabiliseDroneHeight(totalForce, droneHeight, linearVelocity);
+                StabiliseDroneAttitude(totalTorque, angularVelocity);
             }
         } else {
             if (linearVelocity.y > 0) {
@@ -406,6 +419,78 @@ public class DroneController {
                         .add(moveDirection.mult(droneSpeed * tpf));
         drone.getDroneSpatial()
                 .setLocalTranslation(nextPosition);
+    }
+
+    /**
+     * Calculate the force needed to move the drone to his set height
+     * @param totalForce The vector used for applying forces
+     * @param droneHeight The desired height
+     * @param linearVelocity The vector containing the speed to dampen the movement and avoid overshoot
+     */
+    private void StabiliseDroneHeight(Vector3f totalForce, float droneHeight, Vector3f linearVelocity){
+        float heightError = hoverHeight - droneHeight;
+        float kpHeight = 15.0f;
+        float kdHeight = 5.0f;
+        // On corrige l'assiette
+        float verticalCorrection = (kpHeight * heightError) - (kdHeight * linearVelocity.y);
+        totalForce.setY(gravityCounterForce + verticalCorrection);
+    }
+
+    /**
+     * Calculate the torque requiered to set the drone to a plane attitude
+     * @param totalTorque The vector used for applying torques
+     * @param angularVelocity The vector containing the angular speeds to dampen the movement and avoid overshoot
+     */
+    private void StabiliseDroneAttitude(Vector3f totalTorque, Vector3f angularVelocity){
+        // On récupère les angles (radians)
+        float[] angles = new float[3];
+        drone.getDroneSpatial().getLocalRotation().toAngles(angles);
+        float currentPitch = angles[0]; // Rotation autour de l'axe X local
+        float currentRoll  = angles[2]; // Rotation autour de l'axe Z local
+        // Réglages : coefficients à ajuster selon le poids du drone
+        float kp = 0.8f;  // Force du "ressort" (Proportionnel)
+        float kd = 0.2f;  // Force de "l'amortisseur" (Dérivé)
+        // Couple de redressement : correction = - (kp * Angle + kd * Vitesse_Angulaire)
+        // On utilise l'inverse de la vitesse angulaire locale pour amortir
+        // On convertit la vitesse angulaire globale en repère local pour agir précisément
+        Vector3f localAngularVelocity = drone.getDroneSpatial().getLocalRotation().inverse().mult(angularVelocity);
+        float pitchCorrection = -(kp * currentPitch + kd * localAngularVelocity.x);
+        float rollCorrection  = -(kp * currentRoll  + kd * localAngularVelocity.z);
+        // On transforme ces corrections locales en vecteur de couple global
+        Vector3f localTorqueHover = new Vector3f(pitchCorrection, 0, rollCorrection).multLocal(torquePower);
+        Vector3f globalTorqueHover = drone.getDroneSpatial().getLocalRotation().mult(localTorqueHover);
+        // On applique au totalTorque
+        totalTorque.addLocal(globalTorqueHover);
+    }
+
+    /**
+     * @return The hover height, not the actual height, with can vary
+     */
+    public float GetHoverHeight(){
+        return this.hoverHeight;
+    }
+
+    /**
+     * Set the new height to hover.
+     * @param newHoverHeight Should not be more than the water height for obvious reasons, the drone can't fly
+     */
+    public void SetHoverHeight(float newHoverHeight){
+        this.hoverHeight = min(newHoverHeight,waterHeight);
+    }
+
+    /**
+     * @return The speed which the hover height will be changed
+     */
+    public float GetUpdateSpeedHoverMode(){
+        return this.updateSpeedHoverMode;
+    }
+
+    /**
+     * Set the new speed to change the hover mode height.
+     * @param newUpdateSpeed Should not be more than 1f, it will be too fast
+     */
+    public void SetUpdateSpeedHoverMode(float newUpdateSpeed){
+        this.updateSpeedHoverMode = newUpdateSpeed;
     }
 }
 
