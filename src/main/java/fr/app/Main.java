@@ -173,6 +173,9 @@ public class Main extends SimpleApplication {
             if (sensor instanceof PressureSensor cs) {
                 System.out.println("Pression : " + cs.getPressure() + "bar");
             }
+            if (sensor instanceof TemperatureSensor ts) {
+                System.out.println("Temperature: " + ts.getTemperature() + "°C");
+            }
         }
 
         if (drone.getBattery() != null) {
