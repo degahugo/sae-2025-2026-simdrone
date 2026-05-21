@@ -9,7 +9,6 @@ import fr.app.model.PhysicsEngine;
 import fr.app.model.WorldView;
 import fr.app.view.CameraManager;
 import fr.app.view.GUIManager;
-import fr.app.view.CameraManager;
 import fr.app.model.sensor.*;
 import fr.app.view.LightingManager;
 import fr.app.view.WaterFilterManager;
