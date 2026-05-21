@@ -1,7 +1,6 @@
 package fr.app;
 
 import com.jme3.app.SimpleApplication;
-import com.jme3.math.ColorRGBA;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.scene.*;
 import com.jme3.system.AppSettings;
@@ -10,7 +9,6 @@ import fr.app.model.PhysicsEngine;
 import fr.app.model.WorldView;
 import fr.app.view.CameraManager;
 import fr.app.view.GUIManager;
-import fr.app.view.CameraManager;
 import fr.app.model.sensor.Sensor;
 import fr.app.model.sensor.TemperatureSensor;
 import fr.app.view.LightingManager;
@@ -22,6 +20,11 @@ import fr.app.view.WaterDistortionManager;
 import fr.app.model.PilotCommand;
 import fr.app.model.DroneStatus;
 import com.jme3.math.Vector3f;
+import com.jme3.renderer.Camera;
+import com.jme3.renderer.ViewPort;
+import com.jme3.texture.FrameBuffer;
+import com.jme3.texture.Image;
+import fr.app.model.SimulationConfiguration;
 
 
 /**
@@ -45,8 +48,9 @@ public class Main extends SimpleApplication {
     private boolean debugMode = false;
     private boolean loading = true;
     private float lastTemperature = Float.NaN; // dernière température enregistré
-
+    private Camera pilotCamera;
     private volatile boolean initialized = false;
+    private SimulationConfiguration configuration;
 
 
     public static void main(String[] args) {
@@ -72,8 +76,15 @@ public class Main extends SimpleApplication {
         flyCam.setEnabled(false);
         inputManager.setCursorVisible(true);
         setPauseOnLostFocus(false);
-
         PhysicsEngine physicsEngine = new PhysicsEngine(this, this.model, this.guiManager, debugMode);
+
+
+        int terrainId = 1;
+
+        if (configuration != null && configuration.getEnvironmentType() != null) {
+            terrainId = configuration.getEnvironmentType().getTerrainId();
+        }
+
 
         // Configure scene
         this.lightingManager = new LightingManager(rootNode, cam, assetManager);
@@ -87,15 +98,19 @@ public class Main extends SimpleApplication {
         //this.cameraManager.configureCamera(false);
 
         // Creates scene and with a callback add the rest of the physics objects
-        Node sceneNode = physicsEngine.CreateTerrainScene(1, () -> {
-            // Only executes when the terrain is ready
+        Node sceneNode = physicsEngine.CreateTerrainScene(terrainId, () -> {            // Only executes when the terrain is ready
             // Add all physics objects here to avoid issues with the terrain not being finished
             System.out.println("Terrain ready : adding the CUBES");
             //physicsEngine.SpawnTestCube(rootNode, -4f, 15f, 0f, ColorRGBA.Red);
             //physicsEngine.SpawnTestCube(rootNode, 0f, 2f, 0f, ColorRGBA.Yellow);
             // Create a drone
-            droneManager.CreateDrone("BR2R4");
-            // Gets the manager and controller te be used here
+            String droneName = "BR2R4";
+
+            if (configuration != null && configuration.getDroneType() != null) {
+                droneName = configuration.getDroneType().getSimulatorName();
+            }
+
+            droneManager.CreateDrone(droneName);            // Gets the manager and controller te be used here
             this.droneCameraManager = droneManager.getDroneCameraManager();
             this.droneController = droneManager.getDroneController();
             // Adding captors
@@ -114,6 +129,7 @@ public class Main extends SimpleApplication {
         rootNode.attachChild(sceneNode);
         //this.initialized = true;
         //System.out.println("[Simulation] Initialisation terminée.");
+
 
     }
     public boolean isInitialized() {
@@ -197,6 +213,10 @@ public class Main extends SimpleApplication {
         }
 
         return status;
+    }
+
+    public void setConfiguration(SimulationConfiguration configuration) {
+        this.configuration = configuration;
     }
 
 }

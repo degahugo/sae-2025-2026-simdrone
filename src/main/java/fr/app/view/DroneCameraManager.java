@@ -13,7 +13,7 @@ public class DroneCameraManager {
     private final Node cameraNode;
 
 
-    private final Vector3f cameraOffset = new Vector3f(0f, 0f, 0f);
+    private final Vector3f cameraOffset = new Vector3f(0f, -1.5f, -0.5f);
 
     public DroneCameraManager(Camera cam, Drone drone) {
         this.cam = cam;

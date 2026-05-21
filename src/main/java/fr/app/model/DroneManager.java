@@ -45,7 +45,7 @@ public class DroneManager {
         this.physicsEngine.CreateDroneHitbox(drone, name);
         this.droneController = new DroneController(inputManager, drone, model);
         this.droneController.setUpKeys();
-        this.droneCameraManager = new DroneCameraManager(cam, drone);
+        //this.droneCameraManager = new DroneCameraManager(cam, drone);
     }
 
     public Drone getDrone(){

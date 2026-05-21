@@ -31,7 +31,7 @@
                               -fx-font-size: 30px;
                               -fx-font-weight: bold;"/>
 
-                <Label text="Préparez l'environnement avant de sélectionner un drone"
+                <Label text="Préparez l'environnement, les conditions et les capteurs"
                        wrapText="true"
                        alignment="CENTER"
                        style="-fx-text-fill: #d8f6ff;
@@ -58,7 +58,7 @@
                 </VBox>
 
                 <VBox spacing="8" maxWidth="Infinity">
-                    <Label text="Capteur"
+                    <Label text="Capteur principal"
                            style="-fx-text-fill: #00e5ff; -fx-font-weight: bold;"/>
                     <ComboBox fx:id="sensorComboBox"
                               promptText="Choisir un capteur"
