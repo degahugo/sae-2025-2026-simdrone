@@ -9,15 +9,26 @@ import java.util.List;
 public class Drone {
 
     private String id;
+
     private Node droneSpatial;
+
     private DroneState state;
+
     private List<Sensor> sensors;
 
+    private Battery battery;
+
     public Drone(String id, Node droneSpatial) {
+
         this.id = id;
+
         this.droneSpatial = droneSpatial;
+
         this.sensors = new ArrayList<>();
+
         this.state = new DroneState();
+
+        this.battery = new Battery(100f);
     }
 
     public String getId() {
@@ -50,5 +61,9 @@ public class Drone {
 
     public void setSensors(List<Sensor> sensors) {
         this.sensors = sensors;
+    }
+
+    public Battery getBattery() {
+        return battery;
     }
 }
