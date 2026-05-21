@@ -149,9 +149,7 @@ public class Main extends SimpleApplication {
             if (sensor instanceof TemperatureSensor) {
                 TemperatureSensor ts = (TemperatureSensor) sensor;
                 ts.affectDrone(drone);
-                /*System.out.println(
-                        "Température : " + ts.getTemperature()
-                );*/
+                //System.out.println("Température : " + ts.getTemperature());
                 float temp = ts.getTemperature();
                 if (Math.abs(temp - lastTemperature) > 0.01f) {
                     lastTemperature = temp;

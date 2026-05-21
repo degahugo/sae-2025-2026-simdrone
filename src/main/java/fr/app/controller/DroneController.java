@@ -45,9 +45,14 @@ public class DroneController {
     private boolean pitchBackwardIntention = false;
     private boolean rollLeftIntention = false;
     private boolean rollRightIntention = false;
+    private boolean toggleHoverModeIntention = false;
+    // Physic
     private RigidBodyControl physicsControl;
     private float mass;
     private float gravityCounterForce;
+    // Hover mode
+    private boolean isHoverModeOn = false;
+    private boolean wasHoverModeCalculated = false;
 
     // vecteurs
    // private Vector3f forwardMovement = new Vector3f(0, 0, -1);
@@ -70,6 +75,7 @@ public class DroneController {
     DroneMovement pitchDown = DroneMovement.PITCHDOWN;
     DroneMovement rollLeft = DroneMovement.ROLLLEFT;
     DroneMovement rollRight = DroneMovement.ROLLRIGHT;
+    DroneMovement toggleHoverMode = DroneMovement.TOGGLEHOVERMODE;
 
     public DroneController(InputManager inputManager, Drone drone, WorldView worldView) {
         this.inputManager = inputManager;
@@ -114,9 +120,6 @@ public class DroneController {
     }
 
 
-    /**
-     * Set up the key mappings
-     */
     public void executeCommand(PilotCommand command,
                                boolean pressed) {
 
@@ -134,6 +137,7 @@ public class DroneController {
             case PITCHDOWN: pitchBackwardIntention = pressed; break;
             case ROLLLEFT: rollLeftIntention = pressed; break;
             case ROLLRIGHT: rollRightIntention = pressed; break;
+            case TOGGLEHOVERMODE: toggleHoverModeIntention = pressed; break;
 
             case STOP:
                 forwardIntention = false;
@@ -146,6 +150,9 @@ public class DroneController {
         }
     }
 
+    /**
+     * Set up the key mappings
+     */
     public void setUpKeys() {
         // Key mappings
         // Moving horizontally
@@ -163,6 +170,8 @@ public class DroneController {
         inputManager.addMapping(rollRight.name(), new KeyTrigger(KeyInput.KEY_L));
         inputManager.addMapping(pitchUp.name(), new KeyTrigger(KeyInput.KEY_I));
         inputManager.addMapping(pitchDown.name(), new KeyTrigger(KeyInput.KEY_K));
+        // Hover mode
+        inputManager.addMapping(toggleHoverMode.name(), new KeyTrigger(KeyInput.KEY_T));
 
         // Listeners
         inputManager.addListener(actionListener,
@@ -177,7 +186,8 @@ public class DroneController {
                 pitchUp.name(),
                 pitchDown.name(),
                 rollLeft.name(),
-                rollRight.name()
+                rollRight.name(),
+                toggleHoverMode.name()
         );
     }
 
@@ -198,7 +208,7 @@ public class DroneController {
     };
 
 
-
+    @Deprecated
     public void applyCommandOnce(PilotCommand command) {
 
         float step = 0.6f;
@@ -250,6 +260,17 @@ public class DroneController {
      * Method to calculate the movement of a physic object.
      */
     public void updateMovement(){
+        if (toggleHoverModeIntention) {
+            // Si l'intention est vraie MAIS qu'elle ne l'était pas à la frame précédente
+            if (!wasHoverModeCalculated) {
+                isHoverModeOn = !isHoverModeOn;
+                System.out.println("Hover mode is : " + isHoverModeOn);
+                wasHoverModeCalculated = true; // On bloque les futurs changements tant que la touche reste enfoncée
+            }
+        } else {
+            // Dès que le joueur relâche la touche, on réinitialise le flag
+            wasHoverModeCalculated = false;
+        }
         // Main vector
         Vector3f totalForce = new Vector3f();
         // Local direction
