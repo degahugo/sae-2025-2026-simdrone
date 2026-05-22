@@ -66,10 +66,12 @@ public class TcpSessionServeur implements Runnable {
     // 4. Réception du port UDP du client
     // 5. Maintien de la session TCP ouverte
     private void handleClient(Socket socket) {
-        String ipClient = socket.getInetAddress().getHostAddress();
+        //ipTcp = IP vue par le serveur
+        String ipTcp = socket.getInetAddress().getHostAddress();
         // clé AES pour cette session : différente pour chaque client
         ProtocoleDeChiffrement protocoleSession = new ProtocoleDeChiffrement();
         protocoleSession.setRSAKeys(protocole.getPublicKey(), protocole.getPrivateKey());
+        String ipReelle = ipTcp; // sera remplacée par l'IP envoyée par le client
         try {
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             objectOutputStream.flush();
@@ -86,15 +88,38 @@ public class TcpSessionServeur implements Runnable {
             SecretKey cleAes = protocoleSession.getAESKey();
             System.out.println("[TCP Serveur] Clé AES reçue et déchiffrée.");
 
-            // récupération du port UDP du client
-            int udpPortClient = (int) objectInputStream.readObject();
-            System.out.println("[TCP Serveur] Port UDP client reçu : " + udpPortClient);
-            System.out.println("[TCP Serveur] Adresse UDP client : "
-                    + socket.getInetAddress().getHostAddress()
-                    + ":" + udpPortClient);
+            // Lecture du prochain objet : IP (String) ou port (Integer) selon version client
+            Object premierObjet= objectInputStream.readObject();
+            int udpPortCommandes;
+            int udpPortVideo;
 
-            // dépot dans le registre pour que UDPServeurTransport puisse envoyer les réponseS
-            registre.enregistrer(ipClient, udpPortClient, cleAes);
+            if (premierObjet instanceof String) {
+                // Nouveau protocole : IP réelle + port commandes + port vidéo
+                ipReelle        = (String) premierObjet;
+                udpPortCommandes = (int) objectInputStream.readObject();
+                udpPortVideo     = (int) objectInputStream.readObject();
+                System.out.println("[TCP Serveur] IP réelle reçue : " + ipReelle);
+            } else {
+                // Ancien protocole : seulement port commandes (Integer)
+                udpPortCommandes = (int) premierObjet;
+                // Essayer de lire le port vidéo avec timeout
+                try {
+                    socket.setSoTimeout(2000);
+                    udpPortVideo = (int) objectInputStream.readObject();
+                    socket.setSoTimeout(0);
+                } catch (Exception e) {
+                    socket.setSoTimeout(0);
+                    udpPortVideo = udpPortCommandes + 1;
+                }
+            }
+
+            System.out.println("[TCP Serveur] Port UDP commandes reçu : " + udpPortCommandes);
+            System.out.println("[TCP Serveur] Port UDP vidéo reçu : " + udpPortVideo);
+            System.out.println("[TCP Serveur] IP pour vidéo : " + ipReelle
+                    + " (IP TCP : " + ipTcp + ")");
+
+            // dépot dans le registre avec l'adresse IP réelle du client afin d'envoyer les fragments vidéo avec le protocole UDP
+            registre.enregistrer(ipReelle, udpPortCommandes,udpPortVideo, cleAes);
 
             // On maintient la connexion TCP ouverte
             while (!socket.isClosed()) {
@@ -105,7 +130,7 @@ public class TcpSessionServeur implements Runnable {
             System.out.println("[TCP Serveur] Client déconnecté : " + e.getMessage());
         }finally {
             // Nettoyage de la session quand le client se déconnecte
-            registre.supprimer(ipClient);
+            registre.supprimer(ipReelle);
         }
     }
     // Fermer le ServerSocket

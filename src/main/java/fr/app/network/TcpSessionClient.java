@@ -85,11 +85,16 @@ public class TcpSessionClient {
 
     // Envoie le port UDP local au serveur via TCP,
     // pour que le serveur sache où envoyer les réponses UDP
-    public void sendUdpPort(int udpPort) throws Exception {
-        objectOutputStream.writeObject(udpPort);
+    public void sendUdpPorts(int portUdpCommandes, int portUdpVideo) throws Exception {
+        // IP locale du socket TCP = IP réelle sur laquelle on peut recevoir des UDP
+        String ipLocale = socket.getLocalAddress().getHostAddress();
+        objectOutputStream.writeObject(ipLocale);
+        objectOutputStream.writeObject(portUdpCommandes);
+        objectOutputStream.writeObject(portUdpVideo);
         objectOutputStream.flush();
 
-        System.out.println("[TCP Client] Port UDP envoyé au serveur : " + udpPort);
+        System.out.println("[TCP Client] IP+Ports UDP envoyés — ip: " + ipLocale
+                + ", commandes: " + portUdpCommandes + ", vidéo: " + portUdpVideo);
         socket.setSoTimeout(0);
     }
 

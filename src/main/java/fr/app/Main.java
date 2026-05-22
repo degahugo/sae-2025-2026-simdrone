@@ -7,9 +7,25 @@ import com.jme3.system.AppSettings;
 import fr.app.model.*;
 import fr.app.view.*;
 import fr.app.model.sensor.*;
+import fr.app.model.sensor.Sensor;
+import fr.app.model.sensor.TemperatureSensor;
+import fr.app.view.LightingManager;
+import fr.app.view.WaterFilterManager;
 import fr.app.controller.DroneController;
+import fr.app.model.Drone;
+import fr.app.view.DroneCameraManager;
+import fr.app.view.WaterDistortionManager;
+import fr.app.model.PilotCommand;
+import fr.app.model.DroneStatus;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
+import com.jme3.renderer.ViewPort;
+import com.jme3.texture.FrameBuffer;
+import com.jme3.texture.Image;
+import fr.app.model.SimulationConfiguration;
+import java.util.concurrent.atomic.AtomicReference;
+import fr.app.view.DroneFrameCapture;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -52,6 +68,10 @@ public class Main extends SimpleApplication {
     private DepthSensor depthSensor;
     private PressureSensor pressureSensor;
     private SimulationConfiguration configuration;
+    // Statut mis à jour à chaque simpleUpdate() — thread-safe pour lecture externe
+    private final AtomicReference<DroneStatus> dernierStatut = new AtomicReference<>(new DroneStatus());
+    // Captures vidéo par droneId
+    private final ConcurrentHashMap<String, DroneFrameCapture> frameCaptures = new ConcurrentHashMap<>();
 
 
     public static void main(String[] args) {
@@ -179,33 +199,51 @@ public class Main extends SimpleApplication {
                 currentTimer = 0f; // On réinitialise le compte à rebours
             }
         }
-/*
-        for (Sensor sensor : drone.getSensors()) {
-            sensor.update(drone);
-            if (sensor instanceof TemperatureSensor) {
-                TemperatureSensor ts = (TemperatureSensor) sensor;
-                ts.affectDrone(drone);
-                //System.out.println("Température : " + ts.getTemperature());
-                float temp = ts.getTemperature();
-                if (Math.abs(temp - lastTemperature) > 0.01f) {
-                    lastTemperature = temp;
-                    System.out.println("Température : " + temp);
+        if(drone!=null) {
+            for (Sensor sensor : drone.getSensors()) {
+                sensor.update(drone);
+                if (sensor instanceof TemperatureSensor) {
+                    TemperatureSensor ts = (TemperatureSensor) sensor;
+                    ts.affectDrone(drone);
+                    //System.out.println("Température : " + ts.getTemperature());
+                    float temp = ts.getTemperature();
+                    if (Math.abs(temp - lastTemperature) > 0.01f) {
+                        lastTemperature = temp;
+                        System.out.println("Température : " + temp);
+                    }
+                }
+                if (sensor instanceof DepthSensor) {
+                    DepthSensor ds = (DepthSensor) sensor;
+                    System.out.println("Profondeur : " + ds.getDepth() + " m");
+                }
+                if (sensor instanceof CompassSensor cs) {
+                    System.out.println("Cap : " + cs.getHeading() + "°");
+                }
+                if (sensor instanceof PressureSensor cs) {
+                    System.out.println("Pression : " + cs.getPressure() + "bar");
+                }
+                if (sensor instanceof TemperatureSensor ts) {
+                    System.out.println("Temperature: " + ts.getTemperature() + "°C");
                 }
             }
-            if (sensor instanceof DepthSensor) {
-                DepthSensor ds = (DepthSensor) sensor;
-                System.out.println("Profondeur : " + ds.getDepth() + " m");
-            }
-            if (sensor instanceof CompassSensor cs) {
-                System.out.println("Cap : " + cs.getHeading() + "°");
-            }
-            if (sensor instanceof PressureSensor cs) {
-                System.out.println("Pression : " + cs.getPressure() + "bar");
-            }
-            if (sensor instanceof TemperatureSensor ts) {
-                System.out.println("Temperature: " + ts.getTemperature() + "°C");
-            }
+
         }
+
+        // Mettre à jour le statut en cache — thread-safe, lu par getDroneStatusDirect()
+        if (drone != null && initialized) {
+            DroneStatus s = new DroneStatus();
+            com.jme3.math.Vector3f pos = drone.getDroneSpatial().getLocalTranslation();
+            s.setX(pos.x); s.setY(pos.y); s.setZ(pos.z);
+            s.setSpeed(0.0);
+            s.setState("En vol");
+            if (temperatureSensor != null) s.setTemperature(temperatureSensor.getTemperature());
+            if (waterDistortionManager != null) {
+                s.setDepth(waterDistortionManager.getProfondeur());
+                s.setIntensity(waterDistortionManager.getIntensity());
+            }
+            dernierStatut.set(s);
+        }
+
 
         if (drone.getBattery() != null) {
             float consumption = 0.05f * tpf;
@@ -215,7 +253,7 @@ public class Main extends SimpleApplication {
                 drone.getBattery().consommation(consumption);
                 //retire de l'énergie à la batterie
                 System.out.println("Batterie : " + drone.getBattery().getPercentage() + "%");
-        }*/
+        }
     }
 
     public void executeNetworkCommand(String droneId, PilotCommand command) {
@@ -242,7 +280,7 @@ public class Main extends SimpleApplication {
         if (drone == null || !drone.getId().equals(droneId)) {
             status.setState("Drone inconnu");
             return status;
-        }
+       }
 
         Vector3f position = drone.getDroneSpatial().getLocalTranslation();
 
@@ -263,6 +301,53 @@ public class Main extends SimpleApplication {
         return status;
     }
 
+    /**
+     * Retourne le dernier statut mis en cache par simpleUpdate().
+     * NON BLOQUANT — thread-safe via AtomicReference.
+     */
+    public DroneStatus getDroneStatusDirect(String droneId) {
+        if (drone == null || !drone.getId().equals(droneId)) {
+            DroneStatus s = new DroneStatus();
+            s.setState(drone == null ? "En initialisation..." : "Drone inconnu");
+            return s;
+        }
+        return dernierStatut.get();
+    }
+
+    /**
+     * Crée le ViewPort off-screen pour la capture vidéo du drone.
+     * DOIT être appelé depuis le thread JME3 (via enqueue).
+     */
+    public void creerViewPortOffScreen(String droneId) {
+        if (droneCameraManager == null) {
+            System.err.println("[Main] creerViewPortOffScreen : droneCameraManager null pour " + droneId);
+            return;
+        }
+        if (frameCaptures.containsKey(droneId)) {
+            System.out.println("[Main] ViewPort déjà créé pour " + droneId);
+            return;
+        }
+        com.jme3.renderer.Camera cameraDrone = droneCameraManager.getCamera();
+        DroneFrameCapture capture = new DroneFrameCapture(droneId, cameraDrone, renderManager, rootNode);
+        frameCaptures.put(droneId, capture);
+        System.out.println("[Main] ViewPort off-screen créé pour " + droneId);
+    }
+
+    /**
+     * Retourne la dernière frame JPEG — NON BLOQUANT (AtomicReference dans DroneFrameCapture).
+     */
+    public byte[] capturerFrameDrone(String droneId) {
+        DroneFrameCapture capture = frameCaptures.get(droneId);
+        if (capture == null && frameCaptures.size() == 1) {
+            capture = frameCaptures.values().iterator().next();
+        }
+        return capture != null ? capture.capturerFrame() : null;
+    }
+
+    /** Stub de compatibilité avec UdpServeurTransport. */
+    public void creerDrone(String droneId) {
+        System.out.println("[Main] creerDrone stub pour " + droneId);
+    }
     public void setConfiguration(SimulationConfiguration configuration) {
         this.configuration = configuration;
     }
