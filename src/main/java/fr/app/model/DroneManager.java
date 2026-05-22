@@ -17,17 +17,19 @@ public class DroneManager {
     private InputManager inputManager;
     private DroneController droneController;
     private DroneCameraManager droneCameraManager;
+    private CurrentMatrix currentMatrix;
     private Camera cam;
     private Drone drone;
     private WorldView model;
 
-    public DroneManager(AssetManager assetManager, Node rootNode, PhysicsEngine physicsEngine, InputManager inputManager, Camera cam, WorldView worldView){
+    public DroneManager(AssetManager assetManager, Node rootNode, PhysicsEngine physicsEngine, InputManager inputManager, Camera cam, WorldView worldView, CurrentMatrix currentMatrix){
         this.assetManager = assetManager;
         this.rootNode = rootNode;
         this.physicsEngine = physicsEngine;
         this.inputManager = inputManager;
         this.cam = cam;
         this.model = worldView;
+        this.currentMatrix = currentMatrix;
     }
 
     public void CreateDrone(String name){
@@ -49,7 +51,7 @@ public class DroneManager {
         rootNode.attachChild(droneNode);
         drone = new Drone("drone1", droneNode);
         this.physicsEngine.CreateDroneHitbox(drone, name);
-        this.droneController = new DroneController(inputManager, drone, model);
+        this.droneController = new DroneController(inputManager, drone, model, currentMatrix);
         this.droneController.setUpKeys();
         this.droneCameraManager = new DroneCameraManager(cam, drone);
         this.droneCameraManager.setCameraOffset(camOffset);

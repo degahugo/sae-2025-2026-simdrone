@@ -30,7 +30,7 @@ public class PhysicsEngine{
     private Node rootNode;
     private GUIManager guiManager;
 
-    public PhysicsEngine(SimpleApplication app, WorldView model, GUIManager guiManager, boolean debugMode) {
+    public PhysicsEngine(SimpleApplication app, WorldView model, GUIManager guiManager, boolean showMeshWireframe) {
         this.model = model;
         this.app = app;
         // Getting the asset manager
@@ -45,7 +45,7 @@ public class PhysicsEngine{
         // Attach it to the global manager
         this.app.getStateManager().attach(bulletAppState);
         // true to see the blue wireframe, false if you want FPS
-        this.bulletAppState.setDebugEnabled(debugMode);
+        this.bulletAppState.setDebugEnabled(showMeshWireframe);
         System.out.println("PhysicsEngine : Successfully initialized");
     }
 

@@ -4,28 +4,12 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.scene.*;
 import com.jme3.system.AppSettings;
-import fr.app.model.DroneManager;
-import fr.app.model.PhysicsEngine;
-import fr.app.model.WorldView;
-import fr.app.view.CameraManager;
-import fr.app.view.GUIManager;
+import fr.app.model.*;
+import fr.app.view.*;
 import fr.app.model.sensor.*;
-import fr.app.model.sensor.Sensor;
-import fr.app.model.sensor.TemperatureSensor;
-import fr.app.view.LightingManager;
-import fr.app.view.WaterFilterManager;
 import fr.app.controller.DroneController;
-import fr.app.model.Drone;
-import fr.app.view.DroneCameraManager;
-import fr.app.view.WaterDistortionManager;
-import fr.app.model.PilotCommand;
-import fr.app.model.DroneStatus;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
-import com.jme3.renderer.ViewPort;
-import com.jme3.texture.FrameBuffer;
-import com.jme3.texture.Image;
-import fr.app.model.SimulationConfiguration;
 
 
 /**
@@ -46,7 +30,15 @@ public class Main extends SimpleApplication {
     private FilterPostProcessor fpp;
     private Sensor sensor;
     private TemperatureSensor temperatureSensor;
-    private boolean debugMode = false;
+    private CurrentMatrix currentMatrix;
+    private CurrentDebugView currentDebugView; // On garde une référence globale
+    private boolean showCurrentDebug = true; // Désactivé par défaut
+    private boolean showMeshWireframe = false;
+    private int currentWidth = 100;
+    private int currentLenght = 100;
+    private float currentCellSize = 0.5f;
+    private float currentTimer = 0f;
+    private final float TIME_BETWEEN_UPDATES = 5.0f;
     private boolean loading = true;
     private float lastTemperature = Float.NaN; // dernière température enregistré
     private Camera pilotCamera;
@@ -81,8 +73,7 @@ public class Main extends SimpleApplication {
         cam.setFrustumPerspective(45f, (float) cam.getWidth() / cam.getHeight(), 0.01f, 1000f);
         inputManager.setCursorVisible(true);
         setPauseOnLostFocus(false);
-        PhysicsEngine physicsEngine = new PhysicsEngine(this, this.model, this.guiManager, debugMode);
-
+        PhysicsEngine physicsEngine = new PhysicsEngine(this, this.model, this.guiManager, showMeshWireframe);
 
         int terrainId = 1;
 
@@ -90,13 +81,15 @@ public class Main extends SimpleApplication {
             terrainId = configuration.getEnvironmentType().getTerrainId();
         }
 
+        // Generation des courants
+        this.currentMatrix = new CurrentMatrix(currentWidth, currentLenght, currentCellSize);
 
         // Configure scene
         this.lightingManager = new LightingManager(rootNode, cam, assetManager);
         this.lightingManager.initLighting();
         // Filter processor
         fpp = new FilterPostProcessor(assetManager);
-        this.droneManager = new DroneManager(assetManager,rootNode,physicsEngine,inputManager,cam, model);
+        this.droneManager = new DroneManager(assetManager,rootNode,physicsEngine,inputManager,cam, model, currentMatrix);
 
         //this.cameraManager = new CameraManager(cam, flyCam);
         // Set false to disable flying camera
@@ -134,6 +127,11 @@ public class Main extends SimpleApplication {
             WaterFilterManager waterFilterManager = new WaterFilterManager(fpp, viewPort, rootNode, model);
             this.waterDistortionManager = new WaterDistortionManager(fpp, viewPort, droneManager.getDrone(), model);
 
+            // Affichage des flèches de courant
+            this.currentDebugView = new CurrentDebugView(currentMatrix, assetManager, rootNode);
+            currentDebugView.setVisible(showCurrentDebug);
+            currentDebugView.showCurrentGrid(0.5f);
+
             // End of the loading, will execute the simpleUpdate
             loading = false;
             initialized = true;
@@ -162,6 +160,18 @@ public class Main extends SimpleApplication {
         }
         if (waterDistortionManager != null){
             waterDistortionManager.update();
+        }
+        if(currentMatrix != null){
+            currentTimer += tpf; // On cumule le temps écoulé depuis la dernière frame
+            if (currentTimer >= TIME_BETWEEN_UPDATES) {
+                // Quand le temps est écoulé, on change les courants
+                currentMatrix.generateRandomCurrents();
+                // Si le mode debug est actif, on force la vue à redessiner les flèches de courants
+                if (showCurrentDebug && currentDebugView != null) {
+                    currentDebugView.showCurrentGrid(0.5f);
+                }
+                currentTimer = 0f; // On réinitialise le compte à rebours
+            }
         }
 /*
         for (Sensor sensor : drone.getSensors()) {
@@ -250,5 +260,4 @@ public class Main extends SimpleApplication {
     public void setConfiguration(SimulationConfiguration configuration) {
         this.configuration = configuration;
     }
-
 }

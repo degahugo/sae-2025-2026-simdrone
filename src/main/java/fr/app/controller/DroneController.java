@@ -6,10 +6,8 @@ import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.math.Vector3f;
-import fr.app.model.Drone;
-import fr.app.model.DroneMovement;
-import fr.app.model.WorldView;
-import fr.app.model.PilotCommand;
+import fr.app.model.*;
+
 import static java.lang.Math.min;
 
 public class DroneController {
@@ -17,6 +15,7 @@ public class DroneController {
     private InputManager inputManager;
     private Drone drone;
     private WorldView model;
+    private CurrentMatrix currentMatrix;
 
     // Speed for cinematic mode
     private float droneSpeed = 0.2f;
@@ -78,10 +77,11 @@ public class DroneController {
     DroneMovement rollRight = DroneMovement.ROLLRIGHT;
     DroneMovement toggleHoverMode = DroneMovement.TOGGLEHOVERMODE;
 
-    public DroneController(InputManager inputManager, Drone drone, WorldView worldView) {
+    public DroneController(InputManager inputManager, Drone drone, WorldView worldView, CurrentMatrix currentMatrix) {
         this.inputManager = inputManager;
         this.drone = drone;
         this.model = worldView;
+        this.currentMatrix = currentMatrix;
         this.waterHeight = model.getWaterHeight();
         physicsControl = drone.getDroneSpatial().getControl(RigidBodyControl.class);
         mass = physicsControl.getMass();
@@ -295,6 +295,7 @@ public class DroneController {
         }
         if(isSubmerged){
             totalForce.setY(gravityCounterForce);
+            ApplyCUrrentForce(totalForce);
             // Forward
             if (forwardIntention) totalForce.addLocal(forward.mult(thrustPower));
             // Backward
@@ -461,6 +462,25 @@ public class DroneController {
         Vector3f globalTorqueHover = drone.getDroneSpatial().getLocalRotation().mult(localTorqueHover);
         // On applique au totalTorque
         totalTorque.addLocal(globalTorqueHover);
+    }
+
+    /**
+     * Get the current force at the drone's location and apply it to its force vector.
+     * @param totalForce The force vector of the drone
+     */
+    private void ApplyCUrrentForce(Vector3f totalForce){
+        if (currentMatrix != null) {
+            // 1. On récupère la position actuelle du drone
+            Vector3f dronePosition = drone.getDroneSpatial().getLocalTranslation();
+
+            // 2. On récupère le vecteur de courant correspondant à cette position
+            Vector3f waterCurrent = currentMatrix.getCurrentAt(dronePosition);
+
+            // 3. On applique le courant directement sur le vecteur de force globale.
+            // Note : Puisque 'physicsControl.applyCentralForce' applique une force par frame,
+            // si ton vecteur de courant est déjà calibré en Newtons (ex: 5.0f), tu peux l'ajouter directement.
+            totalForce.addLocal(waterCurrent);
+        }
     }
 
     /**
