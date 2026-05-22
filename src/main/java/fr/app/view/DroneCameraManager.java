@@ -11,6 +11,7 @@ import fr.app.model.Drone;
  * Gestion de la caméra embarquée du drone.
  * - Suit la rotation complète du drone (yaw, pitch, roll)
  * - Permet au pilote de regarder autour (free-look)
+ * - Compatible avec les offsets utilisés dans develop
  */
 public class DroneCameraManager {
 
@@ -18,55 +19,46 @@ public class DroneCameraManager {
     private final Drone drone;
     private final Node cameraNode;
 
-    // Offset caméra : derrière + légèrement au-dessus (par défaut)
+    // Offset caméra (par défaut : derrière + légèrement au-dessus)
+    // develop utilisait (0,0,0) → on garde ton offset mais on permet de le changer
     private Vector3f cameraOffset = new Vector3f(0f, 1.2f, -3f);
 
     // Free-look : rotation manuelle
     private float cameraYaw = 0f;
     private float cameraPitch = 0f;
 
-    // Limites du pitch (évite de regarder trop haut/bas)
-    private static final float MAX_PITCH = 1.2f;   // ~70°
-    private static final float MIN_PITCH = -1.2f;  // ~-70°
+    // Limites du pitch
+    private static final float MAX_PITCH = 1.2f;
+    private static final float MIN_PITCH = -1.2f;
 
     // Vitesse de rotation du free-look
     private static final float ROTATION_SPEED = 1.5f;
 
-    /**
-     * Constructeur du gestionnaire de caméra.
-     *
-     * @param cam   Caméra principale
-     * @param drone Drone suivi
-     */
     public DroneCameraManager(Camera cam, Drone drone) {
         this.cam = cam;
         this.drone = drone;
 
         this.cameraNode = new Node("CameraNode_" + drone.getId());
-        // On garde le node attaché au drone pour la position de base
         drone.getDroneSpatial().attachChild(cameraNode);
+
+        // Offset initial (compatible avec develop)
         cameraNode.setLocalTranslation(cameraOffset);
     }
 
     // --- Contrôles Free-Look ---
-
-    /** Rotation manuelle vers la gauche. */
     public void rotateCameraLeft(float tpf) {
         cameraYaw += ROTATION_SPEED * tpf;
     }
 
-    /** Rotation manuelle vers la droite. */
     public void rotateCameraRight(float tpf) {
         cameraYaw -= ROTATION_SPEED * tpf;
     }
 
-    /** Rotation manuelle vers le haut. */
     public void rotateCameraUp(float tpf) {
         cameraPitch += ROTATION_SPEED * tpf;
         cameraPitch = Math.min(cameraPitch, MAX_PITCH);
     }
 
-    /** Rotation manuelle vers le bas. */
     public void rotateCameraDown(float tpf) {
         cameraPitch -= ROTATION_SPEED * tpf;
         cameraPitch = Math.max(cameraPitch, MIN_PITCH);
@@ -89,25 +81,21 @@ public class DroneCameraManager {
         // Rotation finale = drone + free-look
         Quaternion finalRotation = droneRotation.mult(manualRotation);
 
-        // Position de base : le node attaché au drone avec offset
+        // Position de base : node attaché au drone
         Vector3f basePosition = cameraNode.getWorldTranslation();
 
-        // On place la caméra à cette position
         cam.setLocation(basePosition);
         cam.setRotation(finalRotation);
     }
 
-    /** Change l’offset de la caméra par rapport au drone. */
+    /** Change l’offset de la caméra (compatible develop) */
     public void setCameraOffset(Vector3f offset){
         this.cameraOffset = offset;
         this.cameraNode.setLocalTranslation(offset);
         System.out.println("Set camera offset to x : " + offset.x + " y : " + offset.y + " z : " + offset.z);
     }
 
-    /**
-     * Retourne la caméra JME3 attachée à ce drone.
-     * Utilisé par DroneFrameCapture pour créer le ViewPort off-screen.
-     */
+    /** Caméra JME3 utilisée par DroneFrameCapture */
     public Camera getCamera() {
         return cam;
     }
