@@ -13,6 +13,15 @@ public class DroneStatus {
     private double depth; // profondeur
     private double intensity; // intensité de la distorsion
 
+    private double yaw;
+    private double pitch;
+    private double roll;
+    private boolean collisionDetected;
+    private String collisionMessage;
+    private String environmentName;
+    private String droneType;
+    private double battery;
+
     public DroneStatus() {
         this.x = 0;
         this.y = 0;
