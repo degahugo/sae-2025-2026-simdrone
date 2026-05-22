@@ -40,6 +40,7 @@ public class Main extends SimpleApplication {
     private DroneManager droneManager;
     private FilterPostProcessor fpp;
     private Sensor sensor;
+    private WaterFilterManager waterFilterManager;
     private TemperatureSensor temperatureSensor;
     private boolean debugMode = false;
     private boolean loading = true;
@@ -116,7 +117,8 @@ public class Main extends SimpleApplication {
 
             drone.addSensor(this.pressureSensor);
             // Creates the water filter
-            WaterFilterManager waterFilterManager = new WaterFilterManager(fpp, viewPort, rootNode, model);
+            //waterFilter existe maintenant de partout
+            this.waterFilterManager = new WaterFilterManager(fpp, viewPort, rootNode, model);
             this.waterDistortionManager = new WaterDistortionManager(fpp, viewPort, droneManager.getDrone(), model);
 
             // End of the loading, will execute the simpleUpdate
@@ -165,6 +167,9 @@ public class Main extends SimpleApplication {
             }
             if (sensor instanceof DepthSensor) {
                 DepthSensor ds = (DepthSensor) sensor;
+                lightingManager.updateUnderwaterLighting(ds.getDepth());
+                //dans waterfiltermanager l'obscurité arrive
+                waterFilterManager.updateUnderwaterEffect(ds.getDepth());
                 System.out.println("Profondeur : " + ds.getDepth() + " m");
             }
             if (sensor instanceof CompassSensor cs) {
