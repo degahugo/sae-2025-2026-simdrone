@@ -14,6 +14,7 @@ import fr.app.model.PilotCommand;
 import fr.app.structure.JsonSerializer;
 import fr.app.model.MessageType;
 import fr.app.structure.SerialisationException;
+import fr.app.model.SimulationConfiguration;
 
 // Classe utilisant le protocole UDP du coté Client
 // Sérialise et envoie les commandes de pilotage ainsi que les réponses de statut
@@ -101,5 +102,30 @@ public class UdpClientTransport {
         socket.close();
         System.out.println("[UDP Client] Socket fermé.");
 
+    }
+
+
+    public void sendConfiguration(SimulationConfiguration configuration) throws Exception {
+
+        CommandeMessage message = new CommandeMessage(
+                MessageType.CONFIGURATION,
+                null,
+                null,
+                configuration
+        );
+
+        byte[] data = serializer.serialisation(message);
+        byte[] donneesChiffrees = protocole.encrypt(data);
+
+        DatagramPacket packet = new DatagramPacket(
+                donneesChiffrees,
+                donneesChiffrees.length,
+                adresseServeur,
+                port
+        );
+
+        socket.send(packet);
+
+        System.out.println("[UDP Client] Configuration envoyée : " + new String(data));
     }
 }

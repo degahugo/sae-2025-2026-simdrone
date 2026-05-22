@@ -5,6 +5,7 @@ import fr.app.model.PilotCommand;
 import java.net.DatagramSocket;
 import java.util.function.Consumer;
 
+import fr.app.model.SimulationConfiguration;
 
 // Classe gérant la connexion TCP et UDP de Client
 // On se connecte en TCP
@@ -99,6 +100,10 @@ public class NetworkClient {
 
     public void sendStartSimulation(String droneId) throws Exception {
         udpClientTransport.sendStartSimulation(droneId);
+    }
+
+    public void sendConfiguration(SimulationConfiguration configuration) throws Exception {
+        udpClientTransport.sendConfiguration(configuration);
     }
 
     public void sendStartSimulation() throws Exception {

@@ -1,6 +1,5 @@
 package fr.app.controller;
 
-
 import fr.app.model.DroneStatus;
 import fr.app.model.PilotCommand;
 import fr.app.network.NetworkClient;
@@ -12,6 +11,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
 import java.io.ByteArrayInputStream;
+import fr.app.model.SimulationConfiguration;
 
 public class DashboardController {
 
@@ -110,6 +110,7 @@ public class DashboardController {
         // Dans un thread séparé pour ne pas bloquer le thread JavaFX
         new Thread(() -> {
             try {
+                client.sendConfiguration(configuration);
                 client.sendStartSimulation(droneId);
                 DroneStatus status = client.receiveStatus();
                 Platform.runLater(() -> {
@@ -121,6 +122,24 @@ public class DashboardController {
                     logArea.appendText("Erreur lancement simulation : " + e.getMessage() + "\n"));
             }
         },"start-sim").start();
+    }
+
+    private SimulationConfiguration configuration;
+
+    public void setConfiguration(SimulationConfiguration configuration) {
+        this.configuration = configuration;
+
+        if (logArea != null && configuration != null) {
+            logArea.appendText(
+                    "Configuration : "
+                            + configuration.getEnvironmentType()
+                            + " | "
+                            + configuration.getDroneType()
+                            + " | "
+                            + configuration.getSensors()
+                            + "\n"
+            );
+        }
     }
 
     @FXML

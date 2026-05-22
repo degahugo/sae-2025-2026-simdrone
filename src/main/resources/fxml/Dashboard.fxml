@@ -2,151 +2,114 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
 <?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
 
-<VBox spacing="20"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="fr.app.controller.DashboardController"
-      style="-fx-background-color: #071018;">
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="fr.app.controller.DashboardController"
+            style="-fx-background-color: #071018;"
+            prefWidth="1280"
+            prefHeight="720">
 
-    <padding>
-        <Insets top="20" right="20" bottom="20" left="20"/>
-    </padding>
+    <top>
+        <HBox alignment="CENTER_LEFT"
+              spacing="20"
+              style="-fx-background-color: #0b141d; -fx-padding: 12 20 12 20;">
+            <Label text="DronSim Pilot Station"
+                   style="-fx-text-fill: white; -fx-font-size: 28px; -fx-font-weight: bold;"/>
 
-    <Label text="DronSim Pilot Station"
-           style="-fx-text-fill: white;
-                  -fx-font-size: 28px;
-                  -fx-font-weight: bold;"/>
-
-    <HBox spacing="20">
-
-        <VBox spacing="10"
-              prefWidth="350"
-              style="-fx-background-color: #101820;
-                     -fx-padding: 15;
-                     -fx-border-color: #ffc107;
-                     -fx-border-radius: 8;
-                     -fx-background-radius: 8;">
-
-            <Label text="Télémétrie Drone"
-                   style="-fx-text-fill: white;
-                          -fx-font-size: 18px;
-                          -fx-font-weight: bold;"/>
-            <Label fx:id="positionLabel"
-                   text="Position : x=0 | y=0 | z=0"
-                   style="-fx-text-fill: white;"/>
-
-            <Label fx:id="speedLabel"
-                   text="Vitesse : 0 m/s"
-                   style="-fx-text-fill: white;"/>
-
-            <Label fx:id="temperatureLabel"
-                   text="Température : 0 °C"
-                   style="-fx-text-fill: white;"/>
-
-            <Label fx:id="depthLabel"
-                   text="Profondeur : 0 m"
-                   style="-fx-text-fill: white;"/>
-
-            <Label fx:id="intensityLabel"
-                   text="Intensité : 0"
-                   style="-fx-text-fill: white;"/>
+            <Label text="LIVE"
+                   style="-fx-text-fill: #00ff99; -fx-font-size: 14px; -fx-font-weight: bold;"/>
 
             <Label fx:id="stateLabel"
                    text="État : En attente"
-                   style="-fx-text-fill: white;"/>
+                   style="-fx-text-fill: white; -fx-font-size: 14px;"/>
+        </HBox>
+    </top>
 
-            <Label text="Batterie : 100%"
-                   style="-fx-text-fill: white;"/>
+    <center>
+        <HBox spacing="15" style="-fx-padding: 15;">
 
+            <VBox spacing="12"
+                  prefWidth="280"
+                  style="-fx-background-color: #101820;
+                         -fx-padding: 15;
+                         -fx-border-color: #ffc107;
+                         -fx-border-radius: 8;
+                         -fx-background-radius: 8;">
+
+                <Label text="Télémétrie"
+                       style="-fx-text-fill: white; -fx-font-size: 20px; -fx-font-weight: bold;"/>
+
+                <Label fx:id="positionLabel" text="Position : x=0 | y=0 | z=0" style="-fx-text-fill: white;"/>
+                <Label fx:id="speedLabel" text="Vitesse : 0 m/s" style="-fx-text-fill: white;"/>
+                <Label fx:id="temperatureLabel" text="Température : 0 °C" style="-fx-text-fill: white;"/>
+                <Label fx:id="depthLabel" text="Profondeur : 0 m" style="-fx-text-fill: white;"/>
+                <Label fx:id="intensityLabel" text="Intensité : 0" style="-fx-text-fill: white;"/>
+
+                <Separator/>
+
+                <Label text="Navigation"
+                       style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+
+                <Label text="Boussole : -- °" style="-fx-text-fill: white;"/>
+                <Label text="Mini-map : en préparation" style="-fx-text-fill: white;"/>
+                <Label text="Collision : aucune" style="-fx-text-fill: #00ff99;"/>
+                <Label text="Batterie : 100%" style="-fx-text-fill: white;"/>
+            </VBox>
+
+            <VBox spacing="8"
+                  HBox.hgrow="ALWAYS"
+                  style="-fx-background-color: black;
+                         -fx-padding: 12;
+                         -fx-border-color: #9c27b0;
+                         -fx-border-radius: 8;
+                         -fx-background-radius: 8;">
+
+                <HBox alignment="CENTER_LEFT" spacing="15">
+                    <Label text="CAMÉRA DRONE"
+                           style="-fx-text-fill: white; -fx-font-size: 20px; -fx-font-weight: bold;"/>
+                    <Label text="Flux pilote"
+                           style="-fx-text-fill: #00ff99; -fx-font-size: 13px;"/>
+                </HBox>
+
+                <StackPane VBox.vgrow="ALWAYS"
+                           style="-fx-background-color: #000000;">
+                    <ImageView fx:id="cameraView"
+                               fitWidth="850"
+                               fitHeight="430"
+                               preserveRatio="true"/>
+                    <!--<Label text="CAMERA FEED"
+                           style="-fx-text-fill: #00ff99;
+                                  -fx-font-size: 18px;
+                                  -fx-font-weight: bold;"/>-->
+                </StackPane>
+            </VBox>
+        </HBox>
+    </center>
+
+    <bottom>
+        <VBox spacing="8"
+              style="-fx-background-color: #0b141d; -fx-padding: 10 20 15 20;">
+
+            <HBox alignment="CENTER" spacing="10">
+                <Button text="▲ Avancer" onAction="#moveForward"/>
+                <Button text="▼ Reculer" onAction="#moveBackward"/>
+                <Button text="◀ Gauche" onAction="#moveLeft"/>
+                <Button text="Droite ▶" onAction="#moveRight"/>
+                <Button text="Monter" onAction="#moveUp"/>
+                <Button text="Descendre" onAction="#moveDown"/>
+                <Button text="STOP" onAction="#stopDrone"
+                        style="-fx-background-color: #b71c1c; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                <Button text="Lancer simulation" onAction="#startSimulation"
+                        style="-fx-background-color: #1565c0; -fx-text-fill: white; -fx-font-weight: bold;"/>
+            </HBox>
+
+            <TextArea fx:id="logArea"
+                      editable="false"
+                      prefHeight="80"
+                      style="-fx-control-inner-background: #071018; -fx-text-fill: white;"/>
         </VBox>
+    </bottom>
 
-        <VBox spacing="10"
-              prefWidth="450"
-              prefHeight="280"
-              style="-fx-background-color: black;
-                     -fx-padding: 15;
-                     -fx-border-color: #9c27b0;
-                     -fx-border-radius: 8;
-                     -fx-background-radius: 8;">
-
-            <Label text="Retour caméra simulé"
-                   style="-fx-text-fill: white;
-                          -fx-font-size: 18px;
-                          -fx-font-weight: bold;"/>
-
-            <ImageView fx:id="cameraView"
-                       fitWidth="420"
-                       fitHeight="240"
-                       preserveRatio="true"/>
-
-        </VBox>
-
-    </HBox>
-
-    <GridPane hgap="10"
-              vgap="10"
-              style="-fx-background-color: #101820;
-                     -fx-padding: 15;
-                     -fx-border-color: #4caf50;
-                     -fx-border-radius: 8;
-                     -fx-background-radius: 8;">
-
-        <Label text="Commandes de pilotage"
-               style="-fx-text-fill: white;
-                      -fx-font-size: 18px;
-                      -fx-font-weight: bold;"
-               GridPane.columnSpan="3"/>
-
-        <Button text="▲ Avancer"
-                onAction="#moveForward"
-                GridPane.columnIndex="1"
-                GridPane.rowIndex="1"/>
-
-        <Button text="◀ Gauche"
-                onAction="#moveLeft"
-                GridPane.rowIndex="2"/>
-
-        <Button text="STOP"
-                onAction="#stopDrone"
-                GridPane.columnIndex="1"
-                GridPane.rowIndex="2"/>
-
-        <Button text="Droite ▶"
-                onAction="#moveRight"
-                GridPane.columnIndex="2"
-                GridPane.rowIndex="2"/>
-
-        <Button text="▼ Reculer"
-                onAction="#moveBackward"
-                GridPane.columnIndex="1"
-                GridPane.rowIndex="3"/>
-
-        <Button text="Monter"
-                onAction="#moveUp"
-                GridPane.rowIndex="4"/>
-
-        <Button text="Descendre"
-                onAction="#moveDown"
-                GridPane.columnIndex="2"
-                GridPane.rowIndex="4"/>
-
-        <Button text="Lancer simulation"
-                onAction="#startSimulation"
-                GridPane.columnIndex="0"
-                GridPane.rowIndex="5"
-                GridPane.columnSpan="3"/>
-
-    </GridPane>
-
-    <Label text="Journal des actions"
-           style="-fx-text-fill: white;
-                  -fx-font-size: 18px;
-                  -fx-font-weight: bold;"/>
-
-    <TextArea fx:id="logArea"
-              editable="false"
-              prefHeight="180"/>
-
-</VBox>
+</BorderPane>

@@ -14,6 +14,7 @@ import fr.app.model.MessageType;
 
 import fr.app.structure.JsonSerializer;
 import fr.app.Main;
+import fr.app.model.SimulationConfiguration;
 
 
 // Gère le transport UDP côté serveur.
@@ -29,6 +30,7 @@ public class UdpServeurTransport implements Runnable{
     private final RegistreDesSessions registre;
 
     private Main simulation;
+    private SimulationConfiguration configuration;
 
     public UdpServeurTransport(int portUdp, RegistreDesSessions registre)throws SocketException {
         // Crée un socket UDP en écoute sur le port spécifié
@@ -73,6 +75,18 @@ public class UdpServeurTransport implements Runnable{
                 String droneId = message.getDroneId();
                 PilotCommand command=message.getCommand();
                 MessageType type = message.getType();
+                if (type == MessageType.CONFIGURATION) {
+                    this.configuration = message.getConfiguration();
+
+                    System.out.println("[UDP Serveur] Configuration reçue : "
+                            + configuration.getEnvironmentType()
+                            + " | "
+                            + configuration.getDroneType()
+                            + " | "
+                            + configuration.getSensors());
+
+                    continue;
+                }
                 if (type == MessageType.START_SIMULATION) {
                     traiterStartSimulation(droneId, clientIp);
                     // Réponse immédiate sans bloquer sur le statut JME3
