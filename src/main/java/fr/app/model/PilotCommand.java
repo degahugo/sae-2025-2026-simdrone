@@ -13,5 +13,6 @@ public enum PilotCommand {
     PITCHDOWN,
     ROLLLEFT,
     ROLLRIGHT,
-    STOP
+    STOP,
+    TOGGLEHOVERMODE
 }

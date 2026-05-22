@@ -5,6 +5,7 @@ public class CommandeMessage {
     private String droneId;
     private PilotCommand command;
     private MessageType type;
+    private SimulationConfiguration configuration;
 
     public CommandeMessage() {} // constructeur vide requis par Jackson
 
@@ -13,6 +14,24 @@ public class CommandeMessage {
         this.droneId = droneId;
         this.command = command;
         this.type = type;
+    }
+    public CommandeMessage(MessageType type,
+                           String droneId,
+                           PilotCommand command,
+                           SimulationConfiguration configuration) {
+        this.type = type;
+        this.droneId = droneId;
+        this.command = command;
+        this.configuration = configuration;
+    }
+
+
+    public SimulationConfiguration getConfiguration() {
+        return configuration;
+    }
+
+    public void setConfiguration(SimulationConfiguration configuration) {
+        this.configuration = configuration;
     }
 
     public String getDroneId() {

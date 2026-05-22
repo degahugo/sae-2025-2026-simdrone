@@ -1,97 +1,61 @@
 package fr.app.controller;
 
+import fr.app.model.DroneType;
+import fr.app.model.SimulationConfiguration;
 import fr.app.network.NetworkClient;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
 import javafx.stage.Stage;
-//import fr.app.network.Client;
+
 public class SelectionDroneController {
 
     @FXML
-    private ComboBox<String> droneComboBox;
+    private ComboBox<DroneType> droneComboBox;
 
     private NetworkClient client;
+    private SimulationConfiguration configuration;
 
-    /*
-     * Reçoit le client déjà connecté
-     */
     public void setClient(NetworkClient client) {
-
         this.client = client;
 
-        /*
-         * Temporaire :
-         * liste fixe des drones
-         *
-         * Plus tard :
-         * les drones viendront du serveur
-         */
-        droneComboBox.getItems().addAll(
-                "drone1",
-                "drone2"
-        );
+        droneComboBox.getItems().clear();
+        droneComboBox.getItems().addAll(DroneType.values());
+        droneComboBox.setValue(DroneType.BR2R4);
+    }
+
+    public void setConfiguration(SimulationConfiguration configuration) {
+        this.configuration = configuration;
     }
 
     @FXML
     private void handleSelectDrone() {
 
-        String selectedDrone =
-                droneComboBox.getValue();
+        DroneType selectedDrone = droneComboBox.getValue();
 
-        /*
-         * Aucun drone sélectionné
-         */
         if (selectedDrone == null) {
             return;
         }
 
         try {
+            if (configuration == null) {
+                configuration = new SimulationConfiguration();
+            }
 
-            /*
-             * Informe le serveur
-             */
-            /*client.send(
-                    "SELECT;" + selectedDrone
-            );*/
+            configuration.setDroneType(selectedDrone);
 
-            /*
-             * Chargement du dashboard
-             */
-            FXMLLoader loader =
-                    new FXMLLoader(
-                            getClass().getResource(
-                                    "/fxml/Dashboard.fxml"
-                            )
-                    );
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/fxml/Dashboard.fxml")
+            );
 
-            Scene scene =
-                    new Scene(loader.load());
+            Scene scene = new Scene(loader.load());
 
-            /*
-             * Récupération du controller
-             */
-            DashboardController controller =
-                    loader.getController();
-
-            /*
-             * Transmission :
-             * - du client réseau
-             * - du drone choisi
-             */
+            DashboardController controller = loader.getController();
             controller.setClient(client);
+            controller.setDroneId(selectedDrone.getDroneId());            controller.setConfiguration(configuration);
 
-            controller.setDroneId(selectedDrone);
-
-            /*
-             * Changement de fenêtre
-             */
-            Stage stage =
-                    (Stage) droneComboBox
-                            .getScene()
-                            .getWindow();
-
+            Stage stage = (Stage) droneComboBox.getScene().getWindow();
             stage.setScene(scene);
 
         } catch (Exception e) {

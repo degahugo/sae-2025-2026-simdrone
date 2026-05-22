@@ -10,11 +10,9 @@ import fr.app.model.CommandeMessage;
 import fr.app.model.DroneStatus;
 import fr.app.model.PilotCommand;
 import fr.app.model.MessageType;
-import fr.utln.dronsim.viewer.example.WaterFilterExample;
-
 import fr.app.structure.JsonSerializer;
 import fr.app.Main;
-import fr.app.structure.SerialisationException;
+import fr.app.model.SimulationConfiguration;
 
 // Gère le transport UDP côté serveur.
 // Rôle : recevoir les commandes de pilotage (PilotCommand) envoyées par le client,
@@ -28,6 +26,7 @@ public class UdpServeurTransport implements Runnable{
     private final RegistreDesSessions registre;
 
     private Main simulation;
+    private SimulationConfiguration configuration;
 
     public UdpServeurTransport(int port, RegistreDesSessions registre)throws SocketException {
         // Crée un socket UDP en écoute sur le port spécifié
@@ -65,9 +64,24 @@ public class UdpServeurTransport implements Runnable{
                 String droneId = message.getDroneId();
                 PilotCommand command=message.getCommand();
                 MessageType type = message.getType();
+                if (type == MessageType.CONFIGURATION) {
+                    this.configuration = message.getConfiguration();
+
+                    System.out.println("[UDP Serveur] Configuration reçue : "
+                            + configuration.getEnvironmentType()
+                            + " | "
+                            + configuration.getDroneType()
+                            + " | "
+                            + configuration.getSensors());
+
+                    continue;
+                }
                 if (type == MessageType.START_SIMULATION) {
                     if (simulation == null) {
                         simulation = new Main();
+                        if (configuration != null) {
+                            simulation.setConfiguration(configuration);
+                        }
 
                         com.jme3.system.AppSettings settings =
                                 new com.jme3.system.AppSettings(true);
@@ -81,7 +95,6 @@ public class UdpServeurTransport implements Runnable{
                         simulation.setPauseOnLostFocus(false);
 
                         simulation.start();
-
                         System.out.println("[UDP Serveur] Simulation lancée pour " + droneId);
                     } else {
                         System.out.println("[UDP Serveur] Simulation déjà lancée.");

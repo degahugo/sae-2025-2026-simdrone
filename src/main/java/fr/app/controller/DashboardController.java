@@ -6,7 +6,7 @@ import fr.app.network.NetworkClient;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
-import fr.app.network.NetworkClient;
+import fr.app.model.SimulationConfiguration;
 
 public class DashboardController {
 
@@ -79,6 +79,7 @@ public class DashboardController {
 
         if (client != null && client.isConnected()) {
             try {
+                client.sendConfiguration(configuration);
                 client.sendStartSimulation(droneId);
 
                 DroneStatus status = client.receiveStatus();
@@ -91,6 +92,25 @@ public class DashboardController {
             }
         } else {
             logArea.appendText(" Client non connecté\n");
+        }
+    }
+
+
+    private SimulationConfiguration configuration;
+
+    public void setConfiguration(SimulationConfiguration configuration) {
+        this.configuration = configuration;
+
+        if (logArea != null && configuration != null) {
+            logArea.appendText(
+                    "Configuration : "
+                            + configuration.getEnvironmentType()
+                            + " | "
+                            + configuration.getDroneType()
+                            + " | "
+                            + configuration.getSensors()
+                            + "\n"
+            );
         }
     }
 

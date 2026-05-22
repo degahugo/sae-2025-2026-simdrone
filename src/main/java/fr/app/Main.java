@@ -1,7 +1,6 @@
 package fr.app;
 
 import com.jme3.app.SimpleApplication;
-import com.jme3.math.ColorRGBA;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.scene.*;
 import com.jme3.system.AppSettings;
@@ -10,8 +9,9 @@ import fr.app.model.PhysicsEngine;
 import fr.app.model.WorldView;
 import fr.app.view.CameraManager;
 import fr.app.view.GUIManager;
-import fr.app.view.CameraManager;
 import fr.app.model.sensor.*;
+import fr.app.model.sensor.Sensor;
+import fr.app.model.sensor.TemperatureSensor;
 import fr.app.view.LightingManager;
 import fr.app.view.WaterFilterManager;
 import fr.app.controller.DroneController;
@@ -21,6 +21,11 @@ import fr.app.view.WaterDistortionManager;
 import fr.app.model.PilotCommand;
 import fr.app.model.DroneStatus;
 import com.jme3.math.Vector3f;
+import com.jme3.renderer.Camera;
+import com.jme3.renderer.ViewPort;
+import com.jme3.texture.FrameBuffer;
+import com.jme3.texture.Image;
+import fr.app.model.SimulationConfiguration;
 
 
 /**
@@ -45,10 +50,11 @@ public class Main extends SimpleApplication {
     private boolean debugMode = false;
     private boolean loading = true;
     private float lastTemperature = Float.NaN; // dernière température enregistré
-
+    private Camera pilotCamera;
     private volatile boolean initialized = false;
     private DepthSensor depthSensor;
     private PressureSensor pressureSensor;
+    private SimulationConfiguration configuration;
 
 
     public static void main(String[] args) {
@@ -72,10 +78,19 @@ public class Main extends SimpleApplication {
         this.guiManager = new GUIManager(assetManager, settings, guiNode);
 
         flyCam.setEnabled(false);
+        // Réduit la distance minimale d'affichage de la caméra pour ne plus voir à travers les murs ou le sol en s'approchant
+        cam.setFrustumPerspective(45f, (float) cam.getWidth() / cam.getHeight(), 0.01f, 1000f);
         inputManager.setCursorVisible(true);
         setPauseOnLostFocus(false);
-
         PhysicsEngine physicsEngine = new PhysicsEngine(this, this.model, this.guiManager, debugMode);
+
+
+        int terrainId = 1;
+
+        if (configuration != null && configuration.getEnvironmentType() != null) {
+            terrainId = configuration.getEnvironmentType().getTerrainId();
+        }
+
 
         // Configure scene
         this.lightingManager = new LightingManager(rootNode, cam, assetManager);
@@ -89,32 +104,32 @@ public class Main extends SimpleApplication {
         //this.cameraManager.configureCamera(false);
 
         // Creates scene and with a callback add the rest of the physics objects
-        Node sceneNode = physicsEngine.CreateTerrainScene(1, () -> {
-            // Only executes when the terrain is ready
+        Node sceneNode = physicsEngine.CreateTerrainScene(terrainId, () -> {            // Only executes when the terrain is ready
             // Add all physics objects here to avoid issues with the terrain not being finished
             System.out.println("Terrain ready : adding the CUBES");
             //physicsEngine.SpawnTestCube(rootNode, -4f, 15f, 0f, ColorRGBA.Red);
             //physicsEngine.SpawnTestCube(rootNode, 0f, 2f, 0f, ColorRGBA.Yellow);
             // Create a drone
-            droneManager.CreateDrone("BR2R4");
-            // Gets the manager and controller te be used here
+            String droneName = "BR2R4";
+
+            if (configuration != null && configuration.getDroneType() != null) {
+                droneName = configuration.getDroneType().getSimulatorName();
+            }
+
+            droneManager.CreateDrone(droneName);            // Gets the manager and controller te be used here
             this.droneCameraManager = droneManager.getDroneCameraManager();
             this.droneController = droneManager.getDroneController();
             // Adding captors
-            this.temperatureSensor = new TemperatureSensor("TempSensor");
+            // Getting the drone
             this.drone = droneManager.getDrone();
+            // Then adding the sensors
+            this.temperatureSensor = new TemperatureSensor("TempSensor");
             this.drone.addSensor(temperatureSensor);
-
             this.depthSensor = new DepthSensor("DepthSensor");
-
             drone.addSensor(this.depthSensor);
-
             CompassSensor compassSensor = new CompassSensor("CompassSensor");
-
             drone.addSensor(compassSensor);
-
             this.pressureSensor = new PressureSensor("PressureSensor", this.depthSensor);
-
             drone.addSensor(this.pressureSensor);
             // Creates the water filter
             //waterFilter existe maintenant de partout
@@ -130,6 +145,7 @@ public class Main extends SimpleApplication {
         //this.initialized = true;
         //System.out.println("[Simulation] Initialisation terminée.");
 
+
     }
     public boolean isInitialized() {
         return initialized;
@@ -141,7 +157,7 @@ public class Main extends SimpleApplication {
             return;
         }
         if (droneController != null){
-            droneController.updateMovement();
+            droneController.updateMovement(tpf);
         }
         if (droneCameraManager != null){
             droneCameraManager.update(tpf);
@@ -149,21 +165,18 @@ public class Main extends SimpleApplication {
         if (waterDistortionManager != null){
             waterDistortionManager.update();
         }
-
+/*
         for (Sensor sensor : drone.getSensors()) {
             sensor.update(drone);
             if (sensor instanceof TemperatureSensor) {
                 TemperatureSensor ts = (TemperatureSensor) sensor;
                 ts.affectDrone(drone);
-                /*System.out.println(
-                        "Température : " + ts.getTemperature()
-                );*/
+                //System.out.println("Température : " + ts.getTemperature());
                 float temp = ts.getTemperature();
                 if (Math.abs(temp - lastTemperature) > 0.01f) {
                     lastTemperature = temp;
                     System.out.println("Température : " + temp);
                 }
-
             }
             if (sensor instanceof DepthSensor) {
                 DepthSensor ds = (DepthSensor) sensor;
@@ -188,17 +201,10 @@ public class Main extends SimpleApplication {
             //Donc plus le temps passe,plus la batterie diminue
             //La batterie commence à diminuer dès que l'on active le main
             //Donc lorsqu'on commence à voir les données un peu de batterie a été consommé lors du lancement de l'application
-
-
                 drone.getBattery().consommation(consumption);
                 //retire de l'énergie à la batterie
-                System.out.println(
-                        "Batterie : " + drone.getBattery().getPercentage() + "%"
-                );
-
-        }
-
-
+                System.out.println("Batterie : " + drone.getBattery().getPercentage() + "%");
+        }*/
     }
 
     public void executeNetworkCommand(String droneId, PilotCommand command) {
@@ -244,6 +250,10 @@ public class Main extends SimpleApplication {
         }
 
         return status;
+    }
+
+    public void setConfiguration(SimulationConfiguration configuration) {
+        this.configuration = configuration;
     }
 
 }
