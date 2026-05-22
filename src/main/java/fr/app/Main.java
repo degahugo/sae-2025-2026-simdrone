@@ -166,13 +166,12 @@ public class Main extends SimpleApplication {
             waterDistortionManager.update();
         }
 
-
         for (Sensor sensor : drone.getSensors()) {
             sensor.update(drone);
             if (sensor instanceof TemperatureSensor) {
                 TemperatureSensor ts = (TemperatureSensor) sensor;
                 ts.affectDrone(drone);
-                //System.out.println("Température : " + ts.getTemperature());
+               // System.out.println("Température : " + ts.getTemperature()+ "°C");
                 float temp = ts.getTemperature();
                 if (Math.abs(temp - lastTemperature) > 0.01f) {
                     lastTemperature = temp;
@@ -191,9 +190,6 @@ public class Main extends SimpleApplication {
             }
             if (sensor instanceof PressureSensor cs) {
                // System.out.println("Pression : " + cs.getPressure() + "bar");
-            }
-            if (sensor instanceof TemperatureSensor ts) {
-                //System.out.println("Temperature: " + ts.getTemperature() + "°C");
             }
         }
 
