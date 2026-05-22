@@ -55,6 +55,7 @@ public class Main extends SimpleApplication {
     private DepthSensor depthSensor;
     private PressureSensor pressureSensor;
     private SimulationConfiguration configuration;
+    private SensorManager sensorManager;
 
 
     public static void main(String[] args) {
@@ -122,20 +123,13 @@ public class Main extends SimpleApplication {
             // Adding captors
             // Getting the drone
             this.drone = droneManager.getDrone();
-            // Then adding the sensors
-            this.temperatureSensor = new TemperatureSensor("TempSensor");
-            this.drone.addSensor(temperatureSensor);
-            this.depthSensor = new DepthSensor("DepthSensor");
-            drone.addSensor(this.depthSensor);
-            CompassSensor compassSensor = new CompassSensor("CompassSensor");
-            drone.addSensor(compassSensor);
-            this.pressureSensor = new PressureSensor("PressureSensor", this.depthSensor);
-            drone.addSensor(this.pressureSensor);
             // Creates the water filter
             //waterFilter existe maintenant de partout
             this.waterFilterManager = new WaterFilterManager(fpp, viewPort, rootNode, model);
             this.waterDistortionManager = new WaterDistortionManager(fpp, viewPort, droneManager.getDrone(), model);
 
+            this.sensorManager = new SensorManager(drone, lightingManager, waterFilterManager);
+            sensorManager.initSensors();
             // End of the loading, will execute the simpleUpdate
             loading = false;
             initialized = true;
@@ -166,31 +160,8 @@ public class Main extends SimpleApplication {
             waterDistortionManager.update();
         }
 
-        for (Sensor sensor : drone.getSensors()) {
-            sensor.update(drone);
-            if (sensor instanceof TemperatureSensor) {
-                TemperatureSensor ts = (TemperatureSensor) sensor;
-                ts.affectDrone(drone);
-               // System.out.println("Température : " + ts.getTemperature()+ "°C");
-                float temp = ts.getTemperature();
-                if (Math.abs(temp - lastTemperature) > 0.01f) {
-                    lastTemperature = temp;
-                  //  System.out.println("Température : " + temp);
-                }
-            }
-            if (sensor instanceof DepthSensor) {
-                DepthSensor ds = (DepthSensor) sensor;
-                lightingManager.updateUnderwaterLighting(ds.getDepth());
-                //dans waterfiltermanager l'obscurité arrive
-                waterFilterManager.updateUnderwaterEffect(ds.getDepth());
-               // System.out.println("Profondeur : " + ds.getDepth() + " m");
-            }
-            if (sensor instanceof CompassSensor cs) {
-               // System.out.println("Cap : " + cs.getHeading() + "°");
-            }
-            if (sensor instanceof PressureSensor cs) {
-               // System.out.println("Pression : " + cs.getPressure() + "bar");
-            }
+        if (sensorManager != null) {
+            sensorManager.updateSensors();
         }
 
         if (drone.getBattery() != null) {

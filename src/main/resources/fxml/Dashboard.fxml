@@ -93,12 +93,12 @@
               style="-fx-background-color: #0b141d; -fx-padding: 10 20 15 20;">
 
             <HBox alignment="CENTER" spacing="10">
-                <Button text="▲ Avancer" onAction="#moveForward"/>
-                <Button text="▼ Reculer" onAction="#moveBackward"/>
-                <Button text="◀ Gauche" onAction="#moveLeft"/>
-                <Button text="Droite ▶" onAction="#moveRight"/>
-                <Button text="Monter" onAction="#moveUp"/>
-                <Button text="Descendre" onAction="#moveDown"/>
+                <Button text="▲ Avancer" onMousePressed="#moveForward" onMouseReleased="#stopDrone"/>
+                <Button text="▼ Reculer" onMousePressed="#moveBackward" onMouseReleased="#stopDrone"/>
+                <Button text="◀ Gauche"  onMousePressed="#moveLeft" onMouseReleased="#stopDrone"/>
+                <Button text="Droite ▶"  onMousePressed="#moveRight" onMouseReleased="#stopDrone"/>
+                <Button text="Monter"  onMousePressed="#moveUp" onMouseReleased="#stopDrone"/>
+                <Button text="Descendre" onMousePressed="#moveDown" onMouseReleased="#stopDrone"/>
                 <Button text="STOP" onAction="#stopDrone"
                         style="-fx-background-color: #b71c1c; -fx-text-fill: white; -fx-font-weight: bold;"/>
                 <Button text="Lancer simulation" onAction="#startSimulation"

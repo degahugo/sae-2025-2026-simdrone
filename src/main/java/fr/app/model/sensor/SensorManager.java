@@ -29,55 +29,27 @@ public class SensorManager {
         drone.addSensor(pressureSensor);
     }
 
-    /**
-     * Met à jour tous les capteurs
-     */
     public void updateSensors() {
-
         for (Sensor sensor : drone.getSensors()) {
-
-            /*
-             * Update capteur
-             */
             sensor.update(drone);
 
-            /*
-             * Température
-             */
-            if (sensor instanceof TemperatureSensor ts) {
+            if (sensor instanceof TemperatureSensor ts) {ts.affectDrone(drone);
+                //System.out.println("Température : "+ ts.getTemperature()+ "°C");
 
-                ts.affectDrone(drone);
+            }
+            if (sensor instanceof DepthSensor ds) {lightingManager.updateUnderwaterLighting(ds.getDepth());
+                waterFilterManager.updateUnderwaterEffect(ds.getDepth());
+                //System.out.println("Profondeur : "+ ds.getDepth()+ " m");
             }
 
-            /*
-             * Profondeur
-             */
-            if (sensor instanceof DepthSensor ds) {
-
-                /*
-                 * Lumière
-                 */
-                lightingManager
-                        .updateUnderwaterLighting(
-                                ds.getDepth()
-                        );
-
-                /*
-                 * Eau
-                 */
-                waterFilterManager
-                        .updateUnderwaterEffect(
-                                ds.getDepth()
-                        );
+            if (sensor instanceof PressureSensor ps) {ps.affectDrone(drone);
+                //System.out.println("Pressure : "+ ps.getPressure()+ "°");
             }
 
-            /*
-             * Pression
-             */
-            if (sensor instanceof PressureSensor ps) {
-
-                ps.affectDrone(drone);
+            if (sensor instanceof CompassSensor) {CompassSensor cs = (CompassSensor) sensor;
+                //System.out.println("Cap : "+ cs.getHeading()+ "°");
             }
+
         }
     }
 }
