@@ -6,7 +6,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
 import javafx.stage.Stage;
-//import fr.app.network.Client;
+
 public class SelectionDroneController {
 
     @FXML
@@ -87,6 +87,13 @@ public class SelectionDroneController {
             /*
              * Changement de fenêtre
              */
+            try {
+                client.demarrerReceptionVideo(controller::afficherFrameVideo);
+                System.out.println("[SelectionDrone] Callback vidéo branché sur DashboardController");
+            } catch (Exception e) {
+                System.err.println("[SelectionDrone] Erreur démarrage réception vidéo : " + e.getMessage());
+            }
+
             Stage stage =
                     (Stage) droneComboBox
                             .getScene()

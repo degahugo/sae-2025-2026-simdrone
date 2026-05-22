@@ -22,6 +22,9 @@ import fr.app.view.WaterDistortionManager;
 import fr.app.model.PilotCommand;
 import fr.app.model.DroneStatus;
 import com.jme3.math.Vector3f;
+import java.util.concurrent.atomic.AtomicReference;
+import fr.app.view.DroneFrameCapture;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -47,6 +50,10 @@ public class Main extends SimpleApplication {
     private float lastTemperature = Float.NaN; // dernière température enregistré
 
     private volatile boolean initialized = false;
+    // Statut mis à jour à chaque simpleUpdate() — thread-safe pour lecture externe
+    private final AtomicReference<DroneStatus> dernierStatut = new AtomicReference<>(new DroneStatus());
+    // Captures vidéo par droneId
+    private final ConcurrentHashMap<String, DroneFrameCapture> frameCaptures = new ConcurrentHashMap<>();
 
 
     public static void main(String[] args) {
@@ -151,6 +158,21 @@ public class Main extends SimpleApplication {
             }
         }
 
+        // Mettre à jour le statut en cache — thread-safe, lu par getDroneStatusDirect()
+        if (drone != null && initialized) {
+            DroneStatus s = new DroneStatus();
+            com.jme3.math.Vector3f pos = drone.getDroneSpatial().getLocalTranslation();
+            s.setX(pos.x); s.setY(pos.y); s.setZ(pos.z);
+            s.setSpeed(0.0);
+            s.setState("En vol");
+            if (temperatureSensor != null) s.setTemperature(temperatureSensor.getTemperature());
+            if (waterDistortionManager != null) {
+                s.setDepth(waterDistortionManager.getProfondeur());
+                s.setIntensity(waterDistortionManager.getIntensity());
+            }
+            dernierStatut.set(s);
+        }
+
 
     }
 
@@ -178,7 +200,7 @@ public class Main extends SimpleApplication {
         if (drone == null || !drone.getId().equals(droneId)) {
             status.setState("Drone inconnu");
             return status;
-        }
+       }
 
         Vector3f position = drone.getDroneSpatial().getLocalTranslation();
 
@@ -199,4 +221,53 @@ public class Main extends SimpleApplication {
         return status;
     }
 
+    /**
+     * Retourne le dernier statut mis en cache par simpleUpdate().
+     * NON BLOQUANT — thread-safe via AtomicReference.
+     */
+    public DroneStatus getDroneStatusDirect(String droneId) {
+        if (drone == null || !drone.getId().equals(droneId)) {
+            DroneStatus s = new DroneStatus();
+            s.setState(drone == null ? "En initialisation..." : "Drone inconnu");
+            return s;
+        }
+        return dernierStatut.get();
+    }
+
+    /**
+     * Crée le ViewPort off-screen pour la capture vidéo du drone.
+     * DOIT être appelé depuis le thread JME3 (via enqueue).
+     */
+    public void creerViewPortOffScreen(String droneId) {
+        if (droneCameraManager == null) {
+            System.err.println("[Main] creerViewPortOffScreen : droneCameraManager null pour " + droneId);
+            return;
+        }
+        if (frameCaptures.containsKey(droneId)) {
+            System.out.println("[Main] ViewPort déjà créé pour " + droneId);
+            return;
+        }
+        com.jme3.renderer.Camera cameraDrone = droneCameraManager.getCamera();
+        DroneFrameCapture capture = new DroneFrameCapture(droneId, cameraDrone, renderManager, rootNode);
+        frameCaptures.put(droneId, capture);
+        System.out.println("[Main] ViewPort off-screen créé pour " + droneId);
+    }
+
+    /**
+     * Retourne la dernière frame JPEG — NON BLOQUANT (AtomicReference dans DroneFrameCapture).
+     */
+    public byte[] capturerFrameDrone(String droneId) {
+        DroneFrameCapture capture = frameCaptures.get(droneId);
+        if (capture == null && frameCaptures.size() == 1) {
+            capture = frameCaptures.values().iterator().next();
+        }
+        return capture != null ? capture.capturerFrame() : null;
+    }
+
+    /** Stub de compatibilité avec UdpServeurTransport. */
+    public void creerDrone(String droneId) {
+        System.out.println("[Main] creerDrone stub pour " + droneId);
+    }
+
 }
+

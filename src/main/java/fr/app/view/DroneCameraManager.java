@@ -18,7 +18,7 @@ public class DroneCameraManager {
     public DroneCameraManager(Camera cam, Drone drone) {
         this.cam = cam;
         this.drone = drone;
-        this.cameraNode = new Node("CameraNode");
+        this.cameraNode = new Node("CameraNode_"+drone.getId());
         drone.getDroneSpatial().attachChild(cameraNode);
         cameraNode.setLocalTranslation(cameraOffset);
     }
@@ -50,5 +50,12 @@ public class DroneCameraManager {
                 lookTarget,
                 Vector3f.UNIT_Y
         );
+    }
+    /**
+     * Retourne la caméra JME3 attachée à ce drone.
+     * Utilisé par DroneFrameCapture pour créer le ViewPort off-screen.
+     */
+    public Camera getCamera() {
+        return cam;
     }
 }

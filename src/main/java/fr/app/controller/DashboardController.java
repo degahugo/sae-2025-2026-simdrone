@@ -1,12 +1,17 @@
 package fr.app.controller;
 
+
 import fr.app.model.DroneStatus;
 import fr.app.model.PilotCommand;
 import fr.app.network.NetworkClient;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
-import fr.app.network.NetworkClient;
+import javafx.application.Platform;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+
+import java.io.ByteArrayInputStream;
 
 public class DashboardController {
 
@@ -30,6 +35,10 @@ public class DashboardController {
 
     @FXML
     private Label temperatureLabel;
+
+    @FXML
+    private ImageView cameraView;   // zone d'affichage vidéo (Dashboard.fxml)
+
 
     private NetworkClient client;
     private String droneId;
@@ -55,43 +64,63 @@ public class DashboardController {
         intensityLabel.setText(String.format("Intensité : %.3f", status.getIntensity()));
     }
 
+    //
+      // Appelé par NetworkClient à chaque frame JPEG reçue en UDP.
+     // Peut être appelé depuis n'importe quel thread — Platform.runLater pour le thread JavaFX.
+
+    public void afficherFrameVideo(byte[] jpegBytes) {
+        Platform.runLater(() -> {
+            try {
+                Image image = new Image(new ByteArrayInputStream(jpegBytes));
+                cameraView.setImage(image);
+            } catch (Exception e) {
+                System.err.println("[Dashboard] Erreur affichage frame : " + e.getMessage());
+            }
+        });
+    }
+
     private void send(PilotCommand cmd) {
 
         logArea.appendText("Commande : " + cmd + "\n");
 
-        if (client != null && client.isConnected()) {
+        if (client == null || !client.isConnected()) {
+            logArea.appendText("Client non connecté\n");
+            return;
+        }
+        new Thread(() -> {
             try {
                 client.sendCommand(droneId, cmd);
-
                 DroneStatus status = client.receiveStatus();
-                updateTelemetry(status);
+                Platform.runLater(() -> updateTelemetry(status));
 
             } catch (Exception e) {
-                logArea.appendText("Erreur envoi : " + e.getMessage() + "\n");
+                Platform.runLater(() ->
+                logArea.appendText("Erreur envoi : " + e.getMessage() + "\n"));
             }
-        } else {
-            logArea.appendText("❌ Client non connecté\n");
-        }
+        }, "cmd-" + cmd).start();
     }
 
     @FXML
     private void startSimulation() {
 
-        if (client != null && client.isConnected()) {
+        if (client == null || !client.isConnected()) {
+            logArea.appendText(" Client non connecté\n");
+            return;
+        }
+        // Dans un thread séparé pour ne pas bloquer le thread JavaFX
+        new Thread(() -> {
             try {
                 client.sendStartSimulation(droneId);
-
                 DroneStatus status = client.receiveStatus();
-                updateTelemetry(status);
-
-                logArea.appendText("Simulation lancée pour " + droneId + "\n");
-
+                Platform.runLater(() -> {
+                    updateTelemetry(status);
+                    logArea.appendText("Simulation lancée pour " + droneId + "\n");
+                });
             } catch (Exception e) {
-                logArea.appendText("Erreur lancement simulation : " + e.getMessage() + "\n");
+                Platform.runLater(() ->
+                    logArea.appendText("Erreur lancement simulation : " + e.getMessage() + "\n"));
             }
-        } else {
-            logArea.appendText("❌ Client non connecté\n");
-        }
+        },"start-sim").start();
     }
 
     @FXML
