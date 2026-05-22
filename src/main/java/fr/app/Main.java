@@ -141,6 +141,24 @@ public class Main extends SimpleApplication {
         if (droneController != null){
             droneController.updateMovement();
         }
+        // --- Free-Look Camera ---
+        if (droneController != null && droneCameraManager != null) {
+
+            if (droneController.isCamLeftIntention()) {
+                droneCameraManager.rotateCameraLeft(tpf);
+            }
+            if (droneController.isCamRightIntention()) {
+                droneCameraManager.rotateCameraRight(tpf);
+            }
+            if (droneController.isCamUpIntention()) {
+                droneCameraManager.rotateCameraUp(tpf);
+            }
+            if (droneController.isCamDownIntention()) {
+                droneCameraManager.rotateCameraDown(tpf);
+            }
+
+        }
+
         if (droneCameraManager != null){
             droneCameraManager.update(tpf);
         }

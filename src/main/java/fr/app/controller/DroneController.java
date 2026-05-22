@@ -45,6 +45,18 @@ public class DroneController {
     private boolean pitchBackwardIntention = false;
     private boolean rollLeftIntention = false;
     private boolean rollRightIntention = false;
+
+    // --- Intentions Free-Look ---
+    private boolean camLeftIntention = false;
+    private boolean camRightIntention = false;
+    private boolean camUpIntention = false;
+    private boolean camDownIntention = false;
+    public boolean isCamLeftIntention() { return camLeftIntention; }
+    public boolean isCamRightIntention() { return camRightIntention; }
+    public boolean isCamUpIntention() { return camUpIntention; }
+    public boolean isCamDownIntention() { return camDownIntention; }
+
+
     private RigidBodyControl physicsControl;
     private float mass;
     private float gravityCounterForce;
@@ -134,6 +146,12 @@ public class DroneController {
             case PITCHDOWN: pitchBackwardIntention = pressed; break;
             case ROLLLEFT: rollLeftIntention = pressed; break;
             case ROLLRIGHT: rollRightIntention = pressed; break;
+            // --- Free-Look Camera ---
+            case CAM_LEFT:  camLeftIntention = pressed; break;
+            case CAM_RIGHT: camRightIntention = pressed; break;
+            case CAM_UP:    camUpIntention = pressed; break;
+            case CAM_DOWN:  camDownIntention = pressed; break;
+
 
             case STOP:
                 forwardIntention = false;
@@ -163,6 +181,12 @@ public class DroneController {
         inputManager.addMapping(rollRight.name(), new KeyTrigger(KeyInput.KEY_L));
         inputManager.addMapping(pitchUp.name(), new KeyTrigger(KeyInput.KEY_I));
         inputManager.addMapping(pitchDown.name(), new KeyTrigger(KeyInput.KEY_K));
+        // --- Free-Look Camera ---
+        inputManager.addMapping(PilotCommand.CAM_LEFT.name(),  new KeyTrigger(KeyInput.KEY_LEFT));
+        inputManager.addMapping(PilotCommand.CAM_RIGHT.name(), new KeyTrigger(KeyInput.KEY_RIGHT));
+        inputManager.addMapping(PilotCommand.CAM_UP.name(),    new KeyTrigger(KeyInput.KEY_UP));
+        inputManager.addMapping(PilotCommand.CAM_DOWN.name(),  new KeyTrigger(KeyInput.KEY_DOWN));
+
 
         // Listeners
         inputManager.addListener(actionListener,
@@ -177,7 +201,15 @@ public class DroneController {
                 pitchUp.name(),
                 pitchDown.name(),
                 rollLeft.name(),
-                rollRight.name()
+                rollRight.name(),
+                // --- Free-Look Camera ---
+                PilotCommand.CAM_LEFT.name(),
+                PilotCommand.CAM_RIGHT.name(),
+                PilotCommand.CAM_UP.name(),
+                PilotCommand.CAM_DOWN.name()
+
+
+
         );
     }
 
