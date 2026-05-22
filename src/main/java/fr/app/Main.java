@@ -30,17 +30,23 @@ public class Main extends SimpleApplication {
     private FilterPostProcessor fpp;
     private Sensor sensor;
     private TemperatureSensor temperatureSensor;
+
+    // Variables pour le courant
     private CurrentMatrix currentMatrix;
     private CurrentDebugView currentDebugView; // On garde une référence globale
-    private boolean showCurrentDebug = true; // Désactivé par défaut
-    private boolean showMeshWireframe = false;
-    private int currentWidth = 100;
-    private int currentLenght = 100;
-    private float currentCellSize = 0.5f;
+    private boolean showCurrentDebug = false; // Désactivé par défaut
+    private final float maxYawAngleChange = 30f;
+    private final float maxPitchAngleChange = 10f;
+    private final float currentForce = 0.1f; // Ne pas dépasser 0.5f sinon ça devient beaucoup trop fort
+    private final int currentWidth = 100;
+    private final int currentLenght = 100;
+    private final float currentCellSize = 0.5f;
     private float currentTimer = 0f;
     private final float TIME_BETWEEN_UPDATES = 5.0f;
-    private boolean loading = true;
-    private float lastTemperature = Float.NaN; // dernière température enregistré
+
+    private boolean showMeshWireframe = false; // Affiche le mesh
+    private boolean loading = true; // Indique si la map a chargé
+    private float lastTemperature = Float.NaN; // dernière température enregistrée
     private Camera pilotCamera;
     private volatile boolean initialized = false;
     private DepthSensor depthSensor;
@@ -82,7 +88,7 @@ public class Main extends SimpleApplication {
         }
 
         // Generation des courants
-        this.currentMatrix = new CurrentMatrix(currentWidth, currentLenght, currentCellSize);
+        this.currentMatrix = new CurrentMatrix(currentWidth, currentLenght, currentCellSize, maxYawAngleChange, maxPitchAngleChange, currentForce);
 
         // Configure scene
         this.lightingManager = new LightingManager(rootNode, cam, assetManager);
@@ -130,7 +136,7 @@ public class Main extends SimpleApplication {
             // Affichage des flèches de courant
             this.currentDebugView = new CurrentDebugView(currentMatrix, assetManager, rootNode);
             currentDebugView.setVisible(showCurrentDebug);
-            currentDebugView.showCurrentGrid(0.5f);
+            if(showCurrentDebug) currentDebugView.showCurrentGrid(0.5f);
 
             // End of the loading, will execute the simpleUpdate
             loading = false;
