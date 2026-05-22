@@ -43,7 +43,7 @@ public class SensorManager {
             }
 
             if (sensor instanceof PressureSensor ps) {ps.affectDrone(drone);
-                //System.out.println("Pressure : "+ ps.getPressure()+ "°");
+                //System.out.println("Pressure : "+ ps.getPressure()+ "bar");
             }
 
             if (sensor instanceof CompassSensor) {CompassSensor cs = (CompassSensor) sensor;
