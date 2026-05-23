@@ -17,8 +17,12 @@ public class SelectionDroneController {
     private NetworkClient client;
     private SimulationConfiguration configuration;
 
+    /*
+     * Reçoit le client déjà connecté
+     */
     public void setClient(NetworkClient client) {
         this.client = client;
+
         droneComboBox.getItems().clear();
         droneComboBox.getItems().addAll(DroneType.values());
         droneComboBox.setValue(DroneType.BR2R4);
@@ -32,12 +36,19 @@ public class SelectionDroneController {
     private void handleSelectDrone() {
 
         DroneType selectedDrone = droneComboBox.getValue();
-        if (selectedDrone == null) return;
+
+        /*
+         * Aucun drone sélectionné
+         */
+        if (selectedDrone == null) {
+            return;
+        }
 
         try {
             if (configuration == null) {
                 configuration = new SimulationConfiguration();
             }
+
             configuration.setDroneType(selectedDrone);
 
             FXMLLoader loader = new FXMLLoader(
@@ -52,12 +63,26 @@ public class SelectionDroneController {
             controller.setConfiguration(configuration);
 
             Stage stage = (Stage) droneComboBox.getScene().getWindow();
+            /*
+             * Changement de fenêtre
+             */
+            try {
+                client.demarrerReceptionVideo(controller::afficherFrameVideo);
+                System.out.println("[SelectionDrone] Callback vidéo branché sur DashboardController");
+            } catch (Exception e) {
+                System.err.println("[SelectionDrone] Erreur démarrage réception vidéo : " + e.getMessage());
+            }
 
-            // ── LIGNE AJOUTÉE ────────────────────────────────────────────────
+            /*Stage stage =
+                    (Stage) droneComboBox
+                            .getScene()
+                            .getWindow();*/
+
+
+
             // Arrête proprement le thread de polling et l'horloge quand
             // la fenêtre est fermée, pour éviter les fuites de thread.
             stage.setOnCloseRequest(e -> controller.shutdown());
-            // ────────────────────────────────────────────────────────────────
 
             stage.setScene(scene);
             stage.setMaximized(true);
