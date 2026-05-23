@@ -54,6 +54,7 @@ public class Main extends SimpleApplication {
     private DepthSensor depthSensor;
     private PressureSensor pressureSensor;
     private SimulationConfiguration configuration;
+    private CompassSensor compassSensor;
 
 
     public static void main(String[] args) {
@@ -126,8 +127,8 @@ public class Main extends SimpleApplication {
             this.drone.addSensor(temperatureSensor);
             this.depthSensor = new DepthSensor("DepthSensor");
             drone.addSensor(this.depthSensor);
-            CompassSensor compassSensor = new CompassSensor("CompassSensor");
-            drone.addSensor(compassSensor);
+            this.compassSensor = new CompassSensor("CompassSensor");
+            drone.addSensor(this.compassSensor);
             this.pressureSensor = new PressureSensor("PressureSensor", this.depthSensor);
             drone.addSensor(this.pressureSensor);
             // Creates the water filter
@@ -154,6 +155,11 @@ public class Main extends SimpleApplication {
         if (loading) {
             return;
         }
+        if (drone != null) {
+            drone.setCollisionDetected(false);
+            drone.setCollisionMessage("Aucune collision");
+        }
+
         if (droneController != null){
             droneController.updateMovement();
         }
@@ -253,6 +259,46 @@ public class Main extends SimpleApplication {
             status.setDepth(waterDistortionManager.getProfondeur());
             status.setIntensity(waterDistortionManager.getIntensity());
         }
+
+        if (compassSensor != null) {
+            status.setHeading(compassSensor.getHeading());
+            status.setYaw(compassSensor.getHeading());
+        }
+
+        if (pressureSensor != null) {
+            status.setPressure(pressureSensor.getPressure());
+        }
+
+        if (drone.getBattery() != null) {
+            status.setBattery(drone.getBattery().getPercentage());
+        }
+
+        if (configuration != null) {
+            if (configuration.getEnvironmentType() != null) {
+                status.setEnvironmentName(configuration.getEnvironmentType().toString());
+            }
+
+            if (configuration.getDroneType() != null) {
+                status.setDroneType(configuration.getDroneType().toString());
+            }
+        }
+
+
+        float[] angles = drone.getDroneSpatial()
+                .getWorldRotation()
+                .toAngles(null);
+
+        double pitch = Math.toDegrees(angles[0]);
+        double yaw = Math.toDegrees(angles[1]);
+        double roll = Math.toDegrees(angles[2]);
+
+        status.setPitch(pitch);
+        status.setYaw(yaw);
+        status.setRoll(roll);
+
+
+        status.setCollisionDetected(drone.isCollisionDetected());
+        status.setCollisionMessage(drone.getCollisionMessage());
 
         return status;
     }

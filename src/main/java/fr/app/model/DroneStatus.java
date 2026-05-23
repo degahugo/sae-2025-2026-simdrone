@@ -21,6 +21,9 @@ public class DroneStatus {
     private String environmentName;
     private String droneType;
     private double battery;
+    private double heading;
+    private double pressure;
+
 
     public DroneStatus() {
         this.x = 0;
@@ -41,6 +44,56 @@ public class DroneStatus {
     }
     public double getDepth() { return depth; }
     public double getIntensity() { return intensity; }
+    public double getHeading() {
+        return heading;
+    }
+    public double getPressure() {
+        return pressure;
+    }
+
+    public double getBattery() {
+        return battery;
+    }
+
+
+    public double getYaw() {
+        return yaw;
+    }
+
+    public double getPitch() {
+        return pitch;
+    }
+
+
+    public double getRoll() {
+        return roll;
+    }
+
+
+    public boolean isCollisionDetected() {
+        return collisionDetected;
+    }
+
+
+    public String getCollisionMessage() {
+        return collisionMessage;
+    }
+
+
+
+    public String getEnvironmentName() {
+        return environmentName;
+    }
+
+
+
+    public String getDroneType() {
+        return droneType;
+    }
+
+
+
+
 
     //Setter
     public void setX(double x) { this.x = x; }
@@ -52,7 +105,43 @@ public class DroneStatus {
     }
     public void setDepth(double depth) { this.depth = depth; }
     public void setIntensity(double intensity) { this.intensity = intensity; }
+    public void setBattery(double battery) {
+        this.battery = battery;
+    }
+    public void setPressure(double pressure) {
+        this.pressure = pressure;
+    }
+    public void setHeading(double heading) {
+        this.heading = heading;
+    }
 
+
+
+    public void setDroneType(String droneType) {
+        this.droneType = droneType;
+    }
+    public void setEnvironmentName(String environmentName) {
+        this.environmentName = environmentName;
+    }
+    public void setCollisionMessage(String collisionMessage) {
+        this.collisionMessage = collisionMessage;
+    }
+    public void setCollisionDetected(boolean collisionDetected) {
+        this.collisionDetected = collisionDetected;
+    }
+
+    public void setRoll(double roll) {
+        this.roll = roll;
+    }
+
+    public void setPitch(double pitch) {
+        this.pitch = pitch;
+    }
+
+
+    public void setYaw(double yaw) {
+        this.yaw = yaw;
+    }
     // @JsonIgnore -> Jackson ignorera cette méthode lors de la sérialisation/désérialisation
     @JsonIgnore
     public String getPositionText() {
@@ -72,6 +161,8 @@ public class DroneStatus {
     public void setState(String state) {
         this.state = state;
     }
+
+
 
     // @JsonIgnore -> Jackson ignorera cette méthode lors de la sérialisation/désérialisation
     @JsonIgnore

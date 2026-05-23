@@ -19,7 +19,11 @@ import com.jme3.scene.*;
 import com.jme3.scene.shape.Box;
 import com.jme3.util.BufferUtils;
 import fr.app.view.GUIManager;
+import com.jme3.bullet.collision.PhysicsCollisionEvent;
+import com.jme3.bullet.collision.PhysicsCollisionListener;
+import com.jme3.bullet.collision.PhysicsCollisionObject;
 import fr.utln.dronsim.viewer.primitives.ReferentialNode;
+import com.jme3.math.FastMath;
 
 public class PhysicsEngine{
 
@@ -344,7 +348,30 @@ public class PhysicsEngine{
         drone.getDroneSpatial().addControl(dronePhysics);
         // Add the rigid body to the physic space
         bulletAppState.getPhysicsSpace().add(dronePhysics);
+
+        bulletAppState.getPhysicsSpace().addCollisionListener(
+                new PhysicsCollisionListener() {
+
+                    @Override
+                    public void collision(PhysicsCollisionEvent event) {
+
+                        PhysicsCollisionObject a = event.getObjectA();
+                        PhysicsCollisionObject b = event.getObjectB();
+
+                        if (a == dronePhysics || b == dronePhysics) {
+
+                            drone.setCollisionDetected(true);
+                            drone.setCollisionMessage("Collision avec terrain ou obstacle");
+
+                            System.out.println("[PHYSICS] Collision détectée");
+                        }
+                    }
+                }
+        );
     }
+
+
+
 
     public void CreateDroneHitbox(Drone drone){
         CreateDroneHitbox(drone, "Auto");
