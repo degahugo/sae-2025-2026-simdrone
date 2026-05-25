@@ -19,7 +19,11 @@ import com.jme3.scene.*;
 import com.jme3.scene.shape.Box;
 import com.jme3.util.BufferUtils;
 import fr.app.view.GUIManager;
+import com.jme3.bullet.collision.PhysicsCollisionEvent;
+import com.jme3.bullet.collision.PhysicsCollisionListener;
+import com.jme3.bullet.collision.PhysicsCollisionObject;
 import fr.utln.dronsim.viewer.primitives.ReferentialNode;
+import com.jme3.math.FastMath;
 
 public class PhysicsEngine{
 
@@ -30,7 +34,7 @@ public class PhysicsEngine{
     private Node rootNode;
     private GUIManager guiManager;
 
-    public PhysicsEngine(SimpleApplication app, WorldView model, GUIManager guiManager, boolean debugMode) {
+    public PhysicsEngine(SimpleApplication app, WorldView model, GUIManager guiManager, boolean showMeshWireframe) {
         this.model = model;
         this.app = app;
         // Getting the asset manager
@@ -45,7 +49,7 @@ public class PhysicsEngine{
         // Attach it to the global manager
         this.app.getStateManager().attach(bulletAppState);
         // true to see the blue wireframe, false if you want FPS
-        this.bulletAppState.setDebugEnabled(debugMode);
+        this.bulletAppState.setDebugEnabled(showMeshWireframe);
         System.out.println("PhysicsEngine : Successfully initialized");
     }
 
@@ -344,7 +348,30 @@ public class PhysicsEngine{
         drone.getDroneSpatial().addControl(dronePhysics);
         // Add the rigid body to the physic space
         bulletAppState.getPhysicsSpace().add(dronePhysics);
+
+        bulletAppState.getPhysicsSpace().addCollisionListener(
+                new PhysicsCollisionListener() {
+
+                    @Override
+                    public void collision(PhysicsCollisionEvent event) {
+
+                        PhysicsCollisionObject a = event.getObjectA();
+                        PhysicsCollisionObject b = event.getObjectB();
+
+                        if (a == dronePhysics || b == dronePhysics) {
+
+                            drone.setCollisionDetected(true);
+                            drone.setCollisionMessage("Collision avec terrain ou obstacle");
+
+                            System.out.println("[PHYSICS] Collision détectée");
+                        }
+                    }
+                }
+        );
     }
+
+
+
 
     public void CreateDroneHitbox(Drone drone){
         CreateDroneHitbox(drone, "Auto");
