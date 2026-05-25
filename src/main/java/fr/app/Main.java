@@ -246,21 +246,21 @@ public class Main extends SimpleApplication {
                     float temp = ts.getTemperature();
                     if (Math.abs(temp - lastTemperature) > 0.01f) {
                         lastTemperature = temp;
-                        System.out.println("Température : " + temp);
+                        //System.out.println("Température : " + temp);
                     }
                 }
                 if (sensor instanceof DepthSensor) {
                     DepthSensor ds = (DepthSensor) sensor;
-                    System.out.println("Profondeur : " + ds.getDepth() + " m");
+                    //System.out.println("Profondeur : " + ds.getDepth() + " m");
                 }
                 if (sensor instanceof CompassSensor cs) {
-                    System.out.println("Cap : " + cs.getHeading() + "°");
+                   // System.out.println("Cap : " + cs.getHeading() + "°");
                 }
                 if (sensor instanceof PressureSensor cs) {
-                    System.out.println("Pression : " + cs.getPressure() + "bar");
+                    //System.out.println("Pression : " + cs.getPressure() + "bar");
                 }
                 if (sensor instanceof TemperatureSensor ts) {
-                    System.out.println("Temperature: " + ts.getTemperature() + "°C");
+                    //System.out.println("Temperature: " + ts.getTemperature() + "°C");
                 }
             }
 
@@ -303,7 +303,7 @@ public class Main extends SimpleApplication {
             //Donc lorsqu'on commence à voir les données un peu de batterie a été consommé lors du lancement de l'application
             drone.getBattery().consommation(consumption);
             //retire de l'énergie à la batterie
-            System.out.println("Batterie : " + drone.getBattery().getPercentage() + "%");
+            //System.out.println("Batterie : " + drone.getBattery().getPercentage() + "%");
         }
     }
 
