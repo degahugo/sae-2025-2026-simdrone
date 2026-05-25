@@ -237,7 +237,7 @@
                                 prefWidth="64" prefHeight="40"
                                 style="-fx-background-color: #1e3a5f; -fx-text-fill: white;
                                        -fx-font-size: 16px; -fx-cursor: hand;"/>
-                        <Button text="◀" onMousePressed="#moveLeft" onMouseReleased="#stopDrone"/>
+                        <Button text="◀" onMousePressed="#moveLeft" onMouseReleased="#stopDrone"
                                 GridPane.columnIndex="0" GridPane.rowIndex="1"
                                 prefWidth="64" prefHeight="40"
                                 style="-fx-background-color: #1e3a5f; -fx-text-fill: white;
@@ -247,12 +247,12 @@
                                 prefWidth="64" prefHeight="40"
                                 style="-fx-background-color: #7f1d1d; -fx-text-fill: white;
                                        -fx-font-size: 16px; -fx-font-weight: bold; -fx-cursor: hand;"/>
-                        <Button text="▶" onMousePressed="#moveRight" onMouseReleased="#stopDrone"/>
+                        <Button text="▶" onMousePressed="#moveRight" onMouseReleased="#stopDrone"
                                 GridPane.columnIndex="2" GridPane.rowIndex="1"
                                 prefWidth="64" prefHeight="40"
                                 style="-fx-background-color: #1e3a5f; -fx-text-fill: white;
                                        -fx-font-size: 16px; -fx-cursor: hand;"/>
-                        <Button text="▼" onMousePressed="#moveBackward" onMouseReleased="#stopDrone"/>
+                        <Button text="▼" onMousePressed="#moveBackward" onMouseReleased="#stopDrone"
                                 GridPane.columnIndex="1" GridPane.rowIndex="2"
                                 prefWidth="64" prefHeight="40"
                                 style="-fx-background-color: #1e3a5f; -fx-text-fill: white;
@@ -260,11 +260,11 @@
                     </GridPane>
 
                     <HBox spacing="8" alignment="CENTER">
-                        <Button text="↑ MONTER" onMousePressed="#moveUp" onMouseReleased="#stopDrone"/>
+                        <Button text="↑ MONTER" onMousePressed="#moveUp" onMouseReleased="#stopDrone"
                                 prefWidth="120" prefHeight="34"
                                 style="-fx-background-color: #14532d; -fx-text-fill: #22c55e;
                                        -fx-font-weight: bold; -fx-cursor: hand;"/>
-                        <Button text="↓ DESCENDRE" onMousePressed="#moveDown" onMouseReleased="#stopDrone"/>
+                        <Button text="↓ DESCENDRE" onMousePressed="#moveDown" onMouseReleased="#stopDrone"
                                 prefWidth="128" prefHeight="34"
                                 style="-fx-background-color: #1e3a5f; -fx-text-fill: #38bdf8;
                                        -fx-font-weight: bold; -fx-cursor: hand;"/>
