@@ -17,6 +17,9 @@ public class SelectionDroneController {
     private NetworkClient client;
     private SimulationConfiguration configuration;
 
+    /*
+     * Reçoit le client déjà connecté
+     */
     public void setClient(NetworkClient client) {
         this.client = client;
 
@@ -34,6 +37,9 @@ public class SelectionDroneController {
 
         DroneType selectedDrone = droneComboBox.getValue();
 
+        /*
+         * Aucun drone sélectionné
+         */
         if (selectedDrone == null) {
             return;
         }
@@ -53,10 +59,33 @@ public class SelectionDroneController {
 
             DashboardController controller = loader.getController();
             controller.setClient(client);
-            controller.setDroneId(selectedDrone.getDroneId());            controller.setConfiguration(configuration);
+            controller.setDroneId(selectedDrone.getDroneId());
+            controller.setConfiguration(configuration);
 
             Stage stage = (Stage) droneComboBox.getScene().getWindow();
+            /*
+             * Changement de fenêtre
+             */
+            try {
+                client.demarrerReceptionVideo(controller::afficherFrameVideo);
+                System.out.println("[SelectionDrone] Callback vidéo branché sur DashboardController");
+            } catch (Exception e) {
+                System.err.println("[SelectionDrone] Erreur démarrage réception vidéo : " + e.getMessage());
+            }
+
+            /*Stage stage =
+                    (Stage) droneComboBox
+                            .getScene()
+                            .getWindow();*/
+
+
+
+            // Arrête proprement le thread de polling et l'horloge quand
+            // la fenêtre est fermée, pour éviter les fuites de thread.
+            stage.setOnCloseRequest(e -> controller.shutdown());
+
             stage.setScene(scene);
+            stage.setMaximized(true);
 
         } catch (Exception e) {
             e.printStackTrace();

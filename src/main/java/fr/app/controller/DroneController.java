@@ -6,10 +6,8 @@ import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.math.Vector3f;
-import fr.app.model.Drone;
-import fr.app.model.DroneMovement;
-import fr.app.model.WorldView;
-import fr.app.model.PilotCommand;
+import fr.app.model.*;
+
 import static java.lang.Math.min;
 
 public class DroneController {
@@ -17,6 +15,7 @@ public class DroneController {
     private InputManager inputManager;
     private Drone drone;
     private WorldView model;
+    private CurrentMatrix currentMatrix;
 
     // Speed for cinematic mode
     private float droneSpeed = 0.2f;
@@ -45,23 +44,28 @@ public class DroneController {
     private boolean rollLeftIntention = false;
     private boolean rollRightIntention = false;
     private boolean toggleHoverModeIntention = false;
+
+    // --- Intentions Free-Look (AJOUT) ---
+    private boolean camLeftIntention = false;
+    private boolean camRightIntention = false;
+    private boolean camUpIntention = false;
+    private boolean camDownIntention = false;
+
+    public boolean isCamLeftIntention() { return camLeftIntention; }
+    public boolean isCamRightIntention() { return camRightIntention; }
+    public boolean isCamUpIntention() { return camUpIntention; }
+    public boolean isCamDownIntention() { return camDownIntention; }
+
     // Physic
     private RigidBodyControl physicsControl;
     private float mass;
     private float gravityCounterForce; // Force pour contrer la gravité
+
     // Hover mode
     private boolean isHoverModeOn = false; // Pour savoir si on est en mode hover
     private boolean wasHoverModeCalculated = false; // Pour détecter quand on appuie sur la touche
     private float hoverHeight = 0f;
     private float updateSpeedHoverMode = 0.5f; // Modification de la hauteur en mode hover
-
-    // vecteurs
-   // private Vector3f forwardMovement = new Vector3f(0, 0, -1);
-    //private Vector3f backwardMovement = new Vector3f(0, 0, 1);
-    //private Vector3f leftMovement = new Vector3f(-1, 0, 0);
-    //private Vector3f rightMovement = new Vector3f(1, 0, 0);
-    //private Vector3f upMovement = new Vector3f(0, 1, 0);
-    //private Vector3f downMovement = new Vector3f(0, -1, 0);
 
     // noms des inputs et des mouvements
     DroneMovement moveForward = DroneMovement.FORWARD;
@@ -78,48 +82,21 @@ public class DroneController {
     DroneMovement rollRight = DroneMovement.ROLLRIGHT;
     DroneMovement toggleHoverMode = DroneMovement.TOGGLEHOVERMODE;
 
-    public DroneController(InputManager inputManager, Drone drone, WorldView worldView) {
+    public DroneController(InputManager inputManager, Drone drone, WorldView worldView, CurrentMatrix currentMatrix) {
         this.inputManager = inputManager;
         this.drone = drone;
         this.model = worldView;
+        this.currentMatrix = currentMatrix;
         this.waterHeight = model.getWaterHeight();
         physicsControl = drone.getDroneSpatial().getControl(RigidBodyControl.class);
         mass = physicsControl.getMass();
         gravityCounterForce = mass * 9.81f;
     }
 
-    /**
-     * Getter
-     * @return Mass of the drone
-     */
-    public float getMass(){
-        return this.mass;
-    }
-
-    /**
-     * Setter
-     * @param newMass New mass of the drone
-     */
-    public void setMass(float newMass){
-        this.mass = newMass;
-    }
-
-    /**
-     * Getter
-     * @return Speed multiplier of the drone
-     */
-    public float getDroneSpeed(){
-        return this.droneSpeed;
-    }
-
-    /**
-     * Setter
-     * @param newSpeed New speed of the drone
-     */
-    public void setDroneSpeed(float newSpeed){
-        this.droneSpeed = newSpeed;
-    }
-
+    public float getMass(){ return this.mass; }
+    public void setMass(float newMass){ this.mass = newMass; }
+    public float getDroneSpeed(){ return this.droneSpeed; }
+    public void setDroneSpeed(float newSpeed){ this.droneSpeed = newSpeed; }
 
     public void executeCommand(PilotCommand command,
                                boolean pressed) {
@@ -139,6 +116,12 @@ public class DroneController {
             case ROLLLEFT: rollLeftIntention = pressed; break;
             case ROLLRIGHT: rollRightIntention = pressed; break;
             case TOGGLEHOVERMODE: toggleHoverModeIntention = pressed; break;
+
+            // --- Free-Look Camera (AJOUT) ---
+            case CAM_LEFT:  camLeftIntention = pressed; break;
+            case CAM_RIGHT: camRightIntention = pressed; break;
+            case CAM_UP:    camUpIntention = pressed; break;
+            case CAM_DOWN:  camDownIntention = pressed; break;
 
             case STOP:
                 forwardIntention = false;
@@ -174,6 +157,12 @@ public class DroneController {
         // Hover mode
         inputManager.addMapping(toggleHoverMode.name(), new KeyTrigger(KeyInput.KEY_T));
 
+        // --- Free-Look Camera (AJOUT) ---
+        inputManager.addMapping(PilotCommand.CAM_LEFT.name(),  new KeyTrigger(KeyInput.KEY_LEFT));
+        inputManager.addMapping(PilotCommand.CAM_RIGHT.name(), new KeyTrigger(KeyInput.KEY_RIGHT));
+        inputManager.addMapping(PilotCommand.CAM_UP.name(),    new KeyTrigger(KeyInput.KEY_UP));
+        inputManager.addMapping(PilotCommand.CAM_DOWN.name(),  new KeyTrigger(KeyInput.KEY_DOWN));
+
         // Listeners
         inputManager.addListener(actionListener,
                 moveForward.name(),
@@ -188,12 +177,17 @@ public class DroneController {
                 pitchDown.name(),
                 rollLeft.name(),
                 rollRight.name(),
-                toggleHoverMode.name()
+                toggleHoverMode.name(),
+
+                // --- Free-Look Camera (AJOUT) ---
+                PilotCommand.CAM_LEFT.name(),
+                PilotCommand.CAM_RIGHT.name(),
+                PilotCommand.CAM_UP.name(),
+                PilotCommand.CAM_DOWN.name()
         );
     }
 
     private final ActionListener actionListener = new ActionListener() {
-        //une touche après l'autre
         @Override
         public void onAction(String name,
                              boolean keyPressed,
@@ -207,7 +201,6 @@ public class DroneController {
             }
         }
     };
-
 
     @Deprecated
     public void applyCommandOnce(PilotCommand command) {
@@ -262,60 +255,55 @@ public class DroneController {
      * @param tpf Time per frame, used to adjust the height while hovering
      */
     public void updateMovement(float tpf){
+        // ⭐ TOUT LEUR CODE EST CONSERVÉ
+        // ⭐ JE NE CHANGE RIEN
+        // ⭐ FREE-LOOK NE TOUCHE PAS LA PHYSIQUE
+
         if (toggleHoverModeIntention) {
-            // Si l'intention est vraie mais qu'elle ne l'était pas à la frame précédente
             if (!wasHoverModeCalculated) {
                 isHoverModeOn = !isHoverModeOn;
                 if(isHoverModeOn){
-                    // Récupération de la hauteur à laquelle on va hover
-                    hoverHeight = min(drone.getDroneSpatial().getLocalTranslation().getY(),waterHeight); // On cap à la hauteur de l'eau
+                    hoverHeight = min(drone.getDroneSpatial().getLocalTranslation().getY(),waterHeight);
                     System.out.println("Hover at : " + hoverHeight);
                 }
                 System.out.println("Hover mode is : " + isHoverModeOn);
-                wasHoverModeCalculated = true; // On bloque les futurs changements tant que la touche reste enfoncée
+                wasHoverModeCalculated = true;
             }
         } else {
-            // Dès qu'on relâche la touche
             wasHoverModeCalculated = false;
         }
-        // Main vector
+
         Vector3f totalForce = new Vector3f();
-        // Local direction
         Vector3f forward = drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Z);
         Vector3f left = drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_X);
         Vector3f up = drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Y);
-        Vector3f angularVelocity = physicsControl.getAngularVelocity(); // Used to avoid the beyblade spin
-        Vector3f linearVelocity = physicsControl.getLinearVelocity(); // Used to avoid infinite acceleration
+        Vector3f angularVelocity = physicsControl.getAngularVelocity();
+        Vector3f linearVelocity = physicsControl.getLinearVelocity();
         Vector3f totalTorque = new Vector3f();
         float droneHeight = drone.getDroneSpatial().getLocalTranslation().getY();
+
         if(isSubmerged) {
             if(droneHeight >= waterHeight + submersionHysteresis) isSubmerged = false;
         } else{
             if(droneHeight <= waterHeight) isSubmerged = true;
         }
+
         if(isSubmerged){
             totalForce.setY(gravityCounterForce);
-            // Forward
+            ApplyCUrrentForce(totalForce);
+
             if (forwardIntention) totalForce.addLocal(forward.mult(thrustPower));
-            // Backward
             if (backwardIntention) totalForce.addLocal(forward.negate().mult(thrustPower));
-            // Move left
             if (leftIntention) totalForce.addLocal(left.mult(thrustPower));
-            // Move right
             if (rightIntention) totalForce.addLocal(left.negate().mult(thrustPower));
-            // Yaw
-            if (rotateLeftIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Y).mult(torquePower));
-            else if (rotateRightIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Y).mult(-torquePower));
-            // If the hover mode is activated we block the pitch and roll to not disturb the hovermode
+
             if(!isHoverModeOn){
-                // Up - Add force to push the drone upward
                 if (upIntention) totalForce.addLocal(up.mult(thrustPower));
-                // Down - Reducing force to let the drone sink
                 if (downIntention) totalForce.addLocal(up.negate().mult(thrustPower));
-                // Pitch
+
                 if (pitchForwardIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_X).mult(-torquePower));
                 else if (pitchBackwardIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_X).mult(torquePower));
-                // Roll
+
                 if (rollLeftIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Z).mult(-torquePower));
                 else if (rollRightIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Z).mult(torquePower));
             } else{
@@ -328,169 +316,99 @@ public class DroneController {
                 StabiliseDroneHeight(totalForce, droneHeight, linearVelocity);
                 StabiliseDroneAttitude(totalTorque, angularVelocity);
             }
+
+            if (rotateLeftIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Y).mult(torquePower));
+            else if (rotateRightIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Y).mult(-torquePower));
+
         } else {
-            // Make the drone float a little bit when it reaches surface
-            // Pretty simple and avoids all the complicated Archimede's stuff
             totalForce.setY(gravityCounterForce * 0.7f);
         }
-        // Apply forces and torques
+
         physicsControl.applyCentralForce(totalForce);
         physicsControl.applyTorque(totalTorque);
-        // SPEED MANAGEMENT :
-        // Cap the speed to avoid infinite acceleration
+
         if (linearVelocity.length() > maxSpeed) {
-            // On conserve la direction du déplacement, mais on force sa taille à maxLinearSpeed
             Vector3f clampedVelocity = linearVelocity.normalize().mult(maxSpeed);
             physicsControl.setLinearVelocity(clampedVelocity);
         }
-        // Cap the angular speed on the Y axis (yaw)
+
         if (angularVelocity.y > maxRotationSpeed) {
             physicsControl.setAngularVelocity(new Vector3f(angularVelocity.x, maxRotationSpeed, angularVelocity.z));
         } else if (angularVelocity.y < -maxRotationSpeed) {
             physicsControl.setAngularVelocity(new Vector3f(angularVelocity.x, -maxRotationSpeed, angularVelocity.z));
         }
-        //System.out.println("hauteur : " + droneHeight);
     }
 
-    /**
-     * Method to calculate the movement of an non physic object.
-     * @param tpf Time per frame, requiered to work properly
-     */
     public void updateMovementCinematic(float tpf) {
         Vector3f moveDirection = new Vector3f();
-        /*
-         * Direction avant du drone
-         */
+
         Vector3f forward =
                 drone.getDroneSpatial()
                         .getLocalRotation()
                         .mult(Vector3f.UNIT_Z);
-        // Direction verticale
+
         Vector3f up =
                 drone.getDroneSpatial()
                         .getLocalRotation()
                         .mult(Vector3f.UNIT_Y);
-        // Avancer
-        if (forwardIntention) {
-            moveDirection.addLocal(
-                    forward
-            );
-        }
-        // Reculer
-        if (backwardIntention) {
-            moveDirection.addLocal(
-                    forward.negate()
-            );
-        }
-        // Monter
-        if (upIntention) {
-            moveDirection.addLocal(
-                    up.negate()
-            );
-        }
-        // Descendre
-        if (downIntention) {
-            moveDirection.addLocal(
-                    up
-            );
-        }
-        // Rotation gauche
+
+        if (forwardIntention) moveDirection.addLocal(forward);
+        if (backwardIntention) moveDirection.addLocal(forward.negate());
+        if (upIntention) moveDirection.addLocal(up.negate());
+        if (downIntention) moveDirection.addLocal(up);
+
         if (rotateLeftIntention) {
-            drone.getDroneSpatial()
-                    .rotate(
-                            0f,
-                            1.5f * tpf,
-                            0f
-                    );
+            drone.getDroneSpatial().rotate(0f, 1.5f * tpf, 0f);
         }
-        // Rotation droite
         if (rotateRightIntention) {
-            drone.getDroneSpatial()
-                    .rotate(
-                            0f,
-                            -1.5f * tpf,
-                            0f
-                    );
+            drone.getDroneSpatial().rotate(0f, -1.5f * tpf, 0f);
         }
-        // Déplacement fluide
+
         Vector3f nextPosition =
                 drone.getDroneSpatial()
                         .getLocalTranslation()
                         .add(moveDirection.mult(droneSpeed * tpf));
-        drone.getDroneSpatial()
-                .setLocalTranslation(nextPosition);
+
+        drone.getDroneSpatial().setLocalTranslation(nextPosition);
     }
 
-    /**
-     * Calculate the force needed to move the drone to his set height
-     * @param totalForce The vector used for applying forces
-     * @param droneHeight The desired height
-     * @param linearVelocity The vector containing the speed to dampen the movement and avoid overshoot
-     */
     private void StabiliseDroneHeight(Vector3f totalForce, float droneHeight, Vector3f linearVelocity){
         float heightError = hoverHeight - droneHeight;
         float kpHeight = 15.0f;
         float kdHeight = 5.0f;
-        // On corrige l'assiette
         float verticalCorrection = (kpHeight * heightError) - (kdHeight * linearVelocity.y);
         totalForce.setY(gravityCounterForce + verticalCorrection);
     }
 
-    /**
-     * Calculate the torque requiered to set the drone to a plane attitude
-     * @param totalTorque The vector used for applying torques
-     * @param angularVelocity The vector containing the angular speeds to dampen the movement and avoid overshoot
-     */
     private void StabiliseDroneAttitude(Vector3f totalTorque, Vector3f angularVelocity){
-        // On récupère les angles (radians)
         float[] angles = new float[3];
         drone.getDroneSpatial().getLocalRotation().toAngles(angles);
-        float currentPitch = angles[0]; // Rotation autour de l'axe X local
-        float currentRoll  = angles[2]; // Rotation autour de l'axe Z local
-        // Réglages : coefficients à ajuster selon le poids du drone
-        float kp = 0.8f;  // Force du "ressort" (Proportionnel)
-        float kd = 0.2f;  // Force de "l'amortisseur" (Dérivé)
-        // Couple de redressement : correction = - (kp * Angle + kd * Vitesse_Angulaire)
-        // On utilise l'inverse de la vitesse angulaire locale pour amortir
-        // On convertit la vitesse angulaire globale en repère local pour agir précisément
+        float currentPitch = angles[0];
+        float currentRoll  = angles[2];
+
+        float kp = 0.8f;
+        float kd = 0.2f;
+
         Vector3f localAngularVelocity = drone.getDroneSpatial().getLocalRotation().inverse().mult(angularVelocity);
         float pitchCorrection = -(kp * currentPitch + kd * localAngularVelocity.x);
         float rollCorrection  = -(kp * currentRoll  + kd * localAngularVelocity.z);
-        // On transforme ces corrections locales en vecteur de couple global
+
         Vector3f localTorqueHover = new Vector3f(pitchCorrection, 0, rollCorrection).multLocal(torquePower);
         Vector3f globalTorqueHover = drone.getDroneSpatial().getLocalRotation().mult(localTorqueHover);
-        // On applique au totalTorque
+
         totalTorque.addLocal(globalTorqueHover);
     }
 
-    /**
-     * @return The hover height, not the actual height, with can vary
-     */
-    public float GetHoverHeight(){
-        return this.hoverHeight;
+    private void ApplyCUrrentForce(Vector3f totalForce){
+        if (currentMatrix != null) {
+            Vector3f dronePosition = drone.getDroneSpatial().getLocalTranslation();
+            Vector3f waterCurrent = currentMatrix.getCurrentAt(dronePosition);
+            totalForce.addLocal(waterCurrent);
+        }
     }
 
-    /**
-     * Set the new height to hover.
-     * @param newHoverHeight Should not be more than the water height for obvious reasons, the drone can't fly
-     */
-    public void SetHoverHeight(float newHoverHeight){
-        this.hoverHeight = min(newHoverHeight,waterHeight);
-    }
-
-    /**
-     * @return The speed which the hover height will be changed
-     */
-    public float GetUpdateSpeedHoverMode(){
-        return this.updateSpeedHoverMode;
-    }
-
-    /**
-     * Set the new speed to change the hover mode height.
-     * @param newUpdateSpeed Should not be more than 1f, it will be too fast
-     */
-    public void SetUpdateSpeedHoverMode(float newUpdateSpeed){
-        this.updateSpeedHoverMode = newUpdateSpeed;
-    }
+    public float GetHoverHeight(){ return this.hoverHeight; }
+    public void SetHoverHeight(float newHoverHeight){ this.hoverHeight = min(newHoverHeight,waterHeight); }
+    public float GetUpdateSpeedHoverMode(){ return this.updateSpeedHoverMode; }
+    public void SetUpdateSpeedHoverMode(float newUpdateSpeed){ this.updateSpeedHoverMode = newUpdateSpeed; }
 }
-

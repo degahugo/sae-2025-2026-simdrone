@@ -5,6 +5,8 @@ import fr.app.model.sensor.Sensor;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.jme3.math.FastMath;
+
 
 public class Drone {
 
@@ -17,6 +19,10 @@ public class Drone {
     private List<Sensor> sensors;
 
     private Battery battery;
+
+    private boolean collisionDetected;
+
+    private String collisionMessage = "Aucune collision";
 
     public Drone(String id, Node droneSpatial) {
 
@@ -65,5 +71,44 @@ public class Drone {
 
     public Battery getBattery() {
         return battery;
+    }
+
+    public boolean isCollisionDetected() {
+        return collisionDetected;
+    }
+
+    public void setCollisionDetected(boolean collisionDetected) {
+        this.collisionDetected = collisionDetected;
+    }
+
+    public String getCollisionMessage() {
+        return collisionMessage;
+    }
+
+    public void setCollisionMessage(String collisionMessage) {
+        this.collisionMessage = collisionMessage;
+    }
+
+    public double getPitch() {
+        float[] angles = droneSpatial.getLocalRotation().toAngles(null);
+        return angles[0] * FastMath.RAD_TO_DEG;
+    }
+
+    public double getYaw() {
+        float[] angles = droneSpatial.getLocalRotation().toAngles(null);
+        return angles[1] * FastMath.RAD_TO_DEG;
+    }
+
+    public double getRoll() {
+        float[] angles = droneSpatial.getLocalRotation().toAngles(null);
+        return angles[2] * FastMath.RAD_TO_DEG;
+    }
+
+    public double getHeading() {
+        double yaw = getYaw();
+        if (yaw < 0) {
+            yaw += 360;
+        }
+        return yaw;
     }
 }
