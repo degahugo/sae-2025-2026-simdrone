@@ -57,15 +57,17 @@ public class Main extends SimpleApplication {
     private CurrentMatrix currentMatrix;
     private CurrentDebugView currentDebugView; // On garde une référence globale
     private boolean showCurrentDebug = false; // Désactivé par défaut
-    private final float maxYawAngleChange = 30f;
-    private final float maxPitchAngleChange = 10f;
-    private final float currentForce = 0.1f; // Ne pas dépasser 0.5f sinon ça devient beaucoup trop fort
-    private final int currentWidth = 100;
-    private final int currentLenght = 100;
-    private final float currentCellSize = 0.5f;
+    // NE PAS MODIFIER CES VALEURS : VALEURS PAR DÉFAUT
+    private float maxYawAngleChange = 30f;
+    private float maxPitchAngleChange = 10f;
+    private float currentForce = 0.1f; // Ne pas dépasser 0.5f sinon ça devient beaucoup trop fort
+    private int currentWidth = 100;
+    private int currentLenght = 100;
+    private float currentCellSize = 0.5f;
     private float currentTimer = 0f;
     private final float TIME_BETWEEN_UPDATES = 5.0f;
-
+    //NE PAS MODIFIER CES VALEURS : VALEURS PAR DÉFAUT
+    // Maintenant vous pouvez :)
     private boolean showMeshWireframe = false; // Affiche le mesh
     private boolean loading = true; // Indique si la map a chargé
     private float lastTemperature = Float.NaN; // dernière température enregistrée
@@ -113,6 +115,36 @@ public class Main extends SimpleApplication {
 
         if (configuration != null && configuration.getEnvironmentType() != null) {
             terrainId = configuration.getEnvironmentType().getTerrainId();
+        }
+
+        switch (terrainId){
+            // Map 1 : target-approach-line-terrain.j3o
+            case 1 : currentWidth = 100;
+                currentLenght = 100;
+                currentCellSize = 0.5f;
+                currentForce = 0.1f;
+                maxYawAngleChange = 30f;
+                maxPitchAngleChange = 10f; break;
+                // Map 2 : target-approach-spiral-terrain.j3o
+            case 2 : currentWidth = 100;
+                currentLenght = 100;
+                currentCellSize = 0.5f;
+                currentForce = 0.1f;
+                maxYawAngleChange = 30f;
+                maxPitchAngleChange = 10f; break;
+                // Map 3 : point_borloo
+            case 3 : currentWidth = 100;
+                currentLenght = 100;
+                currentCellSize = 0.5f;
+                currentForce = 0.1f;
+                maxYawAngleChange = 30f;
+                maxPitchAngleChange = 10f; break;
+            default : currentWidth = 100;
+                currentLenght = 100;
+                currentCellSize = 0.5f;
+                currentForce = 0.1f;
+                maxYawAngleChange = 30f;
+                maxPitchAngleChange = 10f; break;
         }
 
         // Generation des courants
