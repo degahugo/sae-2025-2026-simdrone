@@ -9,7 +9,7 @@ public enum EnvironmentConditions {
     VERY_STRONG_CURRENT,
     // Pour la turbidité
     VERY_GOOD_VISIBILITY,
-    GOOD_VISIBILITYL,
+    GOOD_VISIBILITY,
     CORRECT_VISIBILITY,
     BAD_VISIBILITY,
     VERY_BAD_VISIBILITY,
