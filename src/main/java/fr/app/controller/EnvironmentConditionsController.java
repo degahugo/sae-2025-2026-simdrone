@@ -19,6 +19,12 @@ public class EnvironmentConditionsController {
 
     }
 
+    /**
+     * Créer les conditions environnementales de la simulation.
+     * @param terrainId L'ID du terrain utilisé
+     * @param environmentConditions Les conditions voulues.
+     *                              Pour le moment c'est juste une multiplication
+     */
     public void InitiateEnvironmentConditions(int terrainId, int environmentConditions){
         // Définition des valeurs pour chaque terrain
         switch (terrainId){
@@ -64,6 +70,10 @@ public class EnvironmentConditionsController {
         this.currentMatrix = new CurrentMatrix(currentWidth, currentLenght, currentCellSize, maxYawAngleChange, maxPitchAngleChange, currentForce);
     }
 
+    /**
+     * InitiateEnvironmentConditions doit avoir créé la matrice de courants avant.
+     * @return La matrice de courants
+     */
     public CurrentMatrix getCurrentMatrix() {
         return currentMatrix;
     }
