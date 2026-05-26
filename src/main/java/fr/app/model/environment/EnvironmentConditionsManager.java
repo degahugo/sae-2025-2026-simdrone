@@ -21,6 +21,7 @@ public class EnvironmentConditionsManager {
 
     /**
      * Créer les conditions environnementales de la simulation.
+     * À modifier pour utiliser l'enum EnvironmentConditions plus tard.
      * @param terrainId L'ID du terrain utilisé
      * @param environmentConditions Les conditions voulues.
      *                              Pour le moment c'est juste une multiplication
