@@ -1,6 +1,6 @@
 package fr.app.model;
 
-import fr.app.model.Environment.EnvironmentType;
+import fr.app.model.environment.EnvironmentType;
 
 import java.util.ArrayList;
 import java.util.List;

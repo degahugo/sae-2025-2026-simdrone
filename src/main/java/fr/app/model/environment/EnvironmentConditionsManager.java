@@ -1,4 +1,4 @@
-package fr.app.model.Environment;
+package fr.app.model.environment;
 
 import fr.app.model.CurrentMatrix;
 
