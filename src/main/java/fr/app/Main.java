@@ -420,7 +420,7 @@ public class Main extends SimpleApplication {
             return;
         }
         com.jme3.renderer.Camera cameraDrone = droneCameraManager.getCamera();
-        DroneFrameCapture capture = new DroneFrameCapture(droneId, cameraDrone, renderManager, rootNode, guiNode);
+        DroneFrameCapture capture = new DroneFrameCapture(droneId, cameraDrone, renderManager, rootNode, guiNode,assetManager,model,drone);
         frameCaptures.put(droneId, capture);
         System.out.println("[Main] ViewPort off-screen créé pour " + droneId);
     }
