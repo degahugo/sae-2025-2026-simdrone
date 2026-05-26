@@ -92,14 +92,19 @@ public class EnvironmentConditionsManager {
         switch (environmentVisibility){
             case VERY_GOOD_VISIBILITY:
                 System.out.println("excellente");
+                break;
             case GOOD_VISIBILITY:
                 System.out.println("bonne");
+                break;
             case BAD_VISIBILITY:
                 System.out.println("mauvaise");
+                break;
             case VERY_BAD_VISIBILITY:
                 System.out.println("très mauvaise");
+                break;
             case NO_VISIBILITY:
                 System.out.println("extrêment mauvaise");
+                break;
             case CORRECT_VISIBILITY:
             default:
                 System.out.println("correcte/par défaut");
