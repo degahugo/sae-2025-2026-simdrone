@@ -321,7 +321,7 @@ public class DroneController {
             else if (rotateRightIntention) totalTorque.addLocal(drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Y).mult(-torquePower));
 
         } else {
-            totalForce.setY(gravityCounterForce * 0.7f);
+            totalForce.setY(gravityCounterForce * 0.9f);
         }
 
         physicsControl.applyCentralForce(totalForce);
