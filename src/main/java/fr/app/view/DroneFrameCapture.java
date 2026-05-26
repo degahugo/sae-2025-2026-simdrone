@@ -41,7 +41,8 @@ public class DroneFrameCapture implements SceneProcessor {
     public DroneFrameCapture(String droneId,
                              Camera cameraDrone,
                              RenderManager renderManager,
-                             Node rootNode) {
+                             Node rootNode,
+                             Node guiNode) {
         this.droneId       = droneId;
         this.cameraLive    = cameraDrone;
         this.renderManager = renderManager;
@@ -60,6 +61,7 @@ public class DroneFrameCapture implements SceneProcessor {
         viewPortOffScreen.setBackgroundColor(new com.jme3.math.ColorRGBA(0, 0, 0.6f, 1));
         viewPortOffScreen.setOutputFrameBuffer(frameBuffer);
         viewPortOffScreen.attachScene(rootNode);
+        viewPortOffScreen.attachScene(guiNode);
         viewPortOffScreen.setEnabled(true);
         viewPortOffScreen.addProcessor(this);
 
