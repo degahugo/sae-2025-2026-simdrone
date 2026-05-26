@@ -1,6 +1,6 @@
 package fr.app.controller;
 
-import fr.app.model.EnvironmentType;
+import fr.app.model.Environment.EnvironmentType;
 import fr.app.model.SensorType;
 import fr.app.model.SimulationConfiguration;
 import fr.app.network.NetworkClient;

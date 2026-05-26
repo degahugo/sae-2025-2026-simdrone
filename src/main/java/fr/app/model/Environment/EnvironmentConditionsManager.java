@@ -1,4 +1,6 @@
-package fr.app.model;
+package fr.app.model.Environment;
+
+import fr.app.model.CurrentMatrix;
 
 public class EnvironmentConditionsManager {
     private CurrentMatrix currentMatrix;

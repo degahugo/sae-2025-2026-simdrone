@@ -4,7 +4,7 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.scene.*;
 import com.jme3.system.AppSettings;
-import fr.app.model.EnvironmentConditionsManager;
+import fr.app.model.Environment.EnvironmentConditionsManager;
 import fr.app.model.*;
 import fr.app.view.*;
 import fr.app.model.DroneManager;
