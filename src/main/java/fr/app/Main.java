@@ -4,7 +4,7 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.scene.*;
 import com.jme3.system.AppSettings;
-import fr.app.controller.EnvironmentConditionsController;
+import fr.app.model.EnvironmentConditionsManager;
 import fr.app.model.*;
 import fr.app.view.*;
 import fr.app.model.DroneManager;
@@ -25,9 +25,6 @@ import fr.app.model.PilotCommand;
 import fr.app.model.DroneStatus;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
-import com.jme3.renderer.ViewPort;
-import com.jme3.texture.FrameBuffer;
-import com.jme3.texture.Image;
 import fr.app.model.SimulationConfiguration;
 import java.util.concurrent.atomic.AtomicReference;
 import fr.app.view.DroneFrameCapture;
@@ -53,7 +50,7 @@ public class Main extends SimpleApplication {
     private Sensor sensor;
     private WaterFilterManager waterFilterManager;
     private TemperatureSensor temperatureSensor;
-    private EnvironmentConditionsController environmentConditionsController;
+    private EnvironmentConditionsManager environmentConditionsManager;
 
     // Variables pour le courant
     private CurrentMatrix currentMatrix;
@@ -113,9 +110,9 @@ public class Main extends SimpleApplication {
         }
 
         // Generation des courants
-        this.environmentConditionsController = new EnvironmentConditionsController();
-        environmentConditionsController.InitiateEnvironmentConditions(terrainId, environmentConditions);
-        this.currentMatrix = environmentConditionsController.getCurrentMatrix();
+        this.environmentConditionsManager = new EnvironmentConditionsManager();
+        environmentConditionsManager.InitiateEnvironmentConditions(terrainId, environmentConditions);
+        this.currentMatrix = environmentConditionsManager.getCurrentMatrix();
 
         // Configure scene
         this.lightingManager = new LightingManager(rootNode, cam, assetManager);

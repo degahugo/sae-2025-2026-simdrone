@@ -1,8 +1,6 @@
-package fr.app.controller;
+package fr.app.model;
 
-import fr.app.model.CurrentMatrix;
-
-public class EnvironmentConditionsController {
+public class EnvironmentConditionsManager {
     private CurrentMatrix currentMatrix;
 
     // NE PAS MODIFIER CES VALEURS : VALEURS PAR DÉFAUT
@@ -15,7 +13,7 @@ public class EnvironmentConditionsController {
     private int environmentConditions = 1;
     //NE PAS MODIFIER CES VALEURS : VALEURS PAR DÉFAUT
 
-    public EnvironmentConditionsController(){
+    public EnvironmentConditionsManager(){
 
     }
 
@@ -68,6 +66,8 @@ public class EnvironmentConditionsController {
         }*/
 
         this.currentMatrix = new CurrentMatrix(currentWidth, currentLenght, currentCellSize, maxYawAngleChange, maxPitchAngleChange, currentForce);
+
+        // Gestion de la turbidité de l'eau : pas encore implémenté
     }
 
     /**
