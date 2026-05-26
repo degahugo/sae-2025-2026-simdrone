@@ -4,6 +4,7 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.scene.*;
 import com.jme3.system.AppSettings;
+import fr.app.model.environment.EnvironmentConditions;
 import fr.app.model.environment.EnvironmentConditionsManager;
 import fr.app.model.*;
 import fr.app.view.*;
@@ -58,7 +59,8 @@ public class Main extends SimpleApplication {
     private boolean showCurrentDebug = false; // Désactivé par défaut
     private float currentTimer = 0f;
     private final float TIME_BETWEEN_UPDATES = 5.0f;
-    private int environmentConditions = 1;
+    private EnvironmentConditions environmentConditions;
+    private EnvironmentConditions environmentVisibility;
 
     private boolean showMeshWireframe = false; // Affiche le mesh
     private boolean loading = true; // Indique si la map a chargé
@@ -104,14 +106,22 @@ public class Main extends SimpleApplication {
         PhysicsEngine physicsEngine = new PhysicsEngine(this, this.model, this.guiManager, showMeshWireframe);
 
         int terrainId = 1;
+        environmentConditions = EnvironmentConditions.NORMAL_CURRENT;
+        environmentVisibility = EnvironmentConditions.VERY_GOOD_VISIBILITY;
 
-        if (configuration != null && configuration.getEnvironmentType() != null) {
+        // On peut probablement faire plus propre avec un catch plutôt que rajouter 15 conditions
+        if (configuration != null
+                && configuration.getEnvironmentType() != null
+                && configuration.getCondition() != null
+                && configuration.getVisibility() != null) {
             terrainId = configuration.getEnvironmentType().getTerrainId();
+            environmentConditions = configuration.getCondition();
+            environmentVisibility = configuration.getVisibility();
         }
 
         // Generation des courants
         this.environmentConditionsManager = new EnvironmentConditionsManager();
-        environmentConditionsManager.InitiateEnvironmentConditions(terrainId, environmentConditions);
+        environmentConditionsManager.InitiateEnvironmentConditions(terrainId, environmentConditions, environmentVisibility);
         this.currentMatrix = environmentConditionsManager.getCurrentMatrix();
 
         // Configure scene

@@ -12,6 +12,7 @@ public class SimulationConfiguration {
     private DroneType droneType;
     private List<SensorType> sensors = new ArrayList<>();
     private EnvironmentConditions condition;
+    private EnvironmentConditions visibility;
 
     public EnvironmentType getEnvironmentType() {
         return environmentType;
@@ -43,5 +44,13 @@ public class SimulationConfiguration {
 
     public void setCondition(EnvironmentConditions condition) {
         this.condition = condition;
+    }
+
+    public EnvironmentConditions getVisibility(){
+        return visibility;
+    }
+
+    public void setVisibility(EnvironmentConditions visibility){
+        this.visibility = visibility;
     }
 }

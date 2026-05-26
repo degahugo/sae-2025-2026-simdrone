@@ -95,7 +95,7 @@ public class ConfigurationSimulationController {
 
                 // Traduction de l'enum
                 return switch (visibility) {
-                    case VERY_GOOD_VISIBILITY -> "Très bonne visibilité";
+                    case VERY_GOOD_VISIBILITY -> "Excellente visibilité";
                     case GOOD_VISIBILITY -> "Bonne visibilité";
                     case CORRECT_VISIBILITY -> "Visibilité correcte";
                     case BAD_VISIBILITY -> "Mauvaise visibilité";
@@ -147,7 +147,7 @@ public class ConfigurationSimulationController {
                         EnvironmentConditions.VERY_BAD_VISIBILITY,
                         EnvironmentConditions.NO_VISIBILITY
                 );
-                conditionComboBox.setValue(EnvironmentConditions.NO_CURRENT);
+                conditionComboBox.setValue(EnvironmentConditions.NORMAL_CURRENT);
                 visibilityComboBox.setValue(EnvironmentConditions.VERY_GOOD_VISIBILITY);
                 break;
         }
@@ -170,6 +170,7 @@ public class ConfigurationSimulationController {
             SimulationConfiguration configuration = new SimulationConfiguration();
             configuration.setEnvironmentType(environment);
             configuration.setCondition(condition);
+            configuration.setVisibility(visibility);
             configuration.setSensors(List.of(sensor));
 
             FXMLLoader loader = new FXMLLoader(

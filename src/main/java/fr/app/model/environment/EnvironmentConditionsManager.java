@@ -24,9 +24,9 @@ public class EnvironmentConditionsManager {
      * À modifier pour utiliser l'enum EnvironmentConditions plus tard.
      * @param terrainId L'ID du terrain utilisé
      * @param environmentConditions Les conditions voulues.
-     *                              Pour le moment c'est juste une multiplication
+     * @param environmentVisibility Visibilité voulues.
      */
-    public void InitiateEnvironmentConditions(int terrainId, int environmentConditions){
+    public void InitiateEnvironmentConditions(int terrainId, EnvironmentConditions environmentConditions, EnvironmentConditions environmentVisibility){
         // Définition des valeurs pour chaque terrain
         switch (terrainId){
             // Map 1 : target-approach-line-terrain.j3o
@@ -57,20 +57,55 @@ public class EnvironmentConditionsManager {
                 maxYawAngleChange = 30f;
                 maxPitchAngleChange = 10f; break;
         }
-        // Changement un peu nul pour tester
-        currentForce = 0.1f * environmentConditions;
-        maxYawAngleChange = 30f * environmentConditions/2f;
-        maxPitchAngleChange = 10f * environmentConditions/2f;
-        /*// Changement plus précis et personnalisé
+        System.out.print(" Initialisation des courrants : ");
+        // Changement des courants en fonction de la valeur choisi
         switch (environmentConditions){
-            case 0 : currentForce = 0.1f;
-                maxYawAngleChange = 30f;
-                maxPitchAngleChange = 10f; break;
-        }*/
+            case NO_CURRENT:
+                System.out.println("pas de courant");
+                currentForce = currentForce * 0f;
+                maxYawAngleChange = maxYawAngleChange * 0f;
+                maxPitchAngleChange = maxPitchAngleChange * 0f; break;
+            case LIGHT_CURRENT:
+                System.out.println("peu de courant");
+                currentForce = currentForce * 0.5f;
+                maxYawAngleChange = maxYawAngleChange * 0.5f;
+                maxPitchAngleChange = maxPitchAngleChange * 0.5f; break;
+            case STRONG_CURRENT:
+                System.out.println("courant fort");
+                currentForce = currentForce * 3f;
+                maxYawAngleChange = maxYawAngleChange * 2f;
+                maxPitchAngleChange = maxPitchAngleChange * 2f; break;
+            case VERY_STRONG_CURRENT:
+                System.out.println("courant très fort");
+                currentForce = currentForce * 10f;
+                maxYawAngleChange = maxYawAngleChange * 3f;
+                maxPitchAngleChange = maxPitchAngleChange * 3f; break;
+            case NORMAL_CURRENT:
+            default:
+                System.out.println("courant normal/par défaut");
+                currentForce = currentForce * 1f;
+                maxYawAngleChange = maxYawAngleChange * 1f;
+                maxPitchAngleChange = maxPitchAngleChange * 1f; break;
+        }
+        //Visibilité : pas encore implémenté donc pas utilisé, on va utiliser la turbidité de l'eau
+        System.out.println("Initialisation de la visibilité : ");
+        switch (environmentVisibility){
+            case VERY_GOOD_VISIBILITY:
+                System.out.println("excellente");
+            case GOOD_VISIBILITY:
+                System.out.println("bonne");
+            case BAD_VISIBILITY:
+                System.out.println("mauvaise");
+            case VERY_BAD_VISIBILITY:
+                System.out.println("très mauvaise");
+            case NO_VISIBILITY:
+                System.out.println("extrêment mauvaise");
+            case CORRECT_VISIBILITY:
+            default:
+                System.out.println("correcte/par défaut");
+        }
 
         this.currentMatrix = new CurrentMatrix(currentWidth, currentLenght, currentCellSize, maxYawAngleChange, maxPitchAngleChange, currentForce);
-
-        // Gestion de la turbidité de l'eau : pas encore implémenté
     }
 
     /**
