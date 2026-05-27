@@ -1,5 +1,7 @@
 package fr.app.view;
 
+import com.jme3.asset.AssetManager;
+import com.jme3.post.FilterPostProcessor;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.Renderer;
 import com.jme3.renderer.ViewPort;
@@ -21,6 +23,8 @@ import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicReference;
 import com.jme3.renderer.queue.RenderQueue;
+import fr.app.model.Drone;
+import fr.app.model.WorldView;
 
 public class DroneFrameCapture implements SceneProcessor {
 
@@ -41,7 +45,11 @@ public class DroneFrameCapture implements SceneProcessor {
     public DroneFrameCapture(String droneId,
                              Camera cameraDrone,
                              RenderManager renderManager,
-                             Node rootNode) {
+                             Node rootNode,
+                             Node guiNode, // pas utilisé
+                             AssetManager assetManager,
+                             WorldView model,
+                             Drone drone) {
         this.droneId       = droneId;
         this.cameraLive    = cameraDrone;
         this.renderManager = renderManager;
@@ -60,6 +68,13 @@ public class DroneFrameCapture implements SceneProcessor {
         viewPortOffScreen.setBackgroundColor(new com.jme3.math.ColorRGBA(0, 0, 0.6f, 1));
         viewPortOffScreen.setOutputFrameBuffer(frameBuffer);
         viewPortOffScreen.attachScene(rootNode);
+        FilterPostProcessor fppOffscreen = new FilterPostProcessor(assetManager);
+
+        new WaterFilterManager(fppOffscreen, viewPortOffScreen, rootNode, model);
+        new WaterDistortionManager(fppOffscreen, viewPortOffScreen, drone, model);
+
+        viewPortOffScreen.addProcessor(this);
+        //viewPortOffScreen.attachScene(guiNode);
         viewPortOffScreen.setEnabled(true);
         viewPortOffScreen.addProcessor(this);
 
@@ -106,6 +121,11 @@ public class DroneFrameCapture implements SceneProcessor {
                     int g = pixelBuffer.get() & 0xFF;
                     int b = pixelBuffer.get() & 0xFF;
                     pixelBuffer.get(); // alpha — ignoré
+                    //Correction de la luminosité
+                    float gamma = 0.55f;
+                    r = (int) (255 * Math.pow(r / 255.0, gamma));
+                    g = (int) (255 * Math.pow(g / 255.0, gamma));
+                    b = (int) (255 * Math.pow(b / 255.0, gamma));
                     image.setRGB(x, y, (r << 16) | (g << 8) | b);
                 }
             }

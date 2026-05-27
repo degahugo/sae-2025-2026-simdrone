@@ -4,6 +4,8 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.scene.*;
 import com.jme3.system.AppSettings;
+import fr.app.model.environment.EnvironmentConditions;
+import fr.app.model.environment.EnvironmentConditionsManager;
 import fr.app.model.*;
 import fr.app.view.*;
 import fr.app.model.DroneManager;
@@ -24,9 +26,6 @@ import fr.app.model.PilotCommand;
 import fr.app.model.DroneStatus;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
-import com.jme3.renderer.ViewPort;
-import com.jme3.texture.FrameBuffer;
-import com.jme3.texture.Image;
 import fr.app.model.SimulationConfiguration;
 import java.util.concurrent.atomic.AtomicReference;
 import fr.app.view.DroneFrameCapture;
@@ -52,19 +51,16 @@ public class Main extends SimpleApplication {
     private Sensor sensor;
     private WaterFilterManager waterFilterManager;
     private TemperatureSensor temperatureSensor;
+    private EnvironmentConditionsManager environmentConditionsManager;
 
     // Variables pour le courant
     private CurrentMatrix currentMatrix;
     private CurrentDebugView currentDebugView; // On garde une référence globale
     private boolean showCurrentDebug = false; // Désactivé par défaut
-    private final float maxYawAngleChange = 30f;
-    private final float maxPitchAngleChange = 10f;
-    private final float currentForce = 0.1f; // Ne pas dépasser 0.5f sinon ça devient beaucoup trop fort
-    private final int currentWidth = 100;
-    private final int currentLenght = 100;
-    private final float currentCellSize = 0.5f;
     private float currentTimer = 0f;
     private final float TIME_BETWEEN_UPDATES = 5.0f;
+    private EnvironmentConditions environmentConditions;
+    private EnvironmentConditions environmentVisibility;
 
     private boolean showMeshWireframe = false; // Affiche le mesh
     private boolean loading = true; // Indique si la map a chargé
@@ -110,13 +106,23 @@ public class Main extends SimpleApplication {
         PhysicsEngine physicsEngine = new PhysicsEngine(this, this.model, this.guiManager, showMeshWireframe);
 
         int terrainId = 1;
+        environmentConditions = EnvironmentConditions.NORMAL_CURRENT;
+        environmentVisibility = EnvironmentConditions.VERY_GOOD_VISIBILITY;
 
-        if (configuration != null && configuration.getEnvironmentType() != null) {
+        // On peut probablement faire plus propre avec un catch plutôt que rajouter 15 conditions
+        if (configuration != null
+                && configuration.getEnvironmentType() != null
+                && configuration.getCondition() != null
+                && configuration.getVisibility() != null) {
             terrainId = configuration.getEnvironmentType().getTerrainId();
+            environmentConditions = configuration.getCondition();
+            environmentVisibility = configuration.getVisibility();
         }
 
         // Generation des courants
-        this.currentMatrix = new CurrentMatrix(currentWidth, currentLenght, currentCellSize, maxYawAngleChange, maxPitchAngleChange, currentForce);
+        this.environmentConditionsManager = new EnvironmentConditionsManager();
+        environmentConditionsManager.InitiateEnvironmentConditions(terrainId, environmentConditions, environmentVisibility);
+        this.currentMatrix = environmentConditionsManager.getCurrentMatrix();
 
         // Configure scene
         this.lightingManager = new LightingManager(rootNode, cam, assetManager);
@@ -428,7 +434,7 @@ public class Main extends SimpleApplication {
             return;
         }
         com.jme3.renderer.Camera cameraDrone = droneCameraManager.getCamera();
-        DroneFrameCapture capture = new DroneFrameCapture(droneId, cameraDrone, renderManager, rootNode);
+        DroneFrameCapture capture = new DroneFrameCapture(droneId, cameraDrone, renderManager, rootNode, guiNode,assetManager,model,drone);
         frameCaptures.put(droneId, capture);
         System.out.println("[Main] ViewPort off-screen créé pour " + droneId);
     }

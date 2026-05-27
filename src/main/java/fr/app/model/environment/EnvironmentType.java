@@ -1,4 +1,4 @@
-package fr.app.model;
+package fr.app.model.environment;
 
 public enum EnvironmentType {
 

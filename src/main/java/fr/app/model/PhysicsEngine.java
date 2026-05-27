@@ -154,7 +154,14 @@ public class PhysicsEngine{
             // Once the processing is finished, we can inject it cleanly
             // app should be a reference to JME application (SimpleApplication)
             app.enqueue(() -> {
+                if (terrain == 3) {
+                    // Déplace le modèle visuel vers le bas
+                    // En théorie on a pas besoin de toucher au physique vu qu'il n'a pas encore été rattaché
+                    terrainVisuel.setLocalTranslation(0.0f, -5.0f, 0.0f);
+                }
                 terrainVisuel.addControl(landscape);
+                // Par sécurité on force la position physique au cas où la condition pour point_borloo n'a pas été faite
+                landscape.setPhysicsLocation(terrainVisuel.getWorldTranslation());
                 bulletAppState.getPhysicsSpace().add(landscape);
                 node.attachChild(terrainVisuel);
                 System.out.println("Terrain visual and physic injected succesfully");
