@@ -1,11 +1,13 @@
 package fr.app.model;
 
+import com.jme3.asset.AssetManager;
 import com.jme3.scene.Node;
 import fr.app.model.sensor.Sensor;
 
 import java.util.ArrayList;
 import java.util.List;
 import com.jme3.math.FastMath;
+import fr.app.view.DroneBeamEffect;
 import fr.app.view.DroneLights;
 
 
@@ -19,14 +21,16 @@ public class Drone {
     private boolean collisionDetected;
     private String collisionMessage = "Aucune collision";
     private DroneLights droneLights;
+    private DroneBeamEffect beamEffect;
 
-    public Drone(String id, Node droneSpatial,Node rootNode) {
+    public Drone(String id, Node droneSpatial,Node rootNode, AssetManager assetManager) {
 
         this.id = id;
 
         this.droneSpatial = droneSpatial;
         this.droneLights = new DroneLights(droneSpatial, rootNode);
         this.sensors = new ArrayList<>();
+        this.beamEffect = new DroneBeamEffect(droneSpatial, rootNode,assetManager);
 
         this.state = new DroneState();
 
@@ -109,6 +113,6 @@ public class Drone {
     }
     public void update(float tpf) {
         droneLights.update();
-
+        beamEffect.update();
     }
 }

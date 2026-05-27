@@ -133,7 +133,7 @@ public class WaterFilterExample extends SimpleApplication {
 		//   - Attach the vehicle node to the main scene
 		scene.attachChild(vehicleANode);
 
-        drone = new Drone("drone1",vehicleANode,rootNode);
+        drone = new Drone("drone1",vehicleANode,rootNode, assetManager);
 
         //droneController = new DroneController(inputManager, drone);
 

@@ -10,6 +10,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Cylinder;
 
 //beam effect = effet de faisceau
@@ -32,158 +33,64 @@ public class DroneBeamEffect {
     private void createBeams(AssetManager assetManager) {
 
         //Forme des faisceaux
-        Cylinder cone = new Cylinder(32, 32, 0.05f, 0.8f, 6f, true, false);
+        Cylinder cone = new Cylinder(16, 16, 0.2f, 0.4f, 3f, true, false);
 
         leftBeam = new Geometry("LeftBeam", cone);
 
-        /*
-         * Matériau lumineux transparent
-         */
+        //Matériau lumineux transparent
         Material leftMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
 
-        /*
-         * Couleur bleu clair avec transparence
-         *
-         * alpha = 0.18
-         * -> rend le faisceau semi-transparent
-         */
-        leftMat.setColor(
-                "Color",
-                new ColorRGBA(0.7f, 0.9f, 1f, 0.18f)
-        );
-
-        /*
-         * Active la transparence
-         */
-        leftMat.getAdditionalRenderState().setBlendMode(
-                RenderState.BlendMode.Alpha
-        );
+        //Couleur bleu clair avec transparence
+        leftMat.setColor("Color", new ColorRGBA(0.7f, 0.9f, 1f, 0.12f));
+        leftMat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
+        //activer les 2 faces pour la transparence
+        leftMat.getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Off);
+        //ajout d'un glow plus réaliste
+        leftMat.setBoolean("VertexColor", true);
 
         leftBeam.setMaterial(leftMat);
 
-        /*
-         * Le beam doit être rendu
-         * dans la couche transparente
-         */
-        leftBeam.setQueueBucket(
-                RenderQueue.Bucket.Transparent
-        );
+        leftBeam.setQueueBucket(RenderQueue.Bucket.Transparent);
+        leftBeam.setCullHint(Spatial.CullHint.Never);
 
-        /*
-         * Rotation du cône
-         *
-         * Par défaut :
-         * le cône pointe vers Y
-         *
-         * On le tourne vers l'avant
-         */
-        leftBeam.rotate(
-                FastMath.HALF_PI,
-                0,
-                0
-        );
-
+        leftBeam.rotate(0,FastMath.HALF_PI, 0);
         beamNode.attachChild(leftBeam);
 
-        /*
-         * =========================
-         * FAISCEAU DROIT
-         * =========================
-         */
+
 
         rightBeam = new Geometry("RightBeam", cone);
 
-        Material rightMat = new Material(
-                assetManager,
-                "Common/MatDefs/Misc/Unshaded.j3md"
-        );
+        Material rightMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
 
-        rightMat.setColor(
-                "Color",
-                new ColorRGBA(0.7f, 0.9f, 1f, 0.18f)
-        );
-
-        rightMat.getAdditionalRenderState().setBlendMode(
-                RenderState.BlendMode.Alpha
-        );
+        rightMat.setColor("Color", new ColorRGBA(0.7f, 0.9f, 1f, 0.12f));
+        rightMat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
+        //Par défaut seule une face du mesh est visible
+        rightMat.getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Off);
+        rightMat.setBoolean("VertexColor", true);
 
         rightBeam.setMaterial(rightMat);
-
-        rightBeam.setQueueBucket(
-                RenderQueue.Bucket.Transparent
-        );
-
-        rightBeam.rotate(
-                FastMath.HALF_PI,
-                0,
-                0
-        );
+        rightBeam.setQueueBucket(RenderQueue.Bucket.Transparent);
+        rightBeam.setCullHint(Spatial.CullHint.Never);
+        rightBeam.rotate(0,FastMath.HALF_PI, 0);
 
         beamNode.attachChild(rightBeam);
     }
 
     public void update() {
 
-        /*
-         * =========================
-         * POSITION ACTUELLE DU DRONE
-         * =========================
-         */
+        Vector3f dronePos = droneNode.getWorldTranslation();
 
-        Vector3f dronePos =
-                droneNode.getWorldTranslation();
+     //rotation actuelle du drone
+        Quaternion droneRot = droneNode.getWorldRotation();
 
-        /*
-         * Rotation actuelle du drone
-         */
-        Quaternion droneRot =
-                droneNode.getWorldRotation();
+        Vector3f leftOffset = droneRot.mult(new Vector3f(-0.4f, -0.05f, 2.2f));
 
-        /*
-         * =========================
-         * FAISCEAU GAUCHE
-         * =========================
-         */
-
-        /*
-         * Position locale du phare gauche
-         *
-         * x = gauche/droite
-         * y = haut/bas
-         * z = avant/arrière
-         */
-        Vector3f leftOffset =
-                droneRot.mult(
-                        new Vector3f(-0.5f, -0.1f, 1.5f)
-                );
-
-        /*
-         * Position du faisceau dans le monde
-         */
-        leftBeam.setLocalTranslation(
-                dronePos.add(leftOffset)
-        );
-
-        /*
-         * Le faisceau tourne avec le drone
-         */
+        leftBeam.setLocalTranslation(dronePos.add(leftOffset));
         leftBeam.setLocalRotation(droneRot);
 
-        /*
-         * =========================
-         * FAISCEAU DROIT
-         * =========================
-         */
+        Vector3f rightOffset = droneRot.mult(new Vector3f(0.4f, -0.05f, 2.2f));
 
-        Vector3f rightOffset =
-                droneRot.mult(
-                        new Vector3f(0.5f, -0.1f, 1.5f)
-                );
-
-        rightBeam.setLocalTranslation(
-                dronePos.add(rightOffset)
-        );
-
+        rightBeam.setLocalTranslation(dronePos.add(rightOffset));
         rightBeam.setLocalRotation(droneRot);
     }
 }
