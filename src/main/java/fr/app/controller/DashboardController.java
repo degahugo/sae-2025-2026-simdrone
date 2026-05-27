@@ -1081,8 +1081,8 @@ public class DashboardController {
     // Appelle cette méthode à chaque mise à jour des angles
     private void drawGauge(Canvas canvas, double value, double minVal, double maxVal) {
         GraphicsContext gc = canvas.getGraphicsContext2D();
-        double cx = 36, cy = 36, r = 28;
-        gc.clearRect(0, 0, 72, 72);
+        double cx = 30, cy = 30, r = 23;
+        gc.clearRect(0, 0, 60, 60);
 
         double startAngle = 225;   // degrés JavaFX (sens antihoraire)
         double arcExtent  = -270;  // 270° au total
