@@ -6,30 +6,26 @@ import fr.app.model.sensor.Sensor;
 import java.util.ArrayList;
 import java.util.List;
 import com.jme3.math.FastMath;
+import fr.app.view.DroneLights;
 
 
 public class Drone {
 
     private String id;
-
     private Node droneSpatial;
-
     private DroneState state;
-
     private List<Sensor> sensors;
-
     private Battery battery;
-
     private boolean collisionDetected;
-
     private String collisionMessage = "Aucune collision";
+    private DroneLights droneLights;
 
-    public Drone(String id, Node droneSpatial) {
+    public Drone(String id, Node droneSpatial,Node rootNode) {
 
         this.id = id;
 
         this.droneSpatial = droneSpatial;
-
+        this.droneLights = new DroneLights(droneSpatial, rootNode);
         this.sensors = new ArrayList<>();
 
         this.state = new DroneState();
@@ -110,5 +106,9 @@ public class Drone {
             yaw += 360;
         }
         return yaw;
+    }
+    public void update(float tpf) {
+        droneLights.update();
+
     }
 }

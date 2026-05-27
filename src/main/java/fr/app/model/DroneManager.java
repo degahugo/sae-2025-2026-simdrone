@@ -35,9 +35,9 @@ public class DroneManager {
     public void CreateDrone(String name){
         String droneName;
         Vector3f camOffset;
-        if(name=="BR2R4"){
+        if(name.equals("BR2R4")) {
             droneName = "bluerobotics/br2r4/br2-r4-vehicle.j3o";
-            camOffset = new Vector3f(0f, 0f, 0.205f);
+            camOffset = new Vector3f(0f, 1f, -4f);
         } else{
             droneName = "subseatech/guardian/guardian-vehicle.j3o";
             camOffset = new Vector3f(0f, 0f, 0.4f);
@@ -45,11 +45,11 @@ public class DroneManager {
         Node droneNode = new Node("Drone");
         Spatial droneModel = assetManager.loadModel("vehicle/" + droneName);
         // Empêche la caméra de voir le drone
-        droneModel.setQueueBucket(Bucket.Gui);
+       // droneModel.setQueueBucket(Bucket.Gui);
         droneNode.attachChild(droneModel);
         droneNode.move(0f, 1f, 0f);
         rootNode.attachChild(droneNode);
-        drone = new Drone("drone1", droneNode);
+        drone = new Drone("drone1", droneNode, rootNode);
         this.physicsEngine.CreateDroneHitbox(drone, name);
         this.droneController = new DroneController(inputManager, drone, model, currentMatrix);
         this.droneController.setUpKeys();

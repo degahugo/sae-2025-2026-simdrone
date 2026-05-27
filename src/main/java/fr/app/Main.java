@@ -109,7 +109,7 @@ public class Main extends SimpleApplication {
         setPauseOnLostFocus(false);
         PhysicsEngine physicsEngine = new PhysicsEngine(this, this.model, this.guiManager, showMeshWireframe);
 
-        int terrainId = 1;
+        int terrainId = 3;
 
         if (configuration != null && configuration.getEnvironmentType() != null) {
             terrainId = configuration.getEnvironmentType().getTerrainId();
@@ -192,6 +192,7 @@ public class Main extends SimpleApplication {
         if (drone != null) {
             drone.setCollisionDetected(false);
             drone.setCollisionMessage("Aucune collision");
+            drone.update(tpf);
         }
 
         if (droneController != null) {
