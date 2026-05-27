@@ -7,6 +7,8 @@ import fr.app.network.NetworkClient;
 import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextArea;
@@ -16,6 +18,12 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.transform.Rotate;
 import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
+
+
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
 
 import java.io.ByteArrayInputStream;
 import java.time.LocalTime;
@@ -29,9 +37,16 @@ public class DashboardController {
 
     private static final long POLL_INTERVAL_MS = 150;
 
+    @FXML private Circle radarPoint1;
+    @FXML private Circle radarPoint2;
+    @FXML private Circle radarPoint3;
+    @FXML private Circle radarPoint4;
+    @FXML private Circle radarPoint5;
+
     // ── Barre supérieure
     @FXML private Label networkLabel;
     @FXML private Label systemLabel;
+    @FXML private Circle systemStatusDot;
     @FXML private Label stateLabel;
     @FXML private Label simTimeLabel;
     @FXML private Label clockLabel;
@@ -74,12 +89,17 @@ public class DashboardController {
 
     // ── Colonne droite
     @FXML private Label compassLabel;
-    @FXML private Line compassNeedle;
     @FXML private Label yawLabel;
     @FXML private Label pitchLabel;
     @FXML private Label rollLabel;
     @FXML private Label sensorsLabel;
     @FXML private Label intensityLabel;
+
+    @FXML private Canvas compassCanvas;
+    @FXML private Canvas yawCanvas;
+    @FXML private Canvas pitchCanvas;
+    @FXML private Canvas rollCanvas;
+
 
     // ── État interne
     private NetworkClient client;
@@ -88,6 +108,8 @@ public class DashboardController {
 
     private long startTime = 0;
     private boolean simulationRunning = false;
+    private boolean stabilizedMode = false;
+    private boolean holdPositionMode = false;
     private PilotCommand currentCommand = PilotCommand.STOP;
 
     private ScheduledExecutorService pollExecutor;
@@ -107,7 +129,6 @@ public class DashboardController {
     private final DateTimeFormatter HH_MM_SS =
             DateTimeFormatter.ofPattern("HH:mm:ss");
 
-    private Rotate compassRotate = new Rotate(0, 0, 0);
 
     // ── Init FXML
     @FXML
@@ -115,14 +136,18 @@ public class DashboardController {
 
         startClock();
 
+        // Dessin initial à zéro
+        Platform.runLater(() -> {
+            drawCompass(0);
+            drawGauge(yawCanvas,   0, -180, 180);
+            drawGauge(pitchCanvas, 0,  -90,  90);
+            drawGauge(rollCanvas,  0,  -90,  90);
+        });
+
         cameraView.setManaged(false);
         cameraView.fitWidthProperty().bind(cameraPane.widthProperty());
         cameraView.fitHeightProperty().bind(cameraPane.heightProperty());
 
-        if (compassNeedle != null) {
-            compassNeedle.getTransforms().clear();
-            compassNeedle.getTransforms().add(compassRotate);
-        }
     }
 
     // Setters appelés depuis SelectionDroneController
@@ -497,42 +522,16 @@ public class DashboardController {
         );
 
         // Boussole
-        setText(
-                compassLabel,
-                String.format(
-                        "%.1f°",
-                        status.getHeading()
-                )
-        );
+        drawCompass(status.getHeading());
+        setText(compassLabel, String.format("%.1f°", status.getHeading()));
 
-        compassRotate.setAngle(
-                status.getHeading()
-        );
-
-        // Orientation
-        setText(
-                yawLabel,
-                String.format(
-                        "%.1f°",
-                        status.getYaw()
-                )
-        );
-
-        setText(
-                pitchLabel,
-                String.format(
-                        "%.1f°",
-                        status.getPitch()
-                )
-        );
-
-        setText(
-                rollLabel,
-                String.format(
-                        "%.1f°",
-                        status.getRoll()
-                )
-        );
+// Orientation
+        drawGauge(yawCanvas,   status.getYaw(),   -180, 180);
+        drawGauge(pitchCanvas, status.getPitch(),  -90,  90);
+        drawGauge(rollCanvas,  status.getRoll(),   -90,  90);
+        setText(yawLabel,   String.format("%.1f°", status.getYaw()));
+        setText(pitchLabel, String.format("%.1f°", status.getPitch()));
+        setText(rollLabel,  String.format("%.1f°", status.getRoll()));
 
         // Batterie
         double bat =
@@ -575,71 +574,38 @@ public class DashboardController {
         }
 
         // Collision / alertes
-        if (status.isCollisionDetected()) {
+        boolean collision = status.isCollisionDetected();
+        boolean courantFort = status.getIntensity() > 0.08;
 
-            setText(
-                    collisionLabel,
-                    status.getCollisionMessage()
-            );
-
-            setStyle(
-                    collisionLabel,
-                    "-fx-text-fill: #ef4444;"
-            );
-
-            setText(
-                    alertLabel,
-                    "⚠ Collision détectée"
-            );
-
-            setStyle(
-                    alertLabel,
-                    "-fx-text-fill: #ef4444;"
-            );
-
-            setText(
-                    systemLabel,
-                    "● Système : ALERTE"
-            );
-
-            setStyle(
-                    systemLabel,
-                    "-fx-text-fill: #ef4444;"
-            );
-
+        if (collision) {
+            setText(collisionLabel, "Collision détectée");
+            setStyle(collisionLabel, "-fx-text-fill: #ef4444;");
         } else {
-
-            setText(
-                    collisionLabel,
-                    "Aucune collision"
-            );
-
-            setStyle(
-                    collisionLabel,
-                    "-fx-text-fill: #22c55e;"
-            );
-
-            setText(
-                    alertLabel,
-                    "Système OK"
-            );
-
-            setStyle(
-                    alertLabel,
-                    "-fx-text-fill: #22c55e;"
-            );
-
-            setText(
-                    systemLabel,
-                    "● Système : OK"
-            );
-
-            setStyle(
-                    systemLabel,
-                    "-fx-text-fill: #22c55e;"
-            );
+            setText(collisionLabel, "Aucune collision");
+            setStyle(collisionLabel, "-fx-text-fill: #22c55e;");
         }
 
+        if (courantFort) {
+            setText(alertLabel, "⚠ Courant fort détecté");
+            setStyle(alertLabel, "-fx-text-fill: #f59e0b;");
+        } else {
+            setText(alertLabel, "Système OK");
+            setStyle(alertLabel, "-fx-text-fill: #22c55e;");
+        }
+
+        if (collision) {
+            setText(systemLabel, "Système : ALERTE");
+            setStyle(systemLabel, "-fx-text-fill: #ef4444;");
+            if (systemStatusDot != null) systemStatusDot.setFill(Color.web("#ef4444"));
+        } else if (courantFort) {
+            setText(systemLabel, "Système : ATTENTION");
+            setStyle(systemLabel, "-fx-text-fill: #f59e0b;");
+            if (systemStatusDot != null) systemStatusDot.setFill(Color.web("#f59e0b"));
+        } else {
+            setText(systemLabel, "Système : OK");
+            setStyle(systemLabel, "-fx-text-fill: #22c55e;");
+            if (systemStatusDot != null) systemStatusDot.setFill(Color.web("#22c55e"));
+        }
         // HUD caméra
         setText(
                 cameraHudLabel,
@@ -664,9 +630,7 @@ public class DashboardController {
         );
     }
 
-    private void updateMiniMap(
-            DroneStatus status
-    ) {
+    private void updateMiniMap(DroneStatus status) {
 
         if (miniMapDroneDot == null) {
             return;
@@ -674,25 +638,42 @@ public class DashboardController {
 
         double scale = 4.0;
 
-        miniMapDroneDot.setTranslateX(
-                Math.max(
-                        -90,
-                        Math.min(
-                                90,
-                                status.getX() * scale
-                        )
-                )
-        );
+        double droneMapX = Math.max(-90, Math.min(90, status.getX() * scale));
+        double droneMapY = Math.max(-90, Math.min(90, status.getZ() * scale));
 
-        miniMapDroneDot.setTranslateY(
-                Math.max(
-                        -90,
-                        Math.min(
-                                90,
-                                status.getZ() * scale
-                        )
-                )
-        );
+        miniMapDroneDot.setTranslateX(droneMapX);
+        miniMapDroneDot.setTranslateY(droneMapY);
+
+        boolean danger = status.isCollisionDetected() || status.getIntensity() > 0.08;
+
+        Circle[] points = {
+                radarPoint1,
+                radarPoint2,
+                radarPoint3,
+                radarPoint4,
+                radarPoint5
+        };
+
+        for (Circle point : points) {
+            if (point != null) {
+                point.setVisible(false);
+            }
+        }
+
+
+        if (status.isCollisionDetected() && radarPoint1 != null) {
+            radarPoint1.setVisible(true);
+            radarPoint1.setFill(javafx.scene.paint.Color.web("#ef4444")); // rouge collision
+            radarPoint1.setTranslateX(droneMapX + 15);
+            radarPoint1.setTranslateY(droneMapY - 15);
+        }
+
+        if (status.getIntensity() > 0.08 && radarPoint2 != null) {
+            radarPoint2.setVisible(true);
+            radarPoint2.setFill(javafx.scene.paint.Color.web("#f59e0b")); // orange courant
+            radarPoint2.setTranslateX(droneMapX - 18);
+            radarPoint2.setTranslateY(droneMapY + 12);
+        }
     }
 
     private void updateNetworkStats() {
@@ -870,6 +851,97 @@ public class DashboardController {
         send(PilotCommand.STOP);
     }
 
+    @FXML
+    private void enableStabilizedMode() {
+        stabilizedMode = !stabilizedMode;
+        holdPositionMode = false;
+
+        if (stabilizedMode) {
+            currentCommand = PilotCommand.STOP;
+            log("Mode stabilisé activé");
+            setText(stateLabel, "Mode stabilisé");
+        } else {
+            log("Mode stabilisé désactivé");
+            setText(stateLabel, "En vol");
+        }
+    }
+
+    @FXML
+    private void enableHoldPosition() {
+        holdPositionMode = !holdPositionMode;
+        stabilizedMode = false;
+
+        if (holdPositionMode) {
+            currentCommand = PilotCommand.STOP;
+            log("Maintien position activé");
+            setText(stateLabel, "Maintien position");
+        } else {
+            log("Maintien position désactivé");
+            setText(stateLabel, "En vol");
+        }
+    }
+
+    @FXML
+    private void emergencyStop() {
+        simulationRunning = false;
+        currentCommand = PilotCommand.STOP;
+
+        if (pollExecutor != null) {
+            pollExecutor.shutdownNow();
+        }
+
+        try {
+            if (client != null && client.isConnected()) {
+                client.sendCommand(droneId, PilotCommand.STOP);
+            }
+        } catch (Exception e) {
+            log("Erreur arrêt urgence : " + e.getMessage());
+        }
+
+        setText(stateLabel, "ARRÊT D'URGENCE");
+        setText(systemLabel, "Système : ARRÊT");
+        setStyle(systemLabel, "-fx-text-fill: #ef4444;");
+        setText(cameraStatusLabel, "Flux caméra : arrêté");
+        log("ARRÊT D'URGENCE déclenché");
+    }
+
+
+    @FXML
+    private void stopSimulation() {
+
+        simulationRunning = false;
+        currentCommand = PilotCommand.STOP;
+
+        if (pollExecutor != null) {
+            pollExecutor.shutdownNow();
+        }
+
+        try {
+
+            if (client != null && client.isConnected()) {
+                client.sendCommand(droneId, PilotCommand.STOP);
+            }
+
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/fxml/ConfigurationSimulation.fxml")
+            );
+
+            Scene scene = new Scene(loader.load());
+
+            Stage stage = (Stage) cameraView.getScene().getWindow();
+
+            stage.setScene(scene);
+            stage.setMaximized(true);
+
+        } catch (Exception e) {
+
+            log("Erreur arrêt simulation : " + e.getMessage());
+
+            e.printStackTrace();
+        }
+    }
+
+
     public void shutdown() {
 
         simulationRunning = false;
@@ -929,5 +1001,122 @@ public class DashboardController {
                         + msg
                         + "\n"
         );
+    }
+
+
+
+    // Appelle cette méthode à chaque mise à jour du cap (heading en degrés)
+    private void drawCompass(double headingDeg) {
+        GraphicsContext gc = compassCanvas.getGraphicsContext2D();
+        double w = compassCanvas.getWidth();
+        double h = compassCanvas.getHeight();
+        double cx = w / 2, cy = h / 2, r = w / 2 - 4;
+
+        gc.clearRect(0, 0, w, h);
+
+        // Fond
+        gc.setFill(Color.web("#07111b"));
+        gc.fillOval(cx - r, cy - r, r * 2, r * 2);
+        gc.setStroke(Color.web("#1e3a5f"));
+        gc.setLineWidth(2.5);
+        gc.strokeOval(cx - r, cy - r, r * 2, r * 2);
+
+        // Graduation
+        for (int i = 0; i < 72; i++) {
+            double angle = Math.toRadians(i * 5 - 90);
+            boolean major = (i % 9 == 0);
+            boolean mid = (i % 3 == 0);
+            double r1 = r - 2;
+            double r2 = major ? r - 16 : mid ? r - 11 : r - 7;
+            gc.setStroke(major ? Color.web("#38bdf8") : Color.web("#1e3a5f"));
+            gc.setLineWidth(major ? 2 : 1);
+            gc.strokeLine(cx + r1 * Math.cos(angle), cy + r1 * Math.sin(angle),
+                    cx + r2 * Math.cos(angle), cy + r2 * Math.sin(angle));
+        }
+
+        // Rose tournante — SEULEMENT l'aiguille
+        gc.save();
+        gc.translate(cx, cy);
+        gc.rotate(headingDeg);
+
+// Aiguille rouge (nord)
+        double nr = r - 28;
+        double[] xRed = {0, -5, 0, 5};
+        double[] yRed = {-nr, 0, 8, 0};
+        gc.setFill(Color.web("#ef4444"));
+        gc.fillPolygon(xRed, yRed, 4);
+// Blanc vers le bas
+        double[] xWht = {0, -5, 0, 5};
+        double[] yWht = {nr, 0, 8, 0};
+        gc.setFill(Color.web("#94a3b8"));
+        gc.fillPolygon(xWht, yWht, 4);
+
+        gc.restore();
+// Lettres fixes
+        gc.setFill(Color.WHITE);
+        gc.setFont(javafx.scene.text.Font.font("System", javafx.scene.text.FontWeight.BOLD, 13));
+        gc.setTextAlign(javafx.scene.text.TextAlignment.CENTER);
+        gc.fillText("N", cx, cy - (r - 20));
+        gc.fillText("S", cx, cy + (r - 8));
+        gc.fillText("E", cx + (r - 10), cy + 5);
+        gc.fillText("W", cx - (r - 10), cy + 5);
+
+        gc.setFont(javafx.scene.text.Font.font("System", 11));
+        gc.setFill(Color.web("#64748b"));
+        double ic = (r - 22) * Math.sin(Math.toRadians(45));
+        gc.fillText("NE", cx + ic, cy - ic + 5);
+        gc.fillText("SE", cx + ic, cy + ic + 5);
+        gc.fillText("SW", cx - ic, cy + ic + 5);
+        gc.fillText("NW", cx - ic, cy - ic + 5);
+
+      // Centre
+        gc.setFill(Color.web("#e2e8f0"));
+        gc.fillOval(cx - 7, cy - 7, 14, 14);
+        gc.setStroke(Color.web("#64748b"));
+        gc.setLineWidth(1.2);
+        gc.strokeOval(cx - 9, cy - 9, 18, 18);
+
+    }
+
+    // Appelle cette méthode à chaque mise à jour des angles
+    private void drawGauge(Canvas canvas, double value, double minVal, double maxVal) {
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        double cx = 30, cy = 30, r = 23;
+        gc.clearRect(0, 0, 60, 60);
+
+        double startAngle = 225;   // degrés JavaFX (sens antihoraire)
+        double arcExtent  = -270;  // 270° au total
+
+        // Arc de fond
+        gc.setStroke(Color.web("#0f2744"));
+        gc.setLineWidth(6);
+        gc.strokeArc(cx - r, cy - r, r * 2, r * 2, startAngle, arcExtent, javafx.scene.shape.ArcType.OPEN);
+
+        // Arc coloré arc-en-ciel (40 segments)
+        int segments = 40;
+        double segArc = arcExtent / segments;
+        for (int i = 0; i < segments; i++) {
+            double t = (double) i / segments;
+            double hue = 200 + t * 160; // bleu -> vert -> jaune -> rouge
+            gc.setStroke(Color.hsb(hue, 0.9, 0.85));
+            gc.setLineWidth(4.5);
+            gc.strokeArc(cx - r, cy - r, r * 2, r * 2,
+                    startAngle + i * segArc, segArc * 0.85, javafx.scene.shape.ArcType.OPEN);
+        }
+
+        // Aiguille
+        double norm = (value - minVal) / (maxVal - minVal);
+        double needleAngleDeg = 225 - (norm * 270);
+        double needleRad = Math.toRadians(needleAngleDeg);
+        double nx = cx + (r - 8) * Math.cos(needleRad);
+        double ny = cy - (r - 8) * Math.sin(needleRad); //
+        gc.setStroke(Color.WHITE);
+        gc.setLineWidth(2.5);
+        gc.setLineCap(javafx.scene.shape.StrokeLineCap.ROUND);
+        gc.strokeLine(cx, cy, nx, ny);
+
+        // Centre
+        gc.setFill(Color.web("#94a3b8"));
+        gc.fillOval(cx - 3.5, cy - 3.5, 7, 7);
     }
 }
