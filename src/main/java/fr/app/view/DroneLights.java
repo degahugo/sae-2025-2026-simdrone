@@ -66,9 +66,9 @@ public class DroneLights {
         System.out.println("RIGHT SPOT ADDED");
 
         rearLight = new PointLight();
-        rearLight.setColor(ColorRGBA.Green.mult(200f));
+        rearLight.setColor(ColorRGBA.Green.mult(1.5f));
         //vert très visible pour le test
-        rearLight.setRadius(100f);
+        rearLight.setRadius(4f);
         //définit la portée de la lumière dans toutes les directions
 
         rearLight.setPosition(droneNode.getWorldTranslation().add(0f, 0f, -1f));
@@ -110,3 +110,6 @@ public class DroneLights {
         rearLight.setColor(ColorRGBA.Green.mult(200f * intensity));
     }
 }
+
+//Les deux couleurs on les voit mais juste sur le drone c'est à dire que les lumières n'éclairent pas de loin.
+//J"ai envie de voir les halos lumineux qui éclairent à côté des lumières comme la photo du sous marin que j'avais

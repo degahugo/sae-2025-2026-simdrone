@@ -33,7 +33,7 @@ public class DroneBeamEffect {
     private void createBeams(AssetManager assetManager) {
 
         //Forme des faisceaux
-        Cylinder cone = new Cylinder(16, 16, 0.2f, 0.4f, 3f, true, false);
+        Cylinder cone = new Cylinder(24, 24, 0.03f, 0.18f, 8f, true, false);
 
         leftBeam = new Geometry("LeftBeam", cone);
 
@@ -41,32 +41,33 @@ public class DroneBeamEffect {
         Material leftMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
 
         //Couleur bleu clair avec transparence
-        leftMat.setColor("Color", new ColorRGBA(0.7f, 0.9f, 1f, 0.12f));
+        leftMat.setColor("Color", new ColorRGBA(0.7f, 0.9f, 1f, 0.035f));
         leftMat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
         //activer les 2 faces pour la transparence
         leftMat.getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Off);
         //ajout d'un glow plus réaliste
         leftMat.setBoolean("VertexColor", true);
+        //texture plus douce
+        leftMat.setTransparent(true);
 
         leftBeam.setMaterial(leftMat);
 
         leftBeam.setQueueBucket(RenderQueue.Bucket.Transparent);
         leftBeam.setCullHint(Spatial.CullHint.Never);
-
         leftBeam.rotate(0,FastMath.HALF_PI, 0);
         beamNode.attachChild(leftBeam);
 
 
 
         rightBeam = new Geometry("RightBeam", cone);
-
         Material rightMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
 
-        rightMat.setColor("Color", new ColorRGBA(0.7f, 0.9f, 1f, 0.12f));
+        rightMat.setColor("Color", new ColorRGBA(0.7f, 0.9f, 1f, 0.035f));
         rightMat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
         //Par défaut seule une face du mesh est visible
         rightMat.getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Off);
         rightMat.setBoolean("VertexColor", true);
+        rightMat.setTransparent(true);
 
         rightBeam.setMaterial(rightMat);
         rightBeam.setQueueBucket(RenderQueue.Bucket.Transparent);
@@ -83,14 +84,15 @@ public class DroneBeamEffect {
      //rotation actuelle du drone
         Quaternion droneRot = droneNode.getWorldRotation();
 
-        Vector3f leftOffset = droneRot.mult(new Vector3f(-0.4f, -0.05f, 2.2f));
+        Vector3f leftOffset = droneRot.mult(new Vector3f(-0.35f, -0.08f, 3.2f));
 
         leftBeam.setLocalTranslation(dronePos.add(leftOffset));
-        leftBeam.setLocalRotation(droneRot);
+        leftBeam.setLocalRotation(droneRot.mult(new Quaternion().fromAngles(FastMath.HALF_PI, 0, 0)));
 
-        Vector3f rightOffset = droneRot.mult(new Vector3f(0.4f, -0.05f, 2.2f));
+        Vector3f rightOffset = droneRot.mult(new Vector3f(0.35f, -0.08f, 3.2f));
 
         rightBeam.setLocalTranslation(dronePos.add(rightOffset));
-        rightBeam.setLocalRotation(droneRot);
+        rightBeam.setLocalRotation(droneRot.mult(new Quaternion().fromAngles(FastMath.HALF_PI, 0, 0)));
+
     }
 }
