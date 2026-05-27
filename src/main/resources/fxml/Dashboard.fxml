@@ -4,6 +4,7 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.*?>
+<?import javafx.scene.canvas.Canvas?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="fr.app.controller.DashboardController"
@@ -43,8 +44,10 @@
             <VBox spacing="1">
                 <Label text="ÉTAT SYSTÈME" style="-fx-text-fill: #475569; -fx-font-size: 9px;"/>
                 <HBox spacing="5" alignment="CENTER_LEFT">
-                    <Circle radius="5" fill="#22c55e"/>
-                    <Label fx:id="systemLabel" text="OK"
+                    <Circle fx:id="systemStatusDot"
+                            radius="5"
+                            fill="#22c55e"/>
+                    <Label fx:id="systemLabel" text="Système : OK"
                            style="-fx-text-fill: #22c55e; -fx-font-size: 12px; -fx-font-weight: bold;"/>
                 </HBox>
             </VBox>
@@ -275,11 +278,13 @@
                             style="-fx-background-color: #1d4ed8; -fx-text-fill: white;
                                    -fx-font-weight: bold; -fx-font-size: 13px; -fx-cursor: hand;"/>
 
+
+
                     <HBox spacing="8">
-                        <Button text="Mode stabilisé" prefWidth="124" prefHeight="28"
+                        <Button text="Mode stabilisé" onAction="#enableStabilizedMode" prefWidth="124" prefHeight="28"
                                 style="-fx-background-color: #1e3a5f; -fx-text-fill: #94a3b8;
                                        -fx-font-size: 10px; -fx-cursor: hand;"/>
-                        <Button text="Maintenir position" prefWidth="130" prefHeight="28"
+                        <Button text="Maintenir position" onAction="#enableHoldPosition" prefWidth="130" prefHeight="28"
                                 style="-fx-background-color: #1e3a5f; -fx-text-fill: #94a3b8;
                                        -fx-font-size: 10px; -fx-cursor: hand;"/>
                     </HBox>
@@ -305,12 +310,11 @@
                         <Line startX="-100" startY="0" endX="100" endY="0" stroke="#0f2744"/>
                         <Line startX="0" startY="-100" endX="0" endY="100" stroke="#0f2744"/>
                         <!-- Points obstacles décoratifs -->
-                        <Circle radius="4" fill="#ef4444" translateX="30"  translateY="-50"/>
-                        <Circle radius="4" fill="#ef4444" translateX="-40" translateY="20"/>
-                        <Circle radius="4" fill="#ef4444" translateX="60"  translateY="35"/>
-                        <Circle radius="4" fill="#ef4444" translateX="-20" translateY="60"/>
-                        <Circle radius="4" fill="#ef4444" translateX="45"  translateY="-30"/>
-                        <!-- Drone (position temps réel) -->
+                        <Circle fx:id="radarPoint1" radius="4" fill="#ef4444" visible="false"/>
+                        <Circle fx:id="radarPoint2" radius="4" fill="#ef4444" visible="false"/>
+                        <Circle fx:id="radarPoint3" radius="4" fill="#ef4444" visible="false"/>
+                        <Circle fx:id="radarPoint4" radius="4" fill="#ef4444" visible="false"/>
+                        <Circle fx:id="radarPoint5" radius="4" fill="#ef4444" visible="false"/> <!-- Drone (position temps réel) -->
                         <Circle fx:id="miniMapDroneDot" radius="8" fill="#22c55e"/>
                         <Label text="PORTÉE 100 m" StackPane.alignment="BOTTOM_RIGHT"
                                style="-fx-text-fill: #38bdf8; -fx-font-size: 9px;
@@ -338,11 +342,13 @@
                                style="-fx-text-fill: white; -fx-font-size: 11px;"/>
                     </HBox>
                     <Region VBox.vgrow="ALWAYS"/>
-                    <Button text="⚠  ARRÊT D'URGENCE" onAction="#stopDrone"
+                    <Button text="⚠  ARRÊT D'URGENCE" onAction="#emergencyStop"
                             maxWidth="Infinity" prefHeight="34"
                             style="-fx-background-color: #991b1b; -fx-text-fill: white;
-                                   -fx-font-size: 13px; -fx-font-weight: bold; -fx-cursor: hand;"/>
-                </VBox>
+               -fx-font-size: 13px; -fx-font-weight: bold; -fx-cursor: hand;
+               -fx-background-radius: 8; -fx-border-radius: 8;
+               -fx-border-color: #ef4444; -fx-border-width: 1.2;
+               -fx-effect: dropshadow(gaussian, rgba(239,68,68,0.35), 10, 0.3, 0, 0);"/></VBox>
             </HBox>
 
             <!--
@@ -387,39 +393,33 @@
 
                 <!-- BOUSSOLE -->
                 <Label text="BOUSSOLE"
-                       style="-fx-text-fill: #475569; -fx-font-size: 9px; -fx-font-weight: bold;"/>
-                <StackPane prefHeight="175">
-                    <Circle radius="78" fill="#020b14" stroke="#334155" strokeWidth="2.5"/>
-                    <Circle radius="62" fill="transparent" stroke="#1e3a5f" strokeWidth="1"/>
+                       style="-fx-text-fill: #cbd5e1; -fx-font-size: 11px; -fx-font-weight: bold;"/>
 
-                    <Label text="N" translateY="-88"
-                           style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;"/>
-                    <Label text="S" translateY="88"
-                           style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;"/>
-                    <Label text="E" translateX="88"
-                           style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;"/>
-                    <Label text="W" translateX="-88"
-                           style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;"/>
+                <StackPane prefHeight="225"
+                           style="-fx-background-color: #07111b;
+                  -fx-background-radius: 12;
+                  -fx-border-color: #1e3a5f;
+                  -fx-border-radius: 12;
+                  -fx-padding: 4;">
 
-                    <Label text="NE" translateX="58" translateY="-58"
-                           style="-fx-text-fill: #475569; -fx-font-size: 9px;"/>
+                    <!-- Cercle de fond -->
+                    <Canvas fx:id="compassCanvas" width="217" height="217"/>
 
-                    <!-- Triangle nord -->
-                    <Polygon points="0,-62, -5,-48, 5,-48" fill="#22c55e"/>
+                    <!-- Triangle indicateur fixe -->
+                    <Polygon points="0,-10,-6,2,6,2" fill="#22c55e"
+                             StackPane.alignment="TOP_CENTER"
+                             translateY="4"/>
 
-                    <!-- Aiguille -->
-                    <Line fx:id="compassNeedle" startX="0" startY="8" endX="0" endY="-58"
-                          stroke="#ef4444" strokeWidth="3"/>
-
-                    <!-- Centre -->
-                    <Circle radius="6" fill="#334155" stroke="#94a3b8" strokeWidth="1.5"/>
-
-                    <!-- Valeur -->
-                    <Label fx:id="compassLabel" text="0°" translateY="48"
-                           style="-fx-text-fill: #22c55e; -fx-font-size: 22px; -fx-font-weight: bold;"/>
+                    <!-- Valeur cap -->
+                    <Label fx:id="compassLabel" text="0°"
+                           StackPane.alignment="BOTTOM_CENTER"
+                           translateY="-18"
+                           style="-fx-text-fill: #22c55e; -fx-font-size: 26px; -fx-font-weight: bold;"/>
                 </StackPane>
 
                 <Separator/>
+
+
 
                 <!-- ORIENTATION -->
                 <Label text="ORIENTATION"
@@ -427,25 +427,28 @@
                 <HBox spacing="6" alignment="CENTER">
                     <VBox alignment="CENTER" spacing="2" HBox.hgrow="ALWAYS"
                           style="-fx-background-color: #071827; -fx-padding: 6;
-                                 -fx-border-radius: 6; -fx-background-radius: 6;">
+                 -fx-border-radius: 6; -fx-background-radius: 6;">
                         <Label text="YAW"   style="-fx-text-fill: #475569; -fx-font-size: 9px;"/>
-                        <Label fx:id="yawLabel"   text="0°"
+                        <Canvas fx:id="yawCanvas" width="72" height="72"/>
+                        <Label fx:id="yawLabel" text="0°"
                                style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;"/>
                         <Label text="-180  180" style="-fx-text-fill: #334155; -fx-font-size: 8px;"/>
                     </VBox>
                     <VBox alignment="CENTER" spacing="2" HBox.hgrow="ALWAYS"
                           style="-fx-background-color: #071827; -fx-padding: 6;
-                                 -fx-border-radius: 6; -fx-background-radius: 6;">
+                 -fx-border-radius: 6; -fx-background-radius: 6;">
                         <Label text="PITCH" style="-fx-text-fill: #475569; -fx-font-size: 9px;"/>
+                        <Canvas fx:id="pitchCanvas" width="72" height="72"/>
                         <Label fx:id="pitchLabel" text="0°"
                                style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;"/>
                         <Label text="-90   90" style="-fx-text-fill: #334155; -fx-font-size: 8px;"/>
                     </VBox>
                     <VBox alignment="CENTER" spacing="2" HBox.hgrow="ALWAYS"
                           style="-fx-background-color: #071827; -fx-padding: 6;
-                                 -fx-border-radius: 6; -fx-background-radius: 6;">
+                 -fx-border-radius: 6; -fx-background-radius: 6;">
                         <Label text="ROLL"  style="-fx-text-fill: #475569; -fx-font-size: 9px;"/>
-                        <Label fx:id="rollLabel"  text="0°"
+                        <Canvas fx:id="rollCanvas" width="72" height="72"/>
+                        <Label fx:id="rollLabel" text="0°"
                                style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;"/>
                         <Label text="-90   90" style="-fx-text-fill: #334155; -fx-font-size: 8px;"/>
                     </VBox>
@@ -504,10 +507,10 @@
                 <Region VBox.vgrow="ALWAYS"/>
 
                 <!-- ARRÊT D'URGENCE -->
-                <Button text="⚠  ARRÊT D'URGENCE" onAction="#stopDrone"
+                <Button text="■  ARRÊTER SIMULATION" onAction="#stopSimulation"
                         maxWidth="Infinity" prefHeight="34"
-                        style="-fx-background-color: #991b1b; -fx-text-fill: white;
-                               -fx-font-size: 14px; -fx-font-weight: bold; -fx-cursor: hand;"/>
+                        style="-fx-background-color: #334155; -fx-text-fill: white;
+               -fx-font-weight: bold; -fx-font-size: 12px; -fx-cursor: hand;"/>
             </VBox>
 
         </GridPane>

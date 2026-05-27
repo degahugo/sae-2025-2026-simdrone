@@ -189,10 +189,6 @@ public class Main extends SimpleApplication {
         if (loading) {
             return;
         }
-        if (drone != null) {
-            drone.setCollisionDetected(false);
-            drone.setCollisionMessage("Aucune collision");
-        }
 
         if (droneController != null) {
             droneController.updateMovement(tpf);
@@ -292,6 +288,25 @@ public class Main extends SimpleApplication {
                 s.setHeading(compassSensor.getHeading());
                 s.setYaw(compassSensor.getHeading());
             }
+
+            s.setPitch(drone.getPitch());
+            s.setYaw(drone.getYaw());
+            s.setRoll(drone.getRoll());
+            s.setHeading(drone.getHeading());
+
+            s.setCollisionDetected(drone.isCollisionDetected());
+            s.setCollisionMessage(drone.getCollisionMessage());
+
+
+            s.setCollisionDetected(drone.isCollisionDetected());
+
+            if (drone.isCollisionDetected()) {
+                s.setCollisionMessage("Collision détectée");
+            } else {
+                s.setCollisionMessage("Aucune collision");
+            }
+
+
             dernierStatut.set(s);
         }
 
@@ -374,17 +389,10 @@ public class Main extends SimpleApplication {
         }
 
 
-        float[] angles = drone.getDroneSpatial()
-                .getWorldRotation()
-                .toAngles(null);
-
-        double pitch = Math.toDegrees(angles[0]);
-        double yaw = Math.toDegrees(angles[1]);
-        double roll = Math.toDegrees(angles[2]);
-
-        status.setPitch(pitch);
-        status.setYaw(yaw);
-        status.setRoll(roll);
+        status.setPitch(drone.getPitch());
+        status.setYaw(drone.getYaw());
+        status.setRoll(drone.getRoll());
+        status.setHeading(drone.getHeading());
 
 
         status.setCollisionDetected(drone.isCollisionDetected());
