@@ -126,10 +126,19 @@ public class UdpServeurTransport implements Runnable{
     private void traiterStartSimulation(String droneId, String clientIp) {
         if (simulation == null) {
             simulation = new Main();
+            // Injecte la configuration avant de lancer l'application
+            if (this.configuration != null) {
+                simulation.setConfiguration(this.configuration);
+                System.out.println("[UDP Serveur] Configuration injectée avec succès dans le Main avant le start.");
+            } else {
+                System.out.println("[UDP Serveur] Attention : Aucune configuration reçue avant le START_SIMULATION !");
+            }
             com.jme3.system.AppSettings settings = new com.jme3.system.AppSettings(true);
             settings.setTitle("DronSim - Simulation 3D");
             settings.setWidth(1024);
             settings.setHeight(768);
+            settings.setVSync(false);
+            settings.setFrameRate(-1);
             simulation.setShowSettings(false);
             simulation.setSettings(settings);
             simulation.setPauseOnLostFocus(false);

@@ -1,6 +1,7 @@
 package fr.app;
 
 import com.jme3.app.SimpleApplication;
+import com.jme3.font.BitmapText;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.scene.*;
 import com.jme3.system.AppSettings;
@@ -118,7 +119,13 @@ public class Main extends SimpleApplication {
             environmentConditions = configuration.getCondition();
             environmentVisibility = configuration.getVisibility();
         }
-
+        System.out.println("Environnement choisi : " + terrainId);
+        System.out.println("Conditions choisi : " + environmentConditions);
+        System.out.println("Visibilité choisi : " + environmentVisibility);
+        BitmapText testText = guiManager.CreateLIGUI("Environnement choisi : " + terrainId +
+                                    "\nConditions choisi : " + environmentConditions +
+                                    "\nVisibilité choisi : " + environmentVisibility,
+                                    new Vector3f(0,200,0));
         // Generation des courants
         this.environmentConditionsManager = new EnvironmentConditionsManager();
         environmentConditionsManager.InitiateEnvironmentConditions(terrainId, environmentConditions, environmentVisibility);
@@ -154,26 +161,17 @@ public class Main extends SimpleApplication {
             // Adding captors
             // Getting the drone
             this.drone = droneManager.getDrone();
-            // Then adding the sensors
-            this.temperatureSensor = new TemperatureSensor("TempSensor");
-            this.drone.addSensor(temperatureSensor);
-            this.depthSensor = new DepthSensor("DepthSensor");
-            drone.addSensor(this.depthSensor);
-            this.compassSensor = new CompassSensor("CompassSensor");
-            drone.addSensor(this.compassSensor);
-            this.pressureSensor = new PressureSensor("PressureSensor", this.depthSensor);
-            drone.addSensor(this.pressureSensor);
             // Creates the water filter
-            //waterFilter existe maintenant de partout
             this.waterFilterManager = new WaterFilterManager(fpp, viewPort, rootNode, model);
             this.waterDistortionManager = new WaterDistortionManager(fpp, viewPort, droneManager.getDrone(), model);
-
+            // Then adding the sensors
             this.sensorManager = new SensorManager(drone, lightingManager, waterFilterManager);
             sensorManager.initSensors();
             // Affichage des flèches de courant
             this.currentDebugView = new CurrentDebugView(currentMatrix, assetManager, rootNode);
             currentDebugView.setVisible(showCurrentDebug);
             if(showCurrentDebug) currentDebugView.showCurrentGrid(0.5f);
+            guiManager.RemoveLIGUI(testText);
 
             // End of the loading, will execute the simpleUpdate
             loading = false;
@@ -199,7 +197,6 @@ public class Main extends SimpleApplication {
             drone.setCollisionDetected(false);
             drone.setCollisionMessage("Aucune collision");
         }
-
         if (droneController != null) {
             droneController.updateMovement(tpf);
         }
@@ -242,35 +239,6 @@ public class Main extends SimpleApplication {
                 currentTimer = 0f; // On réinitialise le compte à rebours
             }
         }
-        if (drone != null) {
-            for (Sensor sensor : drone.getSensors()) {
-                sensor.update(drone);
-                if (sensor instanceof TemperatureSensor) {
-                    TemperatureSensor ts = (TemperatureSensor) sensor;
-                    ts.affectDrone(drone);
-                    //System.out.println("Température : " + ts.getTemperature());
-                    float temp = ts.getTemperature();
-                    if (Math.abs(temp - lastTemperature) > 0.01f) {
-                        lastTemperature = temp;
-                        //System.out.println("Température : " + temp);
-                    }
-                }
-                if (sensor instanceof DepthSensor) {
-                    DepthSensor ds = (DepthSensor) sensor;
-                    //System.out.println("Profondeur : " + ds.getDepth() + " m");
-                }
-                if (sensor instanceof CompassSensor cs) {
-                   // System.out.println("Cap : " + cs.getHeading() + "°");
-                }
-                if (sensor instanceof PressureSensor cs) {
-                    //System.out.println("Pression : " + cs.getPressure() + "bar");
-                }
-                if (sensor instanceof TemperatureSensor ts) {
-                    //System.out.println("Temperature: " + ts.getTemperature() + "°C");
-                }
-            }
-
-        }
 
         // Mettre à jour le statut en cache — thread-safe, lu par getDroneStatusDirect()
         if (drone != null && initialized) {
@@ -289,18 +257,15 @@ public class Main extends SimpleApplication {
             if (drone.getBattery() != null) {
                 s.setBattery(drone.getBattery().getPercentage());
             }
-
             if (pressureSensor != null) {
                 s.setPressure(pressureSensor.getPressure());
             }
-
             if (compassSensor != null) {
                 s.setHeading(compassSensor.getHeading());
                 s.setYaw(compassSensor.getHeading());
             }
             dernierStatut.set(s);
         }
-
 
         if (drone.getBattery() != null) {
             float consumption = 0.05f * tpf;

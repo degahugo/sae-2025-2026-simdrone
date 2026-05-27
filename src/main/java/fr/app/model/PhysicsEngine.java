@@ -9,6 +9,7 @@ import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.collision.shapes.MeshCollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
+import com.jme3.font.BitmapText;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState;
 import com.jme3.math.ColorRGBA;
@@ -110,6 +111,7 @@ public class PhysicsEngine{
             return CreateTerrainScene(1,onTerrainReady);
         }
         guiManager.CreateWaitingGUI();
+        BitmapText loadingScreen = guiManager.CreateLIGUI(" Chargement de " + name, new Vector3f(0,-40,0));
         // Using thread to launch the simulator faster
         new Thread(() -> {
             // On charge les fichiers
@@ -129,9 +131,22 @@ public class PhysicsEngine{
                 System.out.println("Texture de point_borloo terminé");
             }
             System.out.println("Chargement du modèle physique lowpoly");
+            app.enqueue(() -> {
+                // Obligatoire sinon crash aléatoire car on modifie un élément potentiellement au moment où JME le lit
+                // donc kaboom
+                guiManager.UpdateLIGUIElement(loadingScreen, "Chargement du modèle physique", new Vector3f(0,-40,0));
+                return null;
+            });
             terrainLowPoly = assetManager.loadModel(name + "-lowpoly.j3o");
             System.out.println("Terrain loaded");
             System.out.println("Beggining mesh generation");
+
+            app.enqueue(() -> {
+                // Obligatoire sinon crash aléatoire car on modifie un élément potentiellement au moment où JME le lit
+                // donc kaboom
+                guiManager.UpdateLIGUIElement(loadingScreen, "Création du mesh", new Vector3f(0,-40,0));
+                return null;
+            });
             // Generating mesh
             CollisionShape sceneShape = CollisionShapeFactory.createMeshShape(terrainLowPoly);
             System.out.println("Mesh generated\nGenerating RigidBodyControl with this mesh");
@@ -166,6 +181,7 @@ public class PhysicsEngine{
                 node.attachChild(terrainVisuel);
                 System.out.println("Terrain visual and physic injected succesfully");
                 guiManager.RemoveWaitingGUI();
+                guiManager.RemoveLIGUI(loadingScreen);
                 // Callback to generate cubes or drones
                 if (onTerrainReady != null) {
                     // The physics engine knows it has something to do but it doesn't know what it is
