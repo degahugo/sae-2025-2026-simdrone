@@ -32,11 +32,11 @@ public class LightingManager {
     public void initLighting() {
         // Set up scene lighting
         PointLight lamp_light = new PointLight();
-        lamp_light.setColor(ColorRGBA.White);
+        lamp_light.setColor(ColorRGBA.Black);
         lamp_light.setRadius(4f);
         lamp_light.setPosition(new Vector3f(0.0f, 0.0f, 2.0f));
         rootNode.addLight(lamp_light);
-
+/*
         // Set up the spotlight
         SpotLight spot = new SpotLight();
         spot.setSpotRange(100f);                           // distance
@@ -46,7 +46,7 @@ public class LightingManager {
         spot.setPosition(cam.getLocation());               // shine from camera loc
         spot.setDirection(cam.getDirection());             // shine forward from camera loc
         rootNode.addLight(spot);
-
+*/
         // Set up the ambient light
         ambientLight = new AmbientLight();
         ambientLight.setColor(ColorRGBA.White);

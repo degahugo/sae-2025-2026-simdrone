@@ -9,6 +9,7 @@ import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import fr.app.controller.DroneController;
 import fr.app.view.DroneCameraManager;
+import fr.app.view.DroneLights;
 
 public class DroneManager {
     private AssetManager assetManager;
@@ -21,6 +22,7 @@ public class DroneManager {
     private Camera cam;
     private Drone drone;
     private WorldView model;
+    private DroneLights droneLights;
 
     public DroneManager(AssetManager assetManager, Node rootNode, PhysicsEngine physicsEngine, InputManager inputManager, Camera cam, WorldView worldView, CurrentMatrix currentMatrix){
         this.assetManager = assetManager;
@@ -49,15 +51,17 @@ public class DroneManager {
         droneNode.attachChild(droneModel);
         droneNode.move(0f, 1f, 0f);
         rootNode.attachChild(droneNode);
-        drone = new Drone("drone1", droneNode, rootNode, assetManager);
+        drone = new Drone("drone1", droneNode, rootNode);
         this.physicsEngine.CreateDroneHitbox(drone, name);
         this.droneController = new DroneController(inputManager, drone, model, currentMatrix);
         this.droneController.setUpKeys();
         this.droneCameraManager = new DroneCameraManager(cam, drone);
         this.droneCameraManager.setCameraOffset(camOffset);
+        this.droneLights = new DroneLights(rootNode, cam);
         //this.droneCameraManager = new DroneCameraManager(cam, drone);
     }
 
+    public DroneLights getDroneFlashlight() {return this.droneLights;}
     public Drone getDrone(){
         return this.drone;
     }

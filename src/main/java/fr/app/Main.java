@@ -1,6 +1,7 @@
 package fr.app;
 
 import com.jme3.app.SimpleApplication;
+import com.jme3.math.ColorRGBA;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.scene.*;
 import com.jme3.system.AppSettings;
@@ -109,7 +110,7 @@ public class Main extends SimpleApplication {
         setPauseOnLostFocus(false);
         PhysicsEngine physicsEngine = new PhysicsEngine(this, this.model, this.guiManager, showMeshWireframe);
 
-        int terrainId = 3;
+        int terrainId = 1;
 
         if (configuration != null && configuration.getEnvironmentType() != null) {
             terrainId = configuration.getEnvironmentType().getTerrainId();
@@ -134,7 +135,7 @@ public class Main extends SimpleApplication {
             // Add all physics objects here to avoid issues with the terrain not being finished
             System.out.println("Terrain ready : adding the CUBES");
             //physicsEngine.SpawnTestCube(rootNode, -4f, 15f, 0f, ColorRGBA.Red);
-            //physicsEngine.SpawnTestCube(rootNode, 0f, 2f, 0f, ColorRGBA.Yellow);
+            physicsEngine.SpawnTestCube(rootNode, 0f, 2f, 0f, ColorRGBA.Yellow);
             // Create a drone
             String droneName = "BR2R4";
 
@@ -168,7 +169,6 @@ public class Main extends SimpleApplication {
             this.currentDebugView = new CurrentDebugView(currentMatrix, assetManager, rootNode);
             currentDebugView.setVisible(showCurrentDebug);
             if(showCurrentDebug) currentDebugView.showCurrentGrid(0.5f);
-
             // End of the loading, will execute the simpleUpdate
             loading = false;
             initialized = true;
@@ -177,9 +177,8 @@ public class Main extends SimpleApplication {
         rootNode.attachChild(sceneNode);
         //this.initialized = true;
         //System.out.println("[Simulation] Initialisation terminée.");
-
-
     }
+
     public boolean isInitialized() {
         return initialized;
     }

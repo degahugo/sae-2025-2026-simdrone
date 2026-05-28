@@ -294,12 +294,17 @@ public class PhysicsEngine{
      * @param color the color of the cube
      */
     public void SpawnTestCube(Node cubeNode, float x, float y, float z, ColorRGBA color) {
+        System.out.println("Création d'un cube");
         // Cube of 0.5m
         Box boxMesh = new Box(0.5f, 0.5f, 0.5f);
         Geometry cubeGeo = new Geometry("TestCube", boxMesh);
         // Red material
-        Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-        mat.setColor("Color", color);
+        Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
+        mat.setBoolean("UseMaterialColors",true);
+        mat.setColor("Diffuse", ColorRGBA.Red);
+        mat.setColor("Ambient", ColorRGBA.Red);
+        mat.setColor("Specular", ColorRGBA.White);
+        mat.setFloat("Shininess", 64f);
         cubeGeo.setMaterial(mat);
         // Position and angle
         cubeGeo.setLocalTranslation(new Vector3f(x, y, z));
@@ -310,13 +315,14 @@ public class PhysicsEngine{
         cubeGeo.setLocalRotation(rotation);
         cubeNode.attachChild(cubeGeo);
         // Cube physics
-        RigidBodyControl cubePhys = new RigidBodyControl(1.0f);
+        RigidBodyControl cubePhys = new RigidBodyControl(0);
         cubeGeo.addControl(cubePhys);
         // Added restitution and a friction to avoid it balancing at unrealistic angles
         cubePhys.setRestitution(0.2f);
         cubePhys.setFriction(0.1f);
         // Add to physic space
         bulletAppState.getPhysicsSpace().add(cubePhys);
+        System.out.println("Cube ajouté à l'espace physique");
     }
 
     /**

@@ -1,14 +1,12 @@
 package fr.app.model;
 
-import com.jme3.asset.AssetManager;
+import com.jme3.renderer.Camera;
 import com.jme3.scene.Node;
 import fr.app.model.sensor.Sensor;
 
 import java.util.ArrayList;
 import java.util.List;
 import com.jme3.math.FastMath;
-import fr.app.view.DroneBeamEffect;
-import fr.app.view.DroneLights;
 
 
 public class Drone {
@@ -20,17 +18,14 @@ public class Drone {
     private Battery battery;
     private boolean collisionDetected;
     private String collisionMessage = "Aucune collision";
-    private DroneLights droneLights;
-    private DroneBeamEffect beamEffect;
 
-    public Drone(String id, Node droneSpatial,Node rootNode, AssetManager assetManager) {
+
+    public Drone(String id, Node droneSpatial,Node rootNode) {
 
         this.id = id;
 
         this.droneSpatial = droneSpatial;
-        this.droneLights = new DroneLights(droneSpatial, rootNode);
         this.sensors = new ArrayList<>();
-        this.beamEffect = new DroneBeamEffect(droneSpatial, rootNode,assetManager);
 
         this.state = new DroneState();
 
@@ -111,8 +106,7 @@ public class Drone {
         }
         return yaw;
     }
-    public void update(float tpf) {
-        droneLights.update();
-        beamEffect.update();
-    }
+    //public void update(float tpf) {
+     //   droneLights.update();
+   // }
 }
