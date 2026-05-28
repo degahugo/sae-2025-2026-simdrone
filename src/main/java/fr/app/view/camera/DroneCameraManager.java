@@ -29,6 +29,9 @@ public class DroneCameraManager {
     private float cameraYaw = 0f;
     private float cameraPitch = 0f;
 
+    // Pour la caméra arrière
+    private final boolean isRearCam;
+
     // Limites du pitch
     private static final float MAX_PITCH = 1.2f;
     private static final float MIN_PITCH = -1.2f;
@@ -41,18 +44,18 @@ public class DroneCameraManager {
     private float maxPitch = 90f * FastMath.DEG_TO_RAD;
     private float maxYaw = 90f * FastMath.DEG_TO_RAD;
 
-    public DroneCameraManager(Camera cam, Drone drone) {
+    public DroneCameraManager(Camera cam, Drone drone, boolean isRearCam) {
         this.cam = cam;
         this.drone = drone;
+        this.isRearCam = isRearCam;
 
         this.cameraNode = new CameraNode("CameraNode",this.cam);
-
         this.cameraNode.setControlDir(CameraControl.ControlDirection.SpatialToCamera);
-
         drone.getDroneSpatial().attachChild(this.cameraNode);
 
         // Offset initial (compatible avec develop)
         this.cameraNode.setLocalTranslation(this.cameraOffset);
+        applyRotation();
     }
 
     // --- Contrôles Free-Look ---
@@ -90,6 +93,7 @@ public class DroneCameraManager {
      * Applique la rotation calculé par les méthodes précédentes sur la caméra
      */
     private void applyRotation(){
+        float finalYaw = isRearCam ? cameraYaw + FastMath.PI : cameraYaw;
         Quaternion localRotation = new Quaternion().fromAngles(cameraPitch, cameraYaw, 0f);
         cameraNode.setLocalRotation(localRotation);
     }
@@ -132,6 +136,21 @@ public class DroneCameraManager {
 
     public CameraNode getCameraNode(){
         return cameraNode;
+    }
+
+    /**
+     * Active ou désactive le rendu à l'écran pour cette caméra
+     */
+    public void setActive(boolean active) {
+        if (active) {
+            // On ajoute la caméra au node et on l'active
+            this.cameraNode.setCamera(this.cam);
+            this.cameraNode.setEnabled(true);
+        } else {
+            // On retire la caméra du node et on la désactive
+            this.cameraNode.setCamera(null);
+            this.cameraNode.setEnabled(false);
+        }
     }
 
     /**

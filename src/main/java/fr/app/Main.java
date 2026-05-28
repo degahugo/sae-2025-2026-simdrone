@@ -47,7 +47,8 @@ public class Main extends SimpleApplication {
     private GUIManager guiManager;
     private Drone drone;
     private DroneController droneController;
-    private DroneCameraManager droneCameraManager;
+    private DroneCameraManager frontCameraManager;
+    private DroneCameraManager rearCameraManager;
     private DroneCameraController droneCameraController;
     private WaterDistortionManager waterDistortionManager;
     private DroneManager droneManager;
@@ -160,9 +161,10 @@ public class Main extends SimpleApplication {
             }
 
             droneManager.CreateDrone(droneName);            // Gets the manager and controller te be used here
-            this.droneCameraManager = droneManager.getDroneCameraManager();
+            this.frontCameraManager = droneManager.getFrontCameraManager();
+            this.rearCameraManager = droneManager.getRearCameraManager();
             this.droneController = droneManager.getDroneController();
-            this.droneCameraController = new DroneCameraController(droneCameraManager, droneController);
+            this.droneCameraController = new DroneCameraController(frontCameraManager, rearCameraManager, droneController, droneManager);
             // Adding captors
             // Getting the drone
             this.drone = droneManager.getDrone();
@@ -399,7 +401,7 @@ public class Main extends SimpleApplication {
      * DOIT être appelé depuis le thread JME3 (via enqueue).
      */
     public void creerViewPortOffScreen(String droneId) {
-        if (droneCameraManager == null) {
+        if (frontCameraManager == null) {
             System.err.println("[Main] creerViewPortOffScreen : droneCameraManager null pour " + droneId);
             return;
         }
@@ -407,7 +409,7 @@ public class Main extends SimpleApplication {
             System.out.println("[Main] ViewPort déjà créé pour " + droneId);
             return;
         }
-        com.jme3.renderer.Camera cameraDrone = droneCameraManager.getCamera();
+        com.jme3.renderer.Camera cameraDrone = frontCameraManager.getCamera();
         DroneFrameCapture capture = new DroneFrameCapture(droneId, cameraDrone, renderManager, rootNode, guiNode,assetManager,model,drone);
         frameCaptures.put(droneId, capture);
         System.out.println("[Main] ViewPort off-screen créé pour " + droneId);

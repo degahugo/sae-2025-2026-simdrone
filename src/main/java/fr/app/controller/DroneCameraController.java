@@ -1,36 +1,57 @@
 package fr.app.controller;
 
+import fr.app.model.DroneManager;
 import fr.app.view.camera.DroneCameraManager;
 
 public class DroneCameraController {
-    private DroneCameraManager droneCameraManager;
+    private DroneCameraManager frontCameraManager;
+    private DroneCameraManager rearCameraManager;
     private DroneController droneController;
+    private DroneManager droneManager;
 
-    public DroneCameraController(DroneCameraManager droneCameraManager, DroneController droneController){
-        this.droneCameraManager = droneCameraManager;
+    private boolean isCameraSwitched = false;
+
+    public DroneCameraController(DroneCameraManager frontCameraManager, DroneCameraManager rearCameraManager, DroneController droneController, DroneManager droneManager){
+        this.frontCameraManager = frontCameraManager;
+        this.rearCameraManager = rearCameraManager;
         this.droneController = droneController;
+        this.droneManager = droneManager;
     }
 
     public void update(float tpf){
+        if (droneController.isSwitchCameraIntention()) {
+            if (!isCameraSwitched) {
+                droneManager.switchCamera();
+                isCameraSwitched = true;
+            }
+        } else {
+            isCameraSwitched = false;
+        }
+        DroneCameraManager usedCameraManager;
+        if (droneManager.isShowingFrontCam()) {
+            usedCameraManager = frontCameraManager;
+        } else {
+            usedCameraManager = rearCameraManager;
+        }
         boolean camMoved = false;
         if(droneController.isCamLeftIntention()){
-            droneCameraManager.rotateCameraLeft(tpf);
+            usedCameraManager.rotateCameraLeft(tpf);
             camMoved = true;
         }
         if(droneController.isCamRightIntention()){
-            droneCameraManager.rotateCameraRight(tpf);
+            usedCameraManager.rotateCameraRight(tpf);
             camMoved = true;
         }
         if(droneController.isCamUpIntention()){
-            droneCameraManager.rotateCameraUp(tpf);
+            usedCameraManager.rotateCameraUp(tpf);
             camMoved = true;
         }
         if(droneController.isCamDownIntention()){
-            droneCameraManager.rotateCameraDown(tpf);
+            usedCameraManager.rotateCameraDown(tpf);
             camMoved = true;
         }
         if(camMoved){
-            droneCameraManager.getCameraNode().updateGeometricState();
+            usedCameraManager.getCameraNode().updateGeometricState();
         }
     }
 }
