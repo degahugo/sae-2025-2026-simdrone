@@ -61,6 +61,7 @@ public class SelectionDroneController {
             controller.setClient(client);
             controller.setDroneId(selectedDrone.getDroneId());
             controller.setConfiguration(configuration);
+            controller.installKeyboardControls(scene);
 
             Stage stage = (Stage) droneComboBox.getScene().getWindow();
             /*
