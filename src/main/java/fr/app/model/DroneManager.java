@@ -83,8 +83,7 @@ public class DroneManager {
         this.frontCameraManager.setMaxYaw(maxYaw);
         this.frontCameraManager.setMaxPitch(maxPitch);
         if(name.equals("Guardian")){
-            Camera rearCam = this.cam.clone();
-            this.rearCameraManager = new DroneCameraManager(rearCam, drone, true);
+            this.rearCameraManager = new DroneCameraManager(cam, drone, true);
             this.rearCameraManager.setCameraOffset(rearCamOffset);
             this.rearCameraManager.setMaxYaw(maxRearYaw);
             this.rearCameraManager.setMaxPitch(maxRearPitch);

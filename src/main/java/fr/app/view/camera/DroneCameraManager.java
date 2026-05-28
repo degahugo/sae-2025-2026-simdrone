@@ -51,6 +51,12 @@ public class DroneCameraManager {
 
         this.cameraNode = new CameraNode("CameraNode",this.cam);
         this.cameraNode.setControlDir(CameraControl.ControlDirection.SpatialToCamera);
+        if (isRearCam) {
+            // On crée un quaternion de 180 degrés sur l'axe Y (lacet / Yaw)
+            Quaternion flip180 = new Quaternion().fromAngleAxis(FastMath.PI, Vector3f.UNIT_Y);
+            // On l'applique comme rotation de base du Node
+            this.cameraNode.setLocalRotation(flip180);
+        }
         drone.getDroneSpatial().attachChild(this.cameraNode);
 
         // Offset initial (compatible avec develop)
@@ -93,9 +99,15 @@ public class DroneCameraManager {
      * Applique la rotation calculé par les méthodes précédentes sur la caméra
      */
     private void applyRotation(){
-        float finalYaw = isRearCam ? cameraYaw + FastMath.PI : cameraYaw;
         Quaternion localRotation = new Quaternion().fromAngles(cameraPitch, cameraYaw, 0f);
-        cameraNode.setLocalRotation(localRotation);
+
+        if (isRearCam) {
+            // On combine la rotation initiale de 180° avec le PAN/TILT actuel
+            Quaternion flip180 = new Quaternion().fromAngleAxis(FastMath.PI, Vector3f.UNIT_Y);
+            this.cameraNode.setLocalRotation(flip180.mult(localRotation));
+        } else {
+            this.cameraNode.setLocalRotation(localRotation);
+        }
     }
 
     /**
@@ -147,8 +159,10 @@ public class DroneCameraManager {
             this.cameraNode.setCamera(this.cam);
             this.cameraNode.setEnabled(true);
         } else {
-            // On retire la caméra du node et on la désactive
-            this.cameraNode.setCamera(null);
+            // On retire la caméra du node et on la désactive uniquement si c'est bien celle qu'on veut détacher
+            if (this.cameraNode.getCamera() == this.cam) {
+                this.cameraNode.setCamera(null);
+            }
             this.cameraNode.setEnabled(false);
         }
     }
