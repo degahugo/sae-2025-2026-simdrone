@@ -45,6 +45,7 @@ public class DashboardController {
     private double radarRangeMeters = 100.0;
     @FXML private Label radarRangeLabel;
     @FXML private ImageView cameraPreviewView;
+    @FXML private StackPane cameraPreviewPane;
 
     // ── Barre supérieure
     @FXML private Label networkLabel;
@@ -151,6 +152,10 @@ public class DashboardController {
         cameraView.setManaged(false);
         cameraView.fitWidthProperty().bind(cameraPane.widthProperty());
         cameraView.fitHeightProperty().bind(cameraPane.heightProperty());
+
+
+        cameraPreviewView.fitWidthProperty().bind(cameraPreviewPane.widthProperty());
+        cameraPreviewView.fitHeightProperty().bind(cameraPreviewPane.heightProperty());
 
     }
 

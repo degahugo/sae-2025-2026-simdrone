@@ -735,7 +735,10 @@
                 <!-- CAMÉRA MINIATURE -->
                 <Label text="CAMÉRA"
                        style="-fx-text-fill: #475569; -fx-font-size: 9px; -fx-font-weight: bold;"/>
-                <StackPane prefHeight="90"
+                <StackPane fx:id="cameraPreviewPane"
+                           minHeight="90"
+                           prefHeight="90"
+                           maxHeight="90"
                            style="-fx-background-color: #020617;
                   -fx-border-color: #1e3a5f;
                   -fx-border-width: 1;">
@@ -743,8 +746,7 @@
                     <ImageView fx:id="cameraPreviewView"
                                preserveRatio="false"
                                smooth="true"
-                               fitWidth="190"
-                               fitHeight="90"/>
+                               managed="false"/>
 
                     <Label text="APERÇU CAMÉRA 1"
                            StackPane.alignment="TOP_CENTER"
