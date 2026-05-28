@@ -5,6 +5,7 @@ import com.jme3.font.BitmapText;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.scene.*;
 import com.jme3.system.AppSettings;
+import com.jme3.water.WaterFilter;
 import fr.app.controller.DroneCameraController;
 import fr.app.model.environment.EnvironmentConditions;
 import fr.app.model.environment.EnvironmentConditionsManager;
@@ -53,6 +54,7 @@ public class Main extends SimpleApplication {
     private FilterPostProcessor fpp;
     private Sensor sensor;
     private WaterFilterManager waterFilterManager;
+    private WaterFilter waterFilter;
     private TemperatureSensor temperatureSensor;
     private EnvironmentConditionsManager environmentConditionsManager;
 
@@ -103,7 +105,7 @@ public class Main extends SimpleApplication {
 
         flyCam.setEnabled(false);
         // Réduit la distance minimale d'affichage de la caméra pour ne plus voir à travers les murs ou le sol en s'approchant
-        cam.setFrustumPerspective(45f, (float) cam.getWidth() / cam.getHeight(), 0.01f, 1000f);
+        cam.setFrustumPerspective(45f, (float) cam.getWidth() / cam.getHeight(), 0.05f, 1000f);
         inputManager.setCursorVisible(true);
         setPauseOnLostFocus(false);
         PhysicsEngine physicsEngine = new PhysicsEngine(this, this.model, this.guiManager, showMeshWireframe);
@@ -151,7 +153,7 @@ public class Main extends SimpleApplication {
             //physicsEngine.SpawnTestCube(rootNode, -4f, 15f, 0f, ColorRGBA.Red);
             //physicsEngine.SpawnTestCube(rootNode, 0f, 2f, 0f, ColorRGBA.Yellow);
             // Create a drone
-            String droneName = "BR2R4";
+            String droneName = "Guardian";
 
             if (configuration != null && configuration.getDroneType() != null) {
                 droneName = configuration.getDroneType().getSimulatorName();
@@ -166,7 +168,10 @@ public class Main extends SimpleApplication {
             this.drone = droneManager.getDrone();
             // Creates the water filter
             this.waterFilterManager = new WaterFilterManager(fpp, viewPort, rootNode, model);
+            this.waterFilter = waterFilterManager.getWaterFilter();
             this.waterDistortionManager = new WaterDistortionManager(fpp, viewPort, droneManager.getDrone(), model);
+            // Ajoute les filtres au viewport
+            viewPort.addProcessor(fpp);
             // Then adding the sensors
             this.sensorManager = new SensorManager(drone, lightingManager, waterFilterManager);
             sensorManager.initSensors();

@@ -37,7 +37,6 @@ public class WaterDistortionManager {
         // =====================================
         // FILTER POST PROCESSOR
         fpp.addFilter(distortionFilter);
-        viewPort.addProcessor(fpp);
     }
 
     /**
@@ -55,9 +54,9 @@ public class WaterDistortionManager {
             //test immersion, si immergée on continue
             //test immersion, si immergée on continue
 
-        this.profondeur = waterHeight - droneHeight;
-        this.intensity = Math.min(profondeur * 0.03f, 0.35f);
-        // test immersion, si immergée on continue
+            this.profondeur = waterHeight - droneHeight;
+            this.intensity = Math.min(profondeur * 0.03f, 0.35f);
+            // test immersion, si immergée on continue
             //System.out.println("profondeur : " + profondeur);
             //System.out.println("intensity : "+intensity);
             if (Math.abs(profondeur - lastProfondeur) > 0.01f || Math.abs(intensity - lastIntensity) > 0.001f) {

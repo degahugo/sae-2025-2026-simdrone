@@ -26,7 +26,7 @@ public class WaterFilterManager {
         waterFilter.setWaterHeight(model.getWaterHeight());
         waterFilter.setSpeed(model.getWaterSpeed());
         fpp.addFilter(waterFilter);
-        viewPort.addProcessor(fpp);
+        waterFilter.setUseRefraction(true);
     }
 
     public void updateUnderwaterEffect(float depth) {
@@ -34,4 +34,6 @@ public class WaterFilterManager {
         waterFilter.setWaterColor(new ColorRGBA(0f, 0.1f * intensity, 0.2f * intensity, 1f));
         waterFilter.setDeepWaterColor(new ColorRGBA(0f, 0.03f * intensity, 0.08f * intensity, 1f));
     }
+
+    public WaterFilter getWaterFilter(){return this.waterFilter;}
 }

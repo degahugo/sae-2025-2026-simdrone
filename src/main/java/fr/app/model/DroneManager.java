@@ -35,12 +35,21 @@ public class DroneManager {
     public void CreateDrone(String name){
         String droneName;
         Vector3f camOffset;
+        float maxYaw;
+        float maxPitch;
+        // On met le bon nom de drone
+        // On règle l'offset de la caméra pour bien la placer
+        // On définit les limites de rotation de la caméra
         if(name=="BR2R4"){
             droneName = "bluerobotics/br2r4/br2-r4-vehicle.j3o";
             camOffset = new Vector3f(0f, 0f, 0.205f);
+            maxYaw = 0f;
+            maxPitch = 90f;
         } else{
             droneName = "subseatech/guardian/guardian-vehicle.j3o";
             camOffset = new Vector3f(0f, 0f, 0.4f);
+            maxYaw = 90f;
+            maxPitch = 90f;
         }
         Node droneNode = new Node("Drone");
         Spatial droneModel = assetManager.loadModel("vehicle/" + droneName);
@@ -54,8 +63,10 @@ public class DroneManager {
         this.droneController = new DroneController(inputManager, drone, model, currentMatrix);
         this.droneController.setUpKeys();
         this.droneCameraManager = new DroneCameraManager(cam, drone);
+        // On applique l'offset de la caméra pour bien la placer et ses limites de rotation
         this.droneCameraManager.setCameraOffset(camOffset);
-        //this.droneCameraManager = new DroneCameraManager(cam, drone);
+        this.droneCameraManager.setMaxYaw(maxYaw);
+        this.droneCameraManager.setMaxPitch(maxPitch);
     }
 
     public Drone getDrone(){
