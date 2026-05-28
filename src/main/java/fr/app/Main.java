@@ -2,6 +2,14 @@ package fr.app;
 
 import com.jme3.app.SimpleApplication;
 import com.jme3.font.BitmapText;
+import com.jme3.app.SimpleApplication;
+import com.jme3.input.KeyInput;
+import com.jme3.input.controls.ActionListener;
+import com.jme3.input.controls.KeyTrigger;
+import com.jme3.light.SpotLight;
+import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
+import com.jme3.math.Vector3f;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.scene.*;
 import com.jme3.system.AppSettings;
@@ -77,6 +85,8 @@ public class Main extends SimpleApplication {
     // Captures vidéo par droneId
     private final ConcurrentHashMap<String, DroneFrameCapture> frameCaptures = new ConcurrentHashMap<>();
     private SensorManager sensorManager;
+    private SpotLight flashlight;
+    private boolean flashlightEnabled = true;
 
 
     public static void main(String[] args) {
@@ -106,7 +116,7 @@ public class Main extends SimpleApplication {
         setPauseOnLostFocus(false);
         PhysicsEngine physicsEngine = new PhysicsEngine(this, this.model, this.guiManager, showMeshWireframe);
 
-        int terrainId = 1;
+        int terrainId = 3;
         environmentConditions = EnvironmentConditions.NORMAL_CURRENT;
         environmentVisibility = EnvironmentConditions.VERY_GOOD_VISIBILITY;
 
@@ -114,7 +124,7 @@ public class Main extends SimpleApplication {
         if (configuration != null
                 && configuration.getEnvironmentType() != null
                 && configuration.getCondition() != null
-                && configuration.getVisibility() != null) {
+               && configuration.getVisibility() != null) {
             terrainId = configuration.getEnvironmentType().getTerrainId();
             environmentConditions = configuration.getCondition();
             environmentVisibility = configuration.getVisibility();
@@ -173,6 +183,10 @@ public class Main extends SimpleApplication {
             if(showCurrentDebug) currentDebugView.showCurrentGrid(0.5f);
             guiManager.RemoveLIGUI(testText);
 
+            initFlashlight();
+            inputManager.addMapping("ToggleFlashlight", new KeyTrigger(KeyInput.KEY_P));
+            inputManager.addListener(actionListener, "ToggleFlashlight");
+
             // End of the loading, will execute the simpleUpdate
             loading = false;
             initialized = true;
@@ -183,6 +197,22 @@ public class Main extends SimpleApplication {
         //System.out.println("[Simulation] Initialisation terminée.");
 
 
+    }
+
+    private void initFlashlight() {
+
+        flashlight = new SpotLight();
+
+        flashlight.setColor(new ColorRGBA(1f, 0.95f, 0.8f, 1f).mult(120f));
+        flashlight.setSpotRange(300f);
+
+        flashlight.setSpotInnerAngle(35f * FastMath.DEG_TO_RAD);
+        flashlight.setSpotOuterAngle(60f * FastMath.DEG_TO_RAD);
+
+        flashlight.setPosition(new Vector3f(0, 20, 0));
+        flashlight.setDirection(Vector3f.UNIT_Y.negate());
+
+        rootNode.addLight(flashlight);
     }
     public boolean isInitialized() {
         return initialized;
@@ -282,6 +312,13 @@ public class Main extends SimpleApplication {
 
             dernierStatut.set(s);
         }
+        if (flashlightEnabled && drone != null) {
+            Spatial droneSpatial = drone.getDroneSpatial();
+            Vector3f forward = droneSpatial.getWorldRotation().mult(Vector3f.UNIT_Z);
+            Vector3f lightPosition = droneSpatial.getWorldTranslation().add(forward.mult(20f)).add(0, 5f, 0);
+            flashlight.setPosition(lightPosition);
+            flashlight.setDirection(forward.normalize());
+        }
 
         if (drone.getBattery() != null) {
             float consumption = 0.05f * tpf;
@@ -292,8 +329,26 @@ public class Main extends SimpleApplication {
             //retire de l'énergie à la batterie
             //System.out.println("Batterie : " + drone.getBattery().getPercentage() + "%");
         }
+
+        System.out.println("FLASH POS = " + flashlight.getPosition());
+        System.out.println("FLASH DIR = " + flashlight.getDirection());
+        System.out.println("DRONE POS = " + drone.getDroneSpatial().getWorldTranslation());
     }
 
+
+    private final ActionListener actionListener = (name, isPressed, tpf) -> {
+
+        if (name.equals("ToggleFlashlight") && !isPressed) {
+
+            flashlightEnabled = !flashlightEnabled;
+
+            if (flashlightEnabled) {
+                rootNode.addLight(flashlight);
+            } else {
+                rootNode.removeLight(flashlight);
+            }
+        }
+    };
 
     public void executeNetworkCommand(String droneId, PilotCommand command) {
 

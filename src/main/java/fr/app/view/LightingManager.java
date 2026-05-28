@@ -31,7 +31,7 @@ public class LightingManager {
      */
     public void initLighting() {
         // Set up scene lighting
-        PointLight lamp_light = new PointLight();
+       /* PointLight lamp_light = new PointLight();
         lamp_light.setColor(ColorRGBA.White);
         lamp_light.setRadius(4f);
         lamp_light.setPosition(new Vector3f(0.0f, 0.0f, 2.0f));
@@ -45,17 +45,17 @@ public class LightingManager {
         spot.setColor(ColorRGBA.White);                    // light color
         spot.setPosition(cam.getLocation());               // shine from camera loc
         spot.setDirection(cam.getDirection());             // shine forward from camera loc
-        rootNode.addLight(spot);
+        rootNode.addLight(spot);*/
 
         // Set up the ambient light
         ambientLight = new AmbientLight();
-        ambientLight.setColor(ColorRGBA.White);
+        ambientLight.setColor(ColorRGBA.Black);
         rootNode.addLight(ambientLight);
         //on peut maintenant modifier la lumière depuis n'importe quelle méthode
 
         // Set up the directionnal light
         sunLight = new DirectionalLight();
-        sunLight.setColor(ColorRGBA.White);
+        sunLight.setColor(ColorRGBA.Black);
         sunLight.setDirection(new Vector3f(-.5f,-.5f,-.5f).normalizeLocal());
         rootNode.addLight(sunLight);
 

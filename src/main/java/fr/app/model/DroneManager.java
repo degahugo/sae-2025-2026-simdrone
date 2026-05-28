@@ -45,7 +45,7 @@ public class DroneManager {
         Node droneNode = new Node("Drone");
         Spatial droneModel = assetManager.loadModel("vehicle/" + droneName);
         // Empêche la caméra de voir le drone
-        droneModel.setQueueBucket(Bucket.Gui);
+       // droneModel.setQueueBucket(Bucket.Gui);
         droneNode.attachChild(droneModel);
         droneNode.move(0f, 1f, 0f);
         rootNode.attachChild(droneNode);
