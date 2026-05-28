@@ -1,4 +1,4 @@
-package fr.app.view;
+package fr.app.view.camera;
 
 import com.jme3.input.FlyByCamera;
 import com.jme3.math.Vector3f;

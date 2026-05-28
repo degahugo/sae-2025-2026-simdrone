@@ -8,7 +8,7 @@ import com.jme3.renderer.queue.RenderQueue.Bucket;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import fr.app.controller.DroneController;
-import fr.app.view.DroneCameraManager;
+import fr.app.view.camera.DroneCameraManager;
 
 public class DroneManager {
     private AssetManager assetManager;

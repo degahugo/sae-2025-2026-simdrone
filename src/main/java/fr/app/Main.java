@@ -5,6 +5,7 @@ import com.jme3.font.BitmapText;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.scene.*;
 import com.jme3.system.AppSettings;
+import fr.app.controller.DroneCameraController;
 import fr.app.model.environment.EnvironmentConditions;
 import fr.app.model.environment.EnvironmentConditionsManager;
 import fr.app.model.*;
@@ -12,7 +13,7 @@ import fr.app.view.*;
 import fr.app.model.DroneManager;
 import fr.app.model.PhysicsEngine;
 import fr.app.model.WorldView;
-import fr.app.view.CameraManager;
+import fr.app.view.camera.CameraManager;
 import fr.app.view.GUIManager;
 import fr.app.model.sensor.*;
 import fr.app.model.sensor.Sensor;
@@ -21,7 +22,7 @@ import fr.app.view.LightingManager;
 import fr.app.view.WaterFilterManager;
 import fr.app.controller.DroneController;
 import fr.app.model.Drone;
-import fr.app.view.DroneCameraManager;
+import fr.app.view.camera.DroneCameraManager;
 import fr.app.view.WaterDistortionManager;
 import fr.app.model.PilotCommand;
 import fr.app.model.DroneStatus;
@@ -46,6 +47,7 @@ public class Main extends SimpleApplication {
     private Drone drone;
     private DroneController droneController;
     private DroneCameraManager droneCameraManager;
+    private DroneCameraController droneCameraController;
     private WaterDistortionManager waterDistortionManager;
     private DroneManager droneManager;
     private FilterPostProcessor fpp;
@@ -158,6 +160,7 @@ public class Main extends SimpleApplication {
             droneManager.CreateDrone(droneName);            // Gets the manager and controller te be used here
             this.droneCameraManager = droneManager.getDroneCameraManager();
             this.droneController = droneManager.getDroneController();
+            this.droneCameraController = new DroneCameraController(droneCameraManager, droneController);
             // Adding captors
             // Getting the drone
             this.drone = droneManager.getDrone();
@@ -193,12 +196,14 @@ public class Main extends SimpleApplication {
         if (loading) {
             return;
         }
-
         if (droneController != null) {
             droneController.updateMovement(tpf);
         }
-        // --- Free-Look Camera ---
-        if (droneController != null && droneCameraManager != null) {
+        if(droneCameraController != null){
+            droneCameraController.update(tpf);
+        }
+        // --- Free-Look Camera --- de fatou, je ne sais pas ce que ça fait du coup j'ai commenté
+        /*if (droneController != null && droneCameraManager != null) {
 
             if (droneController.isCamLeftIntention()) {
                 droneCameraManager.rotateCameraLeft(tpf);
@@ -212,12 +217,10 @@ public class Main extends SimpleApplication {
             if (droneController.isCamDownIntention()) {
                 droneCameraManager.rotateCameraDown(tpf);
             }
-
         }
-
         if (droneCameraManager != null) {
             droneCameraManager.update(tpf);
-        }
+        }*/
         if (waterDistortionManager != null) {
             waterDistortionManager.update();
         }

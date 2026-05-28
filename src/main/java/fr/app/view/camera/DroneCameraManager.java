@@ -1,10 +1,12 @@
-package fr.app.view;
+package fr.app.view.camera;
 
+import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
-import com.jme3.scene.Node;
+import com.jme3.scene.CameraNode;
 
+import com.jme3.scene.control.CameraControl;
 import fr.app.model.Drone;
 
 /**
@@ -17,7 +19,7 @@ public class DroneCameraManager {
 
     private final Camera cam;
     private final Drone drone;
-    private final Node cameraNode;
+    private CameraNode cameraNode;
 
     // Offset caméra (par défaut : derrière + légèrement au-dessus)
     // develop utilisait (0,0,0) → on garde ton offset mais on permet de le changer
@@ -34,34 +36,62 @@ public class DroneCameraManager {
     // Vitesse de rotation du free-look
     private static final float ROTATION_SPEED = 1.5f;
 
+    // Variables différentes de celles de fatou parce que je ne sais pas ce qu'elle a fait
+    private final float rotationSpeed = 0.5f;
+    private float maxPitch = 90f * FastMath.DEG_TO_RAD;
+    private float maxYaw = 90f * FastMath.DEG_TO_RAD;
+
     public DroneCameraManager(Camera cam, Drone drone) {
         this.cam = cam;
         this.drone = drone;
 
-        this.cameraNode = new Node("CameraNode_" + drone.getId());
-        drone.getDroneSpatial().attachChild(cameraNode);
+        this.cameraNode = new CameraNode("CameraNode",this.cam);
+
+        this.cameraNode.setControlDir(CameraControl.ControlDirection.SpatialToCamera);
+
+        drone.getDroneSpatial().attachChild(this.cameraNode);
 
         // Offset initial (compatible avec develop)
-        cameraNode.setLocalTranslation(cameraOffset);
+        this.cameraNode.setLocalTranslation(this.cameraOffset);
     }
 
     // --- Contrôles Free-Look ---
     public void rotateCameraLeft(float tpf) {
-        cameraYaw += ROTATION_SPEED * tpf;
+        cameraYaw += rotationSpeed * tpf;
+        cameraYaw = Math.min(cameraYaw, maxYaw);
+        applyRotation();
+        //cameraNode.rotate(0, rotationSpeed * tpf, 0);
     }
 
     public void rotateCameraRight(float tpf) {
-        cameraYaw -= ROTATION_SPEED * tpf;
+        cameraYaw -= rotationSpeed * tpf;
+        cameraYaw = Math.max(cameraYaw, -maxYaw);
+        applyRotation();
+        //cameraNode.rotate(0, -rotationSpeed * tpf, 0);
     }
 
     public void rotateCameraUp(float tpf) {
-        cameraPitch += ROTATION_SPEED * tpf;
-        cameraPitch = Math.min(cameraPitch, MAX_PITCH);
+        cameraPitch -= rotationSpeed * tpf;
+        // Bloquer l'angle vers le haut
+        cameraPitch = Math.max(cameraPitch, -maxPitch);
+        applyRotation();
+        //cameraNode.rotate(-rotationSpeed * tpf, 0, 0);
     }
 
     public void rotateCameraDown(float tpf) {
-        cameraPitch -= ROTATION_SPEED * tpf;
-        cameraPitch = Math.max(cameraPitch, MIN_PITCH);
+        cameraPitch += rotationSpeed * tpf;
+        // Bloquer l'angle vers le bas
+        cameraPitch = Math.min(cameraPitch, maxPitch);
+        applyRotation();
+        //cameraNode.rotate(rotationSpeed * tpf, 0, 0);
+    }
+
+    /**
+     * Applique la rotation calculé par les méthodes précédentes sur la caméra
+     */
+    private void applyRotation(){
+        Quaternion localRotation = new Quaternion().fromAngles(cameraPitch, cameraYaw, 0f);
+        cameraNode.setLocalRotation(localRotation);
     }
 
     /**
@@ -70,7 +100,7 @@ public class DroneCameraManager {
      * - Rotation = rotation du drone + free-look
      */
     public void update(float tpf) {
-
+/*
         // Rotation complète du drone
         Quaternion droneRotation = drone.getDroneSpatial().getWorldRotation();
 
@@ -85,7 +115,7 @@ public class DroneCameraManager {
         Vector3f basePosition = cameraNode.getWorldTranslation();
 
         cam.setLocation(basePosition);
-        cam.setRotation(finalRotation);
+        cam.setRotation(finalRotation);*/
     }
 
     /** Change l’offset de la caméra (compatible develop) */
@@ -98,5 +128,25 @@ public class DroneCameraManager {
     /** Caméra JME3 utilisée par DroneFrameCapture */
     public Camera getCamera() {
         return cam;
+    }
+
+    public CameraNode getCameraNode(){
+        return cameraNode;
+    }
+
+    /**
+     * Définit l'angle maximum que la caméra peut prendre en assiette.
+     * @param angle valeur par côté en degrés, donc si on met 90, la caméra pourra aller de 90° en haut et 90 en bas
+     */
+    public void setMaxPitch(float angle){
+        this.maxPitch = angle * FastMath.DEG_TO_RAD;
+    }
+
+    /**
+     * Définit l'angle maximum que la caméra peut prendre en lacet.
+     * @param angle valeur par côté en degrés, donc si on met 90, la caméra pourra aller de 90° à gauche et 90 à droite
+     */
+    public void setMaxYaw(float angle){
+        this.maxYaw = angle * FastMath.DEG_TO_RAD;
     }
 }
