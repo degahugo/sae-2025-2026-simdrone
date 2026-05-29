@@ -1,6 +1,8 @@
 package fr.app.view;
 
 import com.jme3.asset.AssetManager;
+import com.jme3.math.Quaternion;
+import com.jme3.math.Vector3f;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.Renderer;
@@ -26,6 +28,15 @@ import com.jme3.renderer.queue.RenderQueue;
 import fr.app.model.Drone;
 import fr.app.model.WorldView;
 
+/**
+ * Capture vidéo off-screen pour un drone.
+ *
+ * Différence avec le mono-client :
+ *   Avant : preFrame() copiait la caméra principale JME3 (cam) -> partagée entre tous les drones.
+ *   Maintenant : preFrame() lit la position/rotation depuis le DroneCameraManager DÉDIÉ
+ *                à ce drone (via cameraNode + droneRotation), indépendamment des autres.
+ *
+ */
 public class DroneFrameCapture implements SceneProcessor {
 
     public static final int   LARGEUR      = 320;
@@ -36,9 +47,11 @@ public class DroneFrameCapture implements SceneProcessor {
     private final FrameBuffer frameBuffer;
     private final ByteBuffer  pixelBuffer;
     private final String      droneId;
-    private final Camera      cameraLive;
     private       Renderer    renderer;
     private       RenderManager renderManager;
+
+    // Référence au DroneCameraManager de CE drone pour lire sa position dans preFrame()
+    private final DroneCameraManager droneCameraManager;
 
     private final AtomicReference<byte[]> derniereFrame = new AtomicReference<>(null);
 
@@ -49,14 +62,17 @@ public class DroneFrameCapture implements SceneProcessor {
                              Node guiNode, // pas utilisé
                              AssetManager assetManager,
                              WorldView model,
-                             Drone drone) {
+                             Drone drone,
+                             DroneCameraManager droneCameraManager) {
         this.droneId       = droneId;
-        this.cameraLive    = cameraDrone;
+        this.droneCameraManager = droneCameraManager;
         this.renderManager = renderManager;
         this.renderer      = renderManager.getRenderer();
 
+        // La position sera écrasée à chaque preFrame() depuis droneCameraManager
         Camera camOffScreen = cameraDrone.clone();
         camOffScreen.resize(LARGEUR, HAUTEUR, true);
+        camOffScreen.setName("OffScreenCam_" + droneId);
 
         // RGBA8 au lieu de RGB8 : plus fiable avec readFrameBuffer() en JME3 3.7
         frameBuffer = new FrameBuffer(LARGEUR, HAUTEUR, 1);
@@ -76,7 +92,7 @@ public class DroneFrameCapture implements SceneProcessor {
         viewPortOffScreen.addProcessor(this);
         //viewPortOffScreen.attachScene(guiNode);
         viewPortOffScreen.setEnabled(true);
-        viewPortOffScreen.addProcessor(this);
+
 
         // 4 octets par pixel (RGBA8)
         pixelBuffer = BufferUtils.createByteBuffer(LARGEUR * HAUTEUR * 4);
@@ -99,8 +115,15 @@ public class DroneFrameCapture implements SceneProcessor {
     public void preFrame(float tpf) {
         // Synchroniser la caméra off-screen avec la caméra live du drone
         Camera camOffScreen = viewPortOffScreen.getCamera();
-        camOffScreen.setLocation(cameraLive.getLocation());
-        camOffScreen.setRotation(cameraLive.getRotation());
+
+        // Lire position et rotation depuis le cameraNode du drone concerné
+        Node cameraNode = droneCameraManager.getCameraNode();
+        Quaternion droneRotation = droneCameraManager.getDrone().getDroneSpatial().getWorldRotation();
+        Quaternion manualRotation = droneCameraManager.getManualRotation();
+        Quaternion finalRotation  = droneRotation.mult(manualRotation);
+
+        camOffScreen.setLocation(cameraNode.getWorldTranslation());
+        camOffScreen.setRotation(finalRotation);
         camOffScreen.update();
     }
 

@@ -37,7 +37,10 @@ public class WaterDistortionManager {
         // =====================================
         // FILTER POST PROCESSOR
         fpp.addFilter(distortionFilter);
-        viewPort.addProcessor(fpp);
+        // N'ajouter le fpp au viewPort que s'il n'y est pas déjà
+        if (!viewPort.getProcessors().contains(fpp)) {
+            viewPort.addProcessor(fpp);
+        }
     }
 
     /**

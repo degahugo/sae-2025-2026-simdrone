@@ -99,4 +99,16 @@ public class DroneCameraManager {
     public Camera getCamera() {
         return cam;
     }
+
+    public Node getCameraNode() {
+        return cameraNode;
+    }
+
+    public Quaternion getManualRotation() {
+        return new Quaternion().fromAngles(cameraPitch, cameraYaw, 0f);
+    }
+
+    public Drone getDrone() {
+        return drone;
+    }
 }

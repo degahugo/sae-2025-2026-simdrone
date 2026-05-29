@@ -161,7 +161,7 @@ public class Serveur {
                     final DroneStatus[] statusHolder = new DroneStatus[1];
 
                     simulation.enqueue(() -> {
-                        statusHolder[0] = simulation.getDroneStatus(droneId);
+                        statusHolder[0] = simulation.getDroneStatusDirect(droneId);
                         return null;
                     }).get();
 
