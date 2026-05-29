@@ -381,12 +381,27 @@ public class PhysicsEngine{
                         PhysicsCollisionObject a = event.getObjectA();
                         PhysicsCollisionObject b = event.getObjectB();
 
+
                         if (a == dronePhysics || b == dronePhysics) {
 
                             drone.setCollisionDetected(true);
-                            drone.setCollisionMessage("Collision avec terrain ou obstacle");
+                            //drone.setCollisionMessage("Collision avec terrain ou obstacle");
 
-                            System.out.println("[PHYSICS] Collision détectée");
+                            //méthode pour repositionner le drone après collision pas très loin de la collision
+                            Vector3f pos = dronePhysics.getPhysicsLocation();
+                            dronePhysics.setPhysicsLocation(pos.add(0f, 0.01f, 0f));
+
+                            dronePhysics.setLinearVelocity(Vector3f.ZERO);
+                            dronePhysics.setAngularVelocity(Vector3f.ZERO);
+
+                            Quaternion currentRot = dronePhysics.getPhysicsRotation();
+                            float[] angles = currentRot.toAngles(null);
+                            Quaternion corrected = new Quaternion();
+
+                            //le drone se remet droit après collision
+                            corrected.fromAngles(0f, angles[1], 0f);
+                            dronePhysics.setPhysicsRotation(corrected);
+                            System.out.println("Drone dégagé de la collision");
                         }
                     }
                 }
