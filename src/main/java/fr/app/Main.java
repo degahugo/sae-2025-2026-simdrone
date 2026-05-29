@@ -85,8 +85,8 @@ public class Main extends SimpleApplication {
     // Captures vidéo par droneId
     private final ConcurrentHashMap<String, DroneFrameCapture> frameCaptures = new ConcurrentHashMap<>();
     private SensorManager sensorManager;
-    private SpotLight flashlight;
-    private boolean flashlightEnabled = true;
+
+
 
 
     public static void main(String[] args) {
@@ -183,9 +183,6 @@ public class Main extends SimpleApplication {
             if(showCurrentDebug) currentDebugView.showCurrentGrid(0.5f);
             guiManager.RemoveLIGUI(testText);
 
-            initFlashlight();
-            inputManager.addMapping("ToggleFlashlight", new KeyTrigger(KeyInput.KEY_P));
-            inputManager.addListener(actionListener, "ToggleFlashlight");
 
             // End of the loading, will execute the simpleUpdate
             loading = false;
@@ -199,21 +196,7 @@ public class Main extends SimpleApplication {
 
     }
 
-    private void initFlashlight() {
 
-        flashlight = new SpotLight();
-
-        flashlight.setColor(new ColorRGBA(1f, 0.95f, 0.8f, 1f).mult(120f));
-        flashlight.setSpotRange(300f);
-
-        flashlight.setSpotInnerAngle(35f * FastMath.DEG_TO_RAD);
-        flashlight.setSpotOuterAngle(60f * FastMath.DEG_TO_RAD);
-
-        flashlight.setPosition(new Vector3f(0, 20, 0));
-        flashlight.setDirection(Vector3f.UNIT_Y.negate());
-
-        rootNode.addLight(flashlight);
-    }
     public boolean isInitialized() {
         return initialized;
     }
@@ -253,7 +236,8 @@ public class Main extends SimpleApplication {
         }
 
         if (sensorManager != null) {
-            sensorManager.updateSensors();}
+            sensorManager.updateSensors();
+        }
         if (currentMatrix != null) {
             currentTimer += tpf; // On cumule le temps écoulé depuis la dernière frame
             if (currentTimer >= TIME_BETWEEN_UPDATES) {
@@ -312,13 +296,6 @@ public class Main extends SimpleApplication {
 
             dernierStatut.set(s);
         }
-        if (flashlightEnabled && drone != null) {
-            Spatial droneSpatial = drone.getDroneSpatial();
-            Vector3f forward = droneSpatial.getWorldRotation().mult(Vector3f.UNIT_Z);
-            Vector3f lightPosition = droneSpatial.getWorldTranslation().add(forward.mult(20f)).add(0, 5f, 0);
-            flashlight.setPosition(lightPosition);
-            flashlight.setDirection(forward.normalize());
-        }
 
         if (drone.getBattery() != null) {
             float consumption = 0.05f * tpf;
@@ -330,25 +307,21 @@ public class Main extends SimpleApplication {
             //System.out.println("Batterie : " + drone.getBattery().getPercentage() + "%");
         }
 
-        System.out.println("FLASH POS = " + flashlight.getPosition());
-        System.out.println("FLASH DIR = " + flashlight.getDirection());
-        System.out.println("DRONE POS = " + drone.getDroneSpatial().getWorldTranslation());
+        if (drone != null && lightingManager != null) {
+            Spatial droneSpatial = drone.getDroneSpatial();
+
+            // 1. Récupérer le vecteur de direction avant du drone (axe Z)
+            Vector3f forward = droneSpatial.getWorldRotation().mult(Vector3f.UNIT_Z);
+
+            // 2. Placer la lumière juste devant le nez du drone (2 unités en avant)
+            Vector3f lightPosition = droneSpatial.getWorldTranslation().add(forward.mult(2f));
+
+            // 3. Appliquer directement à la vraie SpotLight physique
+            lightingManager.getFlashlight().setPosition(lightPosition);
+            lightingManager.getFlashlight().setDirection(forward.normalize());
+        }
     }
 
-
-    private final ActionListener actionListener = (name, isPressed, tpf) -> {
-
-        if (name.equals("ToggleFlashlight") && !isPressed) {
-
-            flashlightEnabled = !flashlightEnabled;
-
-            if (flashlightEnabled) {
-                rootNode.addLight(flashlight);
-            } else {
-                rootNode.removeLight(flashlight);
-            }
-        }
-    };
 
     public void executeNetworkCommand(String droneId, PilotCommand command) {
 

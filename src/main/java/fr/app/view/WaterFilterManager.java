@@ -3,6 +3,7 @@ package fr.app.view;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.post.FilterPostProcessor;
+import com.jme3.post.filters.FogFilter;
 import com.jme3.renderer.ViewPort;
 import com.jme3.scene.Node;
 import com.jme3.water.WaterFilter;
@@ -25,7 +26,16 @@ public class WaterFilterManager {
         this.waterFilter = new WaterFilter(rootNode, new Vector3f(-.5f,-.5f,-.5f));
         waterFilter.setWaterHeight(model.getWaterHeight());
         waterFilter.setSpeed(model.getWaterSpeed());
-        fpp.addFilter(waterFilter);
+       // fpp.addFilter(waterFilter);
+
+        // Crée un brouillard bleu/vert profond pour simuler l'opacité de l'eau
+        FogFilter waterFog = new FogFilter();
+        waterFog.setFogColor(new ColorRGBA(0.05f, 0.1f, 0.15f, 1.0f)); // Couleur de l'océan
+        waterFog.setFogDistance(60f);                                // Visibilité max (60 unités)
+        waterFog.setFogDensity(1.2f);                                // Densité de l'eau
+
+// Ajoute ce filtre à ton processeur post-process (fpp)
+        fpp.addFilter(waterFog);
         viewPort.addProcessor(fpp);
     }
 

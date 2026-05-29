@@ -19,6 +19,7 @@ public class LightingManager {
 
     private AmbientLight ambientLight;
     private DirectionalLight sunLight;
+    private SpotLight flashlight;
 
     public LightingManager(Node rootNode, Camera cam, AssetManager assetManager) {
         this.rootNode = rootNode;
@@ -30,6 +31,17 @@ public class LightingManager {
      * Configure the lighting
      */
     public void initLighting() {
+        // Configuration de la SpotLight (Lampe torche du drone)
+        flashlight = new SpotLight();
+        flashlight.setSpotRange(200f);                           // Longue portée sous l'eau
+        flashlight.setSpotInnerAngle(20f * FastMath.DEG_TO_RAD); // Cœur du faisceau
+        flashlight.setSpotOuterAngle(40f * FastMath.DEG_TO_RAD); // Bord du faisceau
+        // Couleur blanche/bleutée ultra intense (x150) pour contrer le WaterFilter
+        flashlight.setColor(new ColorRGBA(0.9f, 0.95f, 1.0f, 1.0f).mult(15f));
+        flashlight.setPosition(Vector3f.ZERO);
+        flashlight.setDirection(Vector3f.UNIT_Z);
+        rootNode.addLight(flashlight);
+
         // Set up scene lighting
        /* PointLight lamp_light = new PointLight();
         lamp_light.setColor(ColorRGBA.White);
@@ -49,20 +61,22 @@ public class LightingManager {
 
         // Set up the ambient light
         ambientLight = new AmbientLight();
-        ambientLight.setColor(ColorRGBA.Black);
+        ambientLight.setColor(ColorRGBA.White);
         rootNode.addLight(ambientLight);
         //on peut maintenant modifier la lumière depuis n'importe quelle méthode
 
         // Set up the directionnal light
         sunLight = new DirectionalLight();
-        sunLight.setColor(ColorRGBA.Black);
+        sunLight.setColor(ColorRGBA.White);
         sunLight.setDirection(new Vector3f(-.5f,-.5f,-.5f).normalizeLocal());
         rootNode.addLight(sunLight);
 
         rootNode.attachChild(SkyFactory.createSky(assetManager, "Textures/Sky/Bright/BrightSky.dds", SkyFactory.EnvMapType.CubeMap));
     }
 
-
+    public SpotLight getFlashlight() {
+        return flashlight;
+    }
 
     public void updateUnderwaterLighting(float depth) {
         float intensity = Math.max(0.05f, 1.0f - (depth * 0.02f));
