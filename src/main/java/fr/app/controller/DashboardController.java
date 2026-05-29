@@ -15,9 +15,8 @@ import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.shape.Circle;
-import javafx.scene.shape.Line;
-import javafx.scene.transform.Rotate;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 
@@ -42,6 +41,11 @@ public class DashboardController {
     @FXML private Circle radarPoint3;
     @FXML private Circle radarPoint4;
     @FXML private Circle radarPoint5;
+    private double radarScale = 4.0;
+    private double radarRangeMeters = 100.0;
+    @FXML private Label radarRangeLabel;
+    @FXML private ImageView cameraPreviewView;
+    @FXML private StackPane cameraPreviewPane;
 
     // ── Barre supérieure
     @FXML private Label networkLabel;
@@ -64,7 +68,8 @@ public class DashboardController {
     @FXML private Label batteryAutonomyLabel;
     @FXML private Label collisionLabel;
     @FXML private Label alertLabel;
-    @FXML private TextArea logArea;
+    @FXML private VBox logBox;
+    private static final int MAX_LOG_LINES = 50;
     @FXML private Label depthLeftLabel;
 
     // ── Centre caméra
@@ -155,6 +160,10 @@ public class DashboardController {
         cameraView.fitWidthProperty().bind(cameraPane.widthProperty());
         cameraView.fitHeightProperty().bind(cameraPane.heightProperty());
 
+
+        cameraPreviewView.fitWidthProperty().bind(cameraPreviewPane.widthProperty());
+        cameraPreviewView.fitHeightProperty().bind(cameraPreviewPane.heightProperty());
+
     }
 
     // Setters appelés depuis SelectionDroneController
@@ -234,6 +243,7 @@ public class DashboardController {
                 );
 
                 cameraView.setImage(image);
+                cameraPreviewView.setImage(image);
 
             } catch (Exception e) {
 
@@ -669,7 +679,7 @@ public class DashboardController {
             return;
         }
 
-        double scale = 4.0;
+        double scale = radarScale;
 
         double droneMapX = Math.max(-90, Math.min(90, status.getX() * scale));
         double droneMapY = Math.max(-90, Math.min(90, status.getZ() * scale));
@@ -707,6 +717,38 @@ public class DashboardController {
             radarPoint2.setTranslateX(droneMapX - 18);
             radarPoint2.setTranslateY(droneMapY + 12);
         }
+    }
+
+    @FXML
+    private void zoomRadarIn() {
+
+        radarScale = Math.min(10.0, radarScale + 1.0);
+
+        radarRangeMeters = Math.max(25.0, radarRangeMeters - 15.0);
+
+        if (radarRangeLabel != null) {
+            radarRangeLabel.setText(
+                    String.format("PORTÉE %.0f m", radarRangeMeters)
+            );
+        }
+
+        log("Zoom radar +");
+    }
+
+    @FXML
+    private void zoomRadarOut() {
+
+        radarScale = Math.max(1.0, radarScale - 1.0);
+
+        radarRangeMeters = Math.min(200.0, radarRangeMeters + 15.0);
+
+        if (radarRangeLabel != null) {
+            radarRangeLabel.setText(
+                    String.format("PORTÉE %.0f m", radarRangeMeters)
+            );
+        }
+
+        log("Zoom radar -");
     }
 
     private void updateNetworkStats() {
@@ -885,18 +927,41 @@ public class DashboardController {
     }
 
     @FXML
-    private void enableStabilizedMode() {
-        stabilizedMode = !stabilizedMode;
-        holdPositionMode = false;
+    private void rotateLeft() {
+        send(PilotCommand.ROTATELEFT);
+    }
 
-        if (stabilizedMode) {
-            currentCommand = PilotCommand.STOP;
-            log("Mode stabilisé activé");
-            setText(stateLabel, "Mode stabilisé");
-        } else {
-            log("Mode stabilisé désactivé");
-            setText(stateLabel, "En vol");
-        }
+    @FXML
+    private void rotateRight() {
+        send(PilotCommand.ROTATERIGHT);
+    }
+
+    @FXML
+    private void pitchUp() {
+        send(PilotCommand.PITCHUP);
+    }
+
+    @FXML
+    private void pitchDown() {
+        send(PilotCommand.PITCHDOWN);
+    }
+
+    @FXML
+    private void rollLeft() {
+        send(PilotCommand.ROLLLEFT);
+    }
+
+    @FXML
+    private void rollRight() {
+        send(PilotCommand.ROLLRIGHT);
+    }
+
+
+    @FXML
+    private void enableStabilizedMode() {
+        send(PilotCommand.TOGGLEHOVERMODE);
+        log("Mode stabilisé demandé");
+        setText(stateLabel, "Mode stabilisé");
     }
 
     @FXML
@@ -1027,20 +1092,78 @@ public class DashboardController {
     }
 
     private void log(String msg) {
+        if (logBox == null) return;
 
-        if (logArea == null) {
-            return;
+        String t = LocalTime.now().format(HH_MM_SS);
+
+        String color;
+        String prefix;
+        if (msg.contains("❌") || msg.contains("collision") || msg.contains("urgence") || msg.contains("ARRÊT")) {
+            color = "#ef4444"; prefix = "[ALERTE]";
+        } else if (msg.contains("⚠") || msg.contains("Courant") || msg.contains("ATTENTION") || msg.contains("Erreur")) {
+            color = "#f59e0b"; prefix = "[WARN] ";
+        } else if (msg.contains("OK") || msg.contains("lancée") || msg.contains("chargée") || msg.contains("branché")) {
+            color = "#22c55e"; prefix = "[INFO] ";
+        } else {
+            color = "#94a3b8"; prefix = "[LOG]  ";
         }
 
-        String t =
-                LocalTime.now()
-                        .format(HH_MM_SS);
+        final String finalColor = color;
+        final String finalPrefix = prefix;
 
-        logArea.appendText(
-                "[" + t + "] "
-                        + msg
-                        + "\n"
-        );
+        Platform.runLater(() -> {
+            HBox line = new HBox(6);
+
+            Label timeLabel = new Label(t);
+            timeLabel.setStyle("-fx-text-fill: #475569; -fx-font-size: 10px; -fx-font-family: monospace;");
+            timeLabel.setMinWidth(52);
+
+            Label prefixLabel = new Label(finalPrefix);
+            prefixLabel.setStyle("-fx-text-fill: " + finalColor + "; -fx-font-size: 10px; -fx-font-weight: bold; -fx-font-family: monospace;");
+            prefixLabel.setMinWidth(56);
+
+            Label msgLabel = new Label(msg);
+            msgLabel.setStyle("-fx-text-fill: #cbd5e1; -fx-font-size: 10px; -fx-font-family: monospace;");
+            msgLabel.setWrapText(true);
+
+            line.getChildren().addAll(timeLabel, prefixLabel, msgLabel);
+            logBox.getChildren().add(0, line);
+
+            if (logBox.getChildren().size() > MAX_LOG_LINES) {
+                logBox.getChildren().remove(MAX_LOG_LINES, logBox.getChildren().size());
+            }
+        });
+    }
+
+    public void installKeyboardControls(Scene scene) {
+
+        scene.setOnKeyPressed(event -> {
+            switch (event.getCode()) {
+                case W -> send(PilotCommand.FORWARD);
+                case S -> send(PilotCommand.BACKWARD);
+                case Q -> send(PilotCommand.LEFT);
+                case E -> send(PilotCommand.RIGHT);
+                case R -> send(PilotCommand.UP);
+                case F -> send(PilotCommand.DOWN);
+
+                case A -> send(PilotCommand.ROTATELEFT);
+                case D -> send(PilotCommand.ROTATERIGHT);
+
+                case I -> send(PilotCommand.PITCHUP);
+                case K -> send(PilotCommand.PITCHDOWN);
+
+                case J -> send(PilotCommand.ROLLLEFT);
+                case L -> send(PilotCommand.ROLLRIGHT);
+
+                case T -> send(PilotCommand.TOGGLEHOVERMODE);
+            }
+        });
+
+        scene.setOnKeyReleased(event -> {
+            switch (event.getCode()) {
+                case W, S, Q, E, R, F, A, D, I, K, J, L, T -> stopDrone();
+            }
+        });
     }
 
 

@@ -134,8 +134,19 @@ public class DroneController {
                 backwardIntention = false;
                 leftIntention = false;
                 rightIntention = false;
+                rotateLeftIntention = false;
+                rotateRightIntention = false;
                 upIntention = false;
                 downIntention = false;
+                pitchForwardIntention = false;
+                pitchBackwardIntention = false;
+                rollLeftIntention = false;
+                rollRightIntention = false;
+                toggleHoverModeIntention = false;
+                camLeftIntention = false;
+                camRightIntention = false;
+                camUpIntention = false;
+                camDownIntention = false;
                 break;
         }
     }
@@ -270,19 +281,22 @@ public class DroneController {
         // ⭐ FREE-LOOK NE TOUCHE PAS LA PHYSIQUE
 
         if (toggleHoverModeIntention) {
-            if (!wasHoverModeCalculated) {
-                isHoverModeOn = !isHoverModeOn;
-                if(isHoverModeOn){
-                    hoverHeight = min(drone.getDroneSpatial().getLocalTranslation().getY(),waterHeight);
-                    System.out.println("Hover at : " + hoverHeight);
-                }
-                System.out.println("Hover mode is : " + isHoverModeOn);
-                wasHoverModeCalculated = true;
-            }
-        } else {
-            wasHoverModeCalculated = false;
-        }
 
+            Vector3f angularVelocity = physicsControl.getAngularVelocity();
+            Vector3f totalTorqueStabilisation = new Vector3f();
+
+            StabiliseDroneAttitude(totalTorqueStabilisation, angularVelocity);
+
+            physicsControl.applyTorque(totalTorqueStabilisation.multLocal(8f));
+
+            physicsControl.setAngularVelocity(
+                    physicsControl.getAngularVelocity().mult(0.4f)
+            );
+
+            toggleHoverModeIntention = false;
+
+            System.out.println("Stabilisation ponctuelle du drone");
+        }
         Vector3f totalForce = new Vector3f();
         Vector3f forward = drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Z);
         Vector3f left = drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_X);

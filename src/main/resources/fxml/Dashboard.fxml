@@ -87,16 +87,16 @@
             </columnConstraints>
 
             <rowConstraints>
-                <RowConstraints percentHeight="46"/>
-                <RowConstraints percentHeight="32"/>
-                <RowConstraints percentHeight="22"/>
+                <RowConstraints percentHeight="52"/>
+                <RowConstraints percentHeight="34"/>
+                <RowConstraints percentHeight="14"/>
             </rowConstraints>
 
             <!--
                  GAUCHE — span 3 lignes
              -->
-            <VBox spacing="3"
-                  GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.rowSpan="3"
+            <VBox spacing="5"
+                  GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.rowSpan="2"
                   style="-fx-background-color: #0b1824; -fx-padding: 12;
                          -fx-border-color: #1e3a5f; -fx-border-radius: 8; -fx-background-radius: 8;">
 
@@ -168,13 +168,19 @@
                 </VBox>
 
 
+                <Region VBox.vgrow="ALWAYS"/>
 
                 <!-- JOURNAL -->
                 <Label text="JOURNAL DES ÉVÈNEMENTS"
                        style="-fx-text-fill: #475569; -fx-font-size: 9px; -fx-font-weight: bold;"/>
-                <TextArea fx:id="logArea" editable="false" prefHeight="70"
-                          style="-fx-control-inner-background: #020617;
-                                 -fx-text-fill: #94a3b8; -fx-font-size: 10px;"/>
+                <ScrollPane VBox.vgrow="ALWAYS"
+                            fitToWidth="true"
+                            minHeight="160"
+                            maxHeight="Infinity"
+                            style="-fx-background: #020617; -fx-background-color: #020617;
+                   -fx-border-color: #1e3a5f; -fx-border-radius: 6;">
+                    <VBox fx:id="logBox" spacing="2" style="-fx-padding: 6; -fx-background-color: #020617;"/>
+                </ScrollPane>
             </VBox>
 
             <!--
@@ -222,164 +228,393 @@
             </VBox>
 
             <!--
-                 BAS CENTRE — ligne 1
-            -->
+     BAS CENTRE — ligne 1
+-->
             <HBox spacing="8"
-                  GridPane.columnIndex="1" GridPane.rowIndex="1">
+                  fillHeight="true"
+                  GridPane.columnIndex="1" GridPane.rowIndex="1"
+                  maxWidth="Infinity">
 
-                <!-- Contrôles -->
-                <VBox spacing="8" prefWidth="265"
+                <!-- CONTRÔLES -->
+                <VBox spacing="4"
+                      prefWidth="470"
+                      HBox.hgrow="ALWAYS"
                       style="-fx-background-color: #0b1824; -fx-padding: 12;
-                             -fx-border-color: #1e3a5f; -fx-border-radius: 8; -fx-background-radius: 8;">
-                    <Label text="CONTRÔLES"
-                           style="-fx-text-fill: #475569; -fx-font-size: 9px; -fx-font-weight: bold;"/>
+                 -fx-border-color: #1e3a5f;
+                 -fx-border-radius: 8;
+                 -fx-background-radius: 8;">
 
-                    <GridPane hgap="8" vgap="8" alignment="CENTER">
-                        <Button text="▲" onMousePressed="#moveForward" onMouseReleased="#stopDrone"
-                                GridPane.columnIndex="1" GridPane.rowIndex="0"
-                                prefWidth="64" prefHeight="40"
-                                style="-fx-background-color: #1e3a5f; -fx-text-fill: white;
-                                       -fx-font-size: 16px; -fx-cursor: hand;"/>
-                        <Button text="◀" onMousePressed="#moveLeft" onMouseReleased="#stopDrone"
-                                GridPane.columnIndex="0" GridPane.rowIndex="1"
-                                prefWidth="64" prefHeight="40"
-                                style="-fx-background-color: #1e3a5f; -fx-text-fill: white;
-                                       -fx-font-size: 16px; -fx-cursor: hand;"/>
-                        <Button text="■" onAction="#stopDrone"
-                                GridPane.columnIndex="1" GridPane.rowIndex="1"
-                                prefWidth="64" prefHeight="40"
-                                style="-fx-background-color: #7f1d1d; -fx-text-fill: white;
-                                       -fx-font-size: 16px; -fx-font-weight: bold; -fx-cursor: hand;"/>
-                        <Button text="▶" onMousePressed="#moveRight" onMouseReleased="#stopDrone"
-                                GridPane.columnIndex="2" GridPane.rowIndex="1"
-                                prefWidth="64" prefHeight="40"
-                                style="-fx-background-color: #1e3a5f; -fx-text-fill: white;
-                                       -fx-font-size: 16px; -fx-cursor: hand;"/>
-                        <Button text="▼" onMousePressed="#moveBackward" onMouseReleased="#stopDrone"
-                                GridPane.columnIndex="1" GridPane.rowIndex="2"
-                                prefWidth="64" prefHeight="40"
-                                style="-fx-background-color: #1e3a5f; -fx-text-fill: white;
-                                       -fx-font-size: 16px; -fx-cursor: hand;"/>
+                    <Label text="CONTRÔLES"
+                           style="-fx-text-fill: #475569;
+                      -fx-font-size: 9px;
+                      -fx-font-weight: bold;"/>
+
+                    <GridPane hgap="6"
+                              vgap="6"
+                              alignment="CENTER"
+                              maxWidth="Infinity">
+
+                        <columnConstraints>
+                            <ColumnConstraints percentWidth="33.33" halignment="CENTER"/>
+                            <ColumnConstraints percentWidth="33.33" halignment="CENTER"/>
+                            <ColumnConstraints percentWidth="33.33" halignment="CENTER"/>
+                        </columnConstraints>
+
+                        <!-- LIGNE 1 -->
+                        <Button text="↺"
+                                onMousePressed="#rotateLeft"
+                                onMouseReleased="#stopDrone"
+                                GridPane.columnIndex="0"
+                                GridPane.rowIndex="0"
+                                prefWidth="44"
+                                prefHeight="36"
+                                style="-fx-background-color: #0f2744;
+                           -fx-text-fill: white;
+                           -fx-cursor: hand;"/>
+
+                        <Button text="▲"
+                                onMousePressed="#moveForward"
+                                onMouseReleased="#stopDrone"
+                                GridPane.columnIndex="1"
+                                GridPane.rowIndex="0"
+                                prefWidth="64"
+                                prefHeight="36"
+                                style="-fx-background-color: #1e3a5f;
+                           -fx-text-fill: white;
+                           -fx-font-size: 16px;
+                           -fx-cursor: hand;"/>
+
+                        <Button text="↻"
+                                onMousePressed="#rotateRight"
+                                onMouseReleased="#stopDrone"
+                                GridPane.columnIndex="2"
+                                GridPane.rowIndex="0"
+                                prefWidth="44"
+                                prefHeight="36"
+                                style="-fx-background-color: #0f2744;
+                           -fx-text-fill: white;
+                           -fx-cursor: hand;"/>
+
+                        <!-- LIGNE 2 -->
+                        <Button text="◀"
+                                onMousePressed="#moveLeft"
+                                onMouseReleased="#stopDrone"
+                                GridPane.columnIndex="0"
+                                GridPane.rowIndex="1"
+                                prefWidth="64"
+                                prefHeight="36"
+                                style="-fx-background-color: #1e3a5f;
+                           -fx-text-fill: white;
+                           -fx-font-size: 16px;
+                           -fx-cursor: hand;"/>
+
+                        <Button text="■"
+                                onAction="#stopDrone"
+                                GridPane.columnIndex="1"
+                                GridPane.rowIndex="1"
+                                prefWidth="64"
+                                prefHeight="36"
+                                style="-fx-background-color: #7f1d1d;
+                           -fx-text-fill: white;
+                           -fx-font-weight: bold;
+                           -fx-cursor: hand;"/>
+
+                        <Button text="▶"
+                                onMousePressed="#moveRight"
+                                onMouseReleased="#stopDrone"
+                                GridPane.columnIndex="2"
+                                GridPane.rowIndex="1"
+                                prefWidth="64"
+                                prefHeight="36"
+                                style="-fx-background-color: #1e3a5f;
+                           -fx-text-fill: white;
+                           -fx-font-size: 16px;
+                           -fx-cursor: hand;"/>
+
+                        <!-- LIGNE 3 -->
+                        <Button text="P+"
+                                onMousePressed="#pitchUp"
+                                onMouseReleased="#stopDrone"
+                                GridPane.columnIndex="0"
+                                GridPane.rowIndex="2"
+                                prefWidth="44"
+                                prefHeight="28"
+                                style="-fx-background-color: #0f2744;
+                           -fx-text-fill: #38bdf8;
+                           -fx-cursor: hand;"/>
+
+                        <Button text="▼"
+                                onMousePressed="#moveBackward"
+                                onMouseReleased="#stopDrone"
+                                GridPane.columnIndex="1"
+                                GridPane.rowIndex="2"
+                                prefWidth="64"
+                                prefHeight="36"
+                                style="-fx-background-color: #1e3a5f;
+                           -fx-text-fill: white;
+                           -fx-font-size: 16px;
+                           -fx-cursor: hand;"/>
+
+                        <Button text="P-"
+                                onMousePressed="#pitchDown"
+                                onMouseReleased="#stopDrone"
+                                GridPane.columnIndex="2"
+                                GridPane.rowIndex="2"
+                                prefWidth="44"
+                                prefHeight="28"
+                                style="-fx-background-color: #0f2744;
+                           -fx-text-fill: #38bdf8;
+                           -fx-cursor: hand;"/>
+
+                        <!-- LIGNE 4 -->
+                        <Button text="R◀"
+                                onMousePressed="#rollLeft"
+                                onMouseReleased="#stopDrone"
+                                GridPane.columnIndex="0"
+                                GridPane.rowIndex="3"
+                                prefWidth="44"
+                                prefHeight="26"
+                                style="-fx-background-color: #0f2744;
+                           -fx-text-fill: #c084fc;
+                           -fx-cursor: hand;"/>
+
+                        <Button text="R▶"
+                                onMousePressed="#rollRight"
+                                onMouseReleased="#stopDrone"
+                                GridPane.columnIndex="2"
+                                GridPane.rowIndex="3"
+                                prefWidth="44"
+                                prefHeight="26"
+                                style="-fx-background-color: #0f2744;
+                           -fx-text-fill: #c084fc;
+                           -fx-cursor: hand;"/>
                     </GridPane>
 
-                    <HBox spacing="8" alignment="CENTER">
-                        <Button text="↑ MONTER" onMousePressed="#moveUp" onMouseReleased="#stopDrone"
-                                prefWidth="120" prefHeight="34"
-                                style="-fx-background-color: #14532d; -fx-text-fill: #22c55e;
-                                       -fx-font-weight: bold; -fx-cursor: hand;"/>
-                        <Button text="↓ DESCENDRE" onMousePressed="#moveDown" onMouseReleased="#stopDrone"
-                                prefWidth="128" prefHeight="34"
-                                style="-fx-background-color: #1e3a5f; -fx-text-fill: #38bdf8;
-                                       -fx-font-weight: bold; -fx-cursor: hand;"/>
+                    <!-- MONTER / DESCENDRE -->
+                    <HBox spacing="10" alignment="CENTER">
+                        <Region HBox.hgrow="ALWAYS"/>
+
+                        <Button text="↑ MONTER"
+                                onMousePressed="#moveUp"
+                                onMouseReleased="#stopDrone"
+                                prefWidth="120"
+                                prefHeight="34"
+                                style="-fx-background-color: #14532d;
+                           -fx-text-fill: #22c55e;
+                           -fx-font-weight: bold;
+                           -fx-cursor: hand;"/>
+
+                        <Button text="↓ DESCENDRE"
+                                onMousePressed="#moveDown"
+                                onMouseReleased="#stopDrone"
+                                prefWidth="128"
+                                prefHeight="34"
+                                style="-fx-background-color: #1e3a5f;
+                           -fx-text-fill: #38bdf8;
+                           -fx-font-weight: bold;
+                           -fx-cursor: hand;"/>
+
+                        <Region HBox.hgrow="ALWAYS"/>
                     </HBox>
 
-                    <Button text="▶  LANCER SIMULATION" onAction="#startSimulation"
-                            maxWidth="Infinity" prefHeight="36"
-                            style="-fx-background-color: #1d4ed8; -fx-text-fill: white;
-                                   -fx-font-weight: bold; -fx-font-size: 13px; -fx-cursor: hand;"/>
+                    <!-- LANCER -->
+                    <Button text="▶  LANCER SIMULATION"
+                            onAction="#startSimulation"
+                            maxWidth="Infinity"
+                            prefHeight="36"
+                            style="-fx-background-color: #1d4ed8;
+                       -fx-text-fill: white;
+                       -fx-font-weight: bold;
+                       -fx-font-size: 13px;
+                       -fx-cursor: hand;"/>
 
+                    <!-- BAS -->
+                    <HBox spacing="10" alignment="CENTER">
+                        <Region HBox.hgrow="ALWAYS"/>
 
+                        <Button text="Mode stabilisé"
+                                onAction="#enableStabilizedMode"
+                                prefWidth="124"
+                                prefHeight="28"
+                                style="-fx-background-color: #1e3a5f;
+                           -fx-text-fill: #94a3b8;
+                           -fx-font-size: 10px;
+                           -fx-cursor: hand;"/>
 
-                    <HBox spacing="8">
-                        <Button text="Mode stabilisé" onAction="#enableStabilizedMode" prefWidth="124" prefHeight="28"
-                                style="-fx-background-color: #1e3a5f; -fx-text-fill: #94a3b8;
-                                       -fx-font-size: 10px; -fx-cursor: hand;"/>
-                        <Button text="Maintenir position" onAction="#enableHoldPosition" prefWidth="130" prefHeight="28"
-                                style="-fx-background-color: #1e3a5f; -fx-text-fill: #94a3b8;
-                                       -fx-font-size: 10px; -fx-cursor: hand;"/>
+                        <Button text="Maintenir position"
+                                onAction="#enableHoldPosition"
+                                prefWidth="130"
+                                prefHeight="28"
+                                style="-fx-background-color: #1e3a5f;
+                           -fx-text-fill: #94a3b8;
+                           -fx-font-size: 10px;
+                           -fx-cursor: hand;"/>
+
+                        <Region HBox.hgrow="ALWAYS"/>
                     </HBox>
                 </VBox>
 
-                <!-- Radar -->
-                <VBox spacing="6" HBox.hgrow="ALWAYS"
-                      style="-fx-background-color: #0b1824; -fx-padding: 12;
-                             -fx-border-color: #1e3a5f; -fx-border-radius: 8; -fx-background-radius: 8;">
+                <!-- RADAR -->
+                <VBox spacing="6"
+                      prefWidth="220"
+                      style="-fx-background-color: #0b1824;
+                 -fx-padding: 12;
+                 -fx-border-color: #1e3a5f;
+                 -fx-border-radius: 8;
+                 -fx-background-radius: 8;">
+
                     <HBox alignment="CENTER_LEFT" spacing="10">
                         <Label text="CARTE / RADAR"
-                               style="-fx-text-fill: #475569; -fx-font-size: 9px; -fx-font-weight: bold;"/>
+                               style="-fx-text-fill: #475569;
+                          -fx-font-size: 9px;
+                          -fx-font-weight: bold;"/>
+
                         <Region HBox.hgrow="ALWAYS"/>
-                        <Label text="−" style="-fx-text-fill: #475569; -fx-font-size: 14px; -fx-cursor: hand;"/>
-                        <Label text="+" style="-fx-text-fill: #475569; -fx-font-size: 14px; -fx-cursor: hand;"/>
+
+                        <Button text="−"
+                                onAction="#zoomRadarOut"
+                                style="-fx-background-color: transparent;
+                           -fx-text-fill: #475569;
+                           -fx-font-size: 14px;
+                           -fx-cursor: hand;"/>
+
+                        <Button text="+"
+                                onAction="#zoomRadarIn"
+                                style="-fx-background-color: transparent;
+                           -fx-text-fill: #475569;
+                           -fx-font-size: 14px;
+                           -fx-cursor: hand;"/>
                     </HBox>
+
                     <StackPane VBox.vgrow="ALWAYS">
-                        <Circle radius="100" fill="#020b14" stroke="#0f2744" strokeWidth="1.5"/>
-                        <Circle radius="70"  fill="transparent" stroke="#0d2035"
-                                strokeWidth="1" strokeDashArray="4,4"/>
-                        <Circle radius="40"  fill="transparent" stroke="#0d2035"
-                                strokeWidth="1" strokeDashArray="4,4"/>
-                        <Line startX="-100" startY="0" endX="100" endY="0" stroke="#0f2744"/>
-                        <Line startX="0" startY="-100" endX="0" endY="100" stroke="#0f2744"/>
-                        <!-- Points obstacles décoratifs -->
-                        <Circle fx:id="radarPoint1" radius="4" fill="#ef4444" visible="false"/>
-                        <Circle fx:id="radarPoint2" radius="4" fill="#ef4444" visible="false"/>
-                        <Circle fx:id="radarPoint3" radius="4" fill="#ef4444" visible="false"/>
-                        <Circle fx:id="radarPoint4" radius="4" fill="#ef4444" visible="false"/>
-                        <Circle fx:id="radarPoint5" radius="4" fill="#ef4444" visible="false"/> <!-- Drone (position temps réel) -->
-                        <Circle fx:id="miniMapDroneDot" radius="8" fill="#22c55e"/>
-                        <Label text="PORTÉE 100 m" StackPane.alignment="BOTTOM_RIGHT"
-                               style="-fx-text-fill: #38bdf8; -fx-font-size: 9px;
-                                      -fx-translate-x: -6; -fx-translate-y: -6;"/>
+
+                        <Circle radius="100"
+                                fill="#020b14"
+                                stroke="#0f2744"
+                                strokeWidth="1.5"/>
+
+                        <Circle radius="70"
+                                fill="transparent"
+                                stroke="#0d2035"
+                                strokeWidth="1"
+                                strokeDashArray="4,4"/>
+
+                        <Circle radius="40"
+                                fill="transparent"
+                                stroke="#0d2035"
+                                strokeWidth="1"
+                                strokeDashArray="4,4"/>
+
+                        <Line startX="-100" startY="0"
+                              endX="100" endY="0"
+                              stroke="#0f2744"/>
+
+                        <Line startX="0" startY="-100"
+                              endX="0" endY="100"
+                              stroke="#0f2744"/>
+
+                        <Circle fx:id="miniMapDroneDot"
+                                radius="8"
+                                fill="#22c55e"/>
+
+                        <Label fx:id="radarRangeLabel"
+                               text="PORTÉE 100 m"
+                               StackPane.alignment="BOTTOM_RIGHT"
+                               style="-fx-text-fill: #38bdf8;
+                          -fx-font-size: 9px;
+                          -fx-translate-x: -6;
+                          -fx-translate-y: -6;"/>
                     </StackPane>
                 </VBox>
 
-                <!-- Mission -->
-                <VBox spacing="8" prefWidth="260"
-                      style="-fx-background-color: #0b1824; -fx-padding: 12;
-                             -fx-border-color: #1e3a5f; -fx-border-radius: 8; -fx-background-radius: 8;">
+                <!-- MISSION -->
+                <VBox spacing="8"
+                      prefWidth="250"
+                      style="-fx-background-color: #0b1824;
+                 -fx-padding: 12;
+                 -fx-border-color: #1e3a5f;
+                 -fx-border-radius: 8;
+                 -fx-background-radius: 8;">
+
                     <Label text="MISSION"
-                           style="-fx-text-fill: #475569; -fx-font-size: 9px; -fx-font-weight: bold;"/>
-                    <Label fx:id="missionLabel" text="--" wrapText="true"
-                           style="-fx-text-fill: white; -fx-font-size: 12px;"/>
+                           style="-fx-text-fill: #475569;
+                      -fx-font-size: 9px;
+                      -fx-font-weight: bold;"/>
+
+                    <Label fx:id="missionLabel"
+                           text="--"
+                           wrapText="true"
+                           style="-fx-text-fill: white;
+                      -fx-font-size: 12px;"/>
+
                     <Separator/>
+
                     <HBox spacing="8">
-                        <Label text="⏱" style="-fx-text-fill: #94a3b8;"/>
-                        <Label fx:id="distanceLabel" text="Distance parcourue : --"
-                               style="-fx-text-fill: white; -fx-font-size: 11px;"/>
+                        <Label text="⏱"
+                               style="-fx-text-fill: #94a3b8;"/>
+
+                        <Label fx:id="distanceLabel"
+                               text="Distance parcourue : --"
+                               style="-fx-text-fill: white;
+                          -fx-font-size: 11px;"/>
                     </HBox>
+
                     <HBox spacing="8">
-                        <Label text="⏱" style="-fx-text-fill: #94a3b8;"/>
-                        <Label fx:id="runtimeLabel" text="Temps : --"
-                               style="-fx-text-fill: white; -fx-font-size: 11px;"/>
+                        <Label text="⏱"
+                               style="-fx-text-fill: #94a3b8;"/>
+
+                        <Label fx:id="runtimeLabel"
+                               text="Temps : --"
+                               style="-fx-text-fill: white;
+                          -fx-font-size: 11px;"/>
                     </HBox>
+
                     <Region VBox.vgrow="ALWAYS"/>
+
                     <Button text="⚠  ARRÊT D'URGENCE" onAction="#emergencyStop"
                             maxWidth="Infinity" prefHeight="34"
                             style="-fx-background-color: #991b1b; -fx-text-fill: white;
                -fx-font-size: 13px; -fx-font-weight: bold; -fx-cursor: hand;
                -fx-background-radius: 8; -fx-border-radius: 8;
                -fx-border-color: #ef4444; -fx-border-width: 1.2;
-               -fx-effect: dropshadow(gaussian, rgba(239,68,68,0.35), 10, 0.3, 0, 0);"/></VBox>
+               -fx-effect: dropshadow(gaussian, rgba(239,68,68,0.35), 10, 0.3, 0, 0);"/>
+
+            </VBox>
+
             </HBox>
 
             <!--
                  BARRE RÉSEAU — ligne 2
              -->
+
             <HBox spacing="0" alignment="CENTER"
-                  GridPane.columnIndex="1" GridPane.rowIndex="2"
-                  style="-fx-background-color: #0b1824; -fx-padding: 6 16;
+                  GridPane.columnIndex="0"
+                  GridPane.columnSpan="3"
+                  GridPane.rowIndex="2"
+                  style="-fx-background-color: #0b1824; -fx-padding: 4 16;
                          -fx-border-color: #1e3a5f; -fx-border-radius: 8; -fx-background-radius: 8;">
                 <VBox alignment="CENTER" HBox.hgrow="ALWAYS" spacing="1">
                     <Label text="LATENCE" style="-fx-text-fill: #475569; -fx-font-size: 9px;"/>
                     <Label fx:id="latencyLabel" text="-- ms"
-                           style="-fx-text-fill: #38bdf8; -fx-font-size: 20px; -fx-font-weight: bold;"/>
+                           style="-fx-text-fill: #38bdf8; -fx-font-size: 18px; -fx-font-weight: bold;"/>
                 </VBox>
                 <Separator orientation="VERTICAL" style="-fx-opacity:0.15;"/>
                 <VBox alignment="CENTER" HBox.hgrow="ALWAYS" spacing="1">
                     <Label text="PAQUETS PERDUS" style="-fx-text-fill: #475569; -fx-font-size: 9px;"/>
                     <Label fx:id="packetLossLabel" text="0%"
-                           style="-fx-text-fill: #38bdf8; -fx-font-size: 20px; -fx-font-weight: bold;"/>
+                           style="-fx-text-fill: #38bdf8; -fx-font-size: 18px; -fx-font-weight: bold;"/>
                 </VBox>
                 <Separator orientation="VERTICAL" style="-fx-opacity:0.15;"/>
                 <VBox alignment="CENTER" HBox.hgrow="ALWAYS" spacing="1">
                     <Label text="FRÉQUENCE" style="-fx-text-fill: #475569; -fx-font-size: 9px;"/>
                     <Label fx:id="frequencyLabel" text="-- FPS"
-                           style="-fx-text-fill: #38bdf8; -fx-font-size: 20px; -fx-font-weight: bold;"/>
+                           style="-fx-text-fill: #38bdf8; -fx-font-size: 18px; -fx-font-weight: bold;"/>
                 </VBox>
                 <Separator orientation="VERTICAL" style="-fx-opacity:0.15;"/>
                 <VBox alignment="CENTER" HBox.hgrow="ALWAYS" spacing="1">
                     <Label text="UPTIME" style="-fx-text-fill: #475569; -fx-font-size: 9px;"/>
                     <Label fx:id="uptimeLabel" text="--"
-                           style="-fx-text-fill: #38bdf8; -fx-font-size: 20px; -fx-font-weight: bold;"/>
+                           style="-fx-text-fill: #38bdf8; -fx-font-size: 18px; -fx-font-weight: bold;"/>
                 </VBox>
             </HBox>
 
@@ -387,7 +622,7 @@
                  DROITE — span 3 lignes
              -->
             <VBox spacing="6"
-                  GridPane.columnIndex="2" GridPane.rowIndex="0" GridPane.rowSpan="3"
+                  GridPane.columnIndex="2" GridPane.rowIndex="0" GridPane.rowSpan="2"
                   style="-fx-background-color: #0b1824; -fx-padding: 14;
                          -fx-border-color: #1e3a5f; -fx-border-radius: 8; -fx-background-radius: 8;">
 
@@ -395,26 +630,27 @@
                 <Label text="BOUSSOLE"
                        style="-fx-text-fill: #cbd5e1; -fx-font-size: 11px; -fx-font-weight: bold;"/>
 
-                <StackPane prefHeight="190"
+                <StackPane prefHeight="250" maxHeight="250"
                            style="-fx-background-color: #07111b;
                   -fx-background-radius: 12;
                   -fx-border-color: #1e3a5f;
                   -fx-border-radius: 12;
-                  -fx-padding: 4;">
+                  -fx-padding: 10 4 18 4;">
 
                     <!-- Cercle de fond -->
-                    <Canvas fx:id="compassCanvas" width="182" height="217"/>
+                    <Canvas fx:id="compassCanvas" width="182" height="182"/>
 
                     <!-- Triangle indicateur fixe -->
                     <Polygon points="0,-10,-6,2,6,2" fill="#22c55e"
                              StackPane.alignment="TOP_CENTER"
-                             translateY="4"/>
+                             translateY="2"/>
 
                     <!-- Valeur cap -->
                     <Label fx:id="compassLabel" text="0°"
                            StackPane.alignment="BOTTOM_CENTER"
-                           translateY="-18"
-                           style="-fx-text-fill: #22c55e; -fx-font-size: 26px; -fx-font-weight: bold;"/>
+                           translateY="24"
+                           translateX="5"
+                           style="-fx-text-fill: #22c55e;-fx-font-size: 20px; -fx-font-weight: bold;"/>
                 </StackPane>
 
                 <Separator/>
@@ -533,12 +769,28 @@
                 <Separator/>
 
                 <!-- CAMÉRA MINIATURE -->
-                <!--<Label text="CAMÉRA"
+                <Label text="CAMÉRA"
                        style="-fx-text-fill: #475569; -fx-font-size: 9px; -fx-font-weight: bold;"/>
-                <StackPane prefHeight="90"
-                           style="-fx-background-color: #020617; -fx-border-color: #1e3a5f; -fx-border-width: 1;">
-                    <Label text="APERÇU CAMÉRA 1" style="-fx-text-fill: #38bdf8; -fx-font-size: 10px;"/>
-                </StackPane>-->
+                <StackPane fx:id="cameraPreviewPane"
+                           minHeight="90"
+                           prefHeight="90"
+                           maxHeight="90"
+                           style="-fx-background-color: #020617;
+                  -fx-border-color: #1e3a5f;
+                  -fx-border-width: 1;">
+
+                    <ImageView fx:id="cameraPreviewView"
+                               preserveRatio="false"
+                               smooth="true"
+                               managed="false"/>
+
+                    <Label text="APERÇU CAMÉRA 1"
+                           StackPane.alignment="TOP_CENTER"
+                           style="-fx-text-fill: #38bdf8;
+                  -fx-font-size: 10px;
+                  -fx-background-color: rgba(0,0,0,0.45);
+                  -fx-padding: 2 6;"/>
+                </StackPane>
 
                 <Region VBox.vgrow="ALWAYS"/>
 
