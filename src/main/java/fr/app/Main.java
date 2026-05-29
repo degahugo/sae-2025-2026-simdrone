@@ -289,6 +289,15 @@ public class Main extends SimpleApplication {
                 s.setCollisionMessage("Aucune collision");
             }
 
+            if(frontCameraManager != null){
+                s.setFrontCamPitch(frontCameraManager.getCameraPitch());
+                s.setFrontCamYaw(frontCameraManager.getCameraYaw());
+            }
+            if (rearCameraManager != null) {
+                s.setRearCamPitch(rearCameraManager.getCameraPitch());
+                s.setRearCamYaw(rearCameraManager.getCameraYaw());
+            }
+
 
             dernierStatut.set(s);
         }
@@ -379,6 +388,16 @@ public class Main extends SimpleApplication {
 
         status.setCollisionDetected(drone.isCollisionDetected());
         status.setCollisionMessage(drone.getCollisionMessage());
+
+        if(frontCameraManager != null){
+            status.setFrontCamPitch(frontCameraManager.getCameraPitch());
+            status.setFrontCamYaw(frontCameraManager.getCameraYaw());
+        }
+        if (rearCameraManager != null) {
+            status.setRearCamPitch(rearCameraManager.getCameraPitch());
+            status.setRearCamYaw(rearCameraManager.getCameraYaw());
+        }
+
 
         return status;
     }

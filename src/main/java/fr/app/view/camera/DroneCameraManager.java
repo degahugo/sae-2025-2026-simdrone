@@ -182,4 +182,18 @@ public class DroneCameraManager {
     public void setMaxYaw(float angle){
         this.maxYaw = angle * FastMath.DEG_TO_RAD;
     }
+
+    /**
+     * Donne l'angle vertical de la caméra
+     */
+    public float getCameraPitch(){
+        return this.cameraPitch;
+    }
+
+    /**
+     * Donne l'angle horizontal de la caméra
+     */
+    public float getCameraYaw(){
+        return this.cameraYaw;
+    }
 }
