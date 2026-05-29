@@ -389,7 +389,7 @@ public class PhysicsEngine{
 
                             //méthode pour repositionner le drone après collision pas très loin de la collision
                             Vector3f pos = dronePhysics.getPhysicsLocation();
-                            dronePhysics.setPhysicsLocation(pos.add(0f, 0.01f, 0f));
+                            dronePhysics.setPhysicsLocation(pos.add(0f, 0.05f, 0f));
 
                             dronePhysics.setLinearVelocity(Vector3f.ZERO);
                             dronePhysics.setAngularVelocity(Vector3f.ZERO);

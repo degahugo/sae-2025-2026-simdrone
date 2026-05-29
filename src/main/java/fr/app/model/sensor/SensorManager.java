@@ -27,6 +27,9 @@ public class SensorManager {
 
         PressureSensor pressureSensor = new PressureSensor("PressureSensor", depthSensor);
         drone.addSensor(pressureSensor);
+
+        FrontSonar frontSonar = new FrontSonar();
+        drone.addSensor(frontSonar);
     }
 
     public void updateSensors() {
@@ -48,6 +51,10 @@ public class SensorManager {
 
             if (sensor instanceof CompassSensor) {CompassSensor cs = (CompassSensor) sensor;
                 //System.out.println("Cap : "+ cs.getHeading()+ "°");
+            }
+
+            if (sensor instanceof FrontSonar fs) {
+                System.out.println("Sonar : " + fs.getDistance() + " m");
             }
 
         }
