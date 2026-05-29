@@ -288,7 +288,7 @@ public class Main extends SimpleApplication {
             } else {
                 s.setCollisionMessage("Aucune collision");
             }
-
+            s.setShowingFrontCamera(droneManager.isShowingFrontCam());
             if(frontCameraManager != null){
                 s.setFrontCamPitch(frontCameraManager.getCameraPitch());
                 s.setFrontCamYaw(frontCameraManager.getCameraYaw());
@@ -389,6 +389,7 @@ public class Main extends SimpleApplication {
         status.setCollisionDetected(drone.isCollisionDetected());
         status.setCollisionMessage(drone.getCollisionMessage());
 
+        status.setShowingFrontCamera(droneManager.isShowingFrontCam());
         if(frontCameraManager != null){
             status.setFrontCamPitch(frontCameraManager.getCameraPitch());
             status.setFrontCamYaw(frontCameraManager.getCameraYaw());

@@ -27,6 +27,7 @@ public class DroneStatus {
     private float frontCamYaw;
     private float rearCamPitch;
     private float rearCamYaw;
+    private boolean isShowingFrontCamera;
 
 
     public DroneStatus() {
@@ -99,6 +100,7 @@ public class DroneStatus {
     public float getFrontCamYaw(){ return frontCamYaw; }
     public float getRearCamPitch(){ return rearCamPitch; }
     public float getRearCamYaw(){ return rearCamYaw; }
+    public boolean getShowingFrontCamera(){ return isShowingFrontCamera; }
 
 
     //Setter
@@ -172,6 +174,7 @@ public class DroneStatus {
     public void setFrontCamYaw(float frontCamYaw) {this.frontCamYaw = frontCamYaw; }
     public void setRearCamPitch(float rearCamPitch) { this.rearCamPitch = rearCamPitch; }
     public void setRearCamYaw(float rearCamYaw) { this.rearCamYaw = rearCamYaw; }
+    public void setShowingFrontCamera(boolean showingFrontCamera){ this.isShowingFrontCamera = showingFrontCamera; }
 
     // @JsonIgnore -> Jackson ignorera cette méthode lors de la sérialisation/désérialisation
     @JsonIgnore

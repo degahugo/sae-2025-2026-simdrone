@@ -100,6 +100,13 @@ public class DashboardController {
     @FXML private Canvas pitchCanvas;
     @FXML private Canvas rollCanvas;
 
+    @FXML private Canvas yawCameraCanvas;
+    @FXML private Canvas pitchCameraCanvas;
+    @FXML private Label yawCamLabel;
+    @FXML private Label pitchCamLabel;
+    @FXML private Label switchCamLabel;
+    @FXML private Label gestionCamText;
+
 
     // ── État interne
     private NetworkClient client;
@@ -533,6 +540,32 @@ public class DashboardController {
         setText(pitchLabel, String.format("%.1f°", status.getPitch()));
         setText(rollLabel,  String.format("%.1f°", status.getRoll()));
 
+        // Gestion caméras
+        double yawCamera;
+        double pitchCamera;
+        String switchCamText;
+        String gestionCamTextS;
+        // On récupère les valeurs de la caméra utilisée
+        if(status.getShowingFrontCamera()){
+            yawCamera = Math.toDegrees(status.getFrontCamYaw());
+            pitchCamera = Math.toDegrees(status.getFrontCamPitch());
+            gestionCamTextS = "GESTION CAMERA - FRONT CAMERA";
+            switchCamText = "Switch to rear camera";
+        } else {
+
+            yawCamera = Math.toDegrees(status.getRearCamYaw());
+            pitchCamera = Math.toDegrees(status.getRearCamPitch());
+            gestionCamTextS = "GESTION CAMERA - REAR CAMERA";
+            switchCamText = "Switch to front camera";
+        }
+        drawGauge(yawCameraCanvas, -yawCamera, -90, 90);
+        drawGauge(pitchCameraCanvas, -pitchCamera, -90, 90);
+        setText(yawCamLabel, String.format("%.1f°", -yawCamera));
+        setText(pitchCamLabel, String.format("%.1f°", -pitchCamera));
+        setText(switchCamLabel, switchCamText);
+        setText(gestionCamText, gestionCamTextS);
+
+
         // Batterie
         double bat =
                 Math.max(
@@ -905,6 +938,13 @@ public class DashboardController {
         log("ARRÊT D'URGENCE déclenché");
     }
 
+    /**
+     * Dis au serveur qu'on appuie sur le bouton de changement de caméra.
+     */
+    @FXML
+    private void switchCamera(){
+        send(PilotCommand.SWITCHCAM);
+    }
 
     @FXML
     private void stopSimulation() {
