@@ -60,14 +60,16 @@ public class LightingManager {
         rootNode.addLight(spot);*/
 
         // Set up the ambient light
-        ambientLight = new AmbientLight();
-        ambientLight.setColor(ColorRGBA.White);
+       ambientLight = new AmbientLight();
+       ambientLight.setColor(ColorRGBA.Black);
+       // ambientLight.setColor(new ColorRGBA(0.05f, 0.08f, 0.12f, 1f));
         rootNode.addLight(ambientLight);
         //on peut maintenant modifier la lumière depuis n'importe quelle méthode
 
         // Set up the directionnal light
         sunLight = new DirectionalLight();
-        sunLight.setColor(ColorRGBA.White);
+        sunLight.setColor(ColorRGBA.Black);
+        //sunLight.setColor(new ColorRGBA(0.08f, 0.10f, 0.12f, 1f));
         sunLight.setDirection(new Vector3f(-.5f,-.5f,-.5f).normalizeLocal());
         rootNode.addLight(sunLight);
 

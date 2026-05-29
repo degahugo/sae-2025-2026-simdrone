@@ -24,6 +24,8 @@ public class Drone {
 
     private String collisionMessage = "Aucune collision";
 
+    private boolean autoLeveling = false;
+
     public Drone(String id, Node droneSpatial) {
 
         this.id = id;
@@ -110,5 +112,13 @@ public class Drone {
             yaw += 360;
         }
         return yaw;
+    }
+
+    public boolean isAutoLeveling() {
+        return autoLeveling;
+    }
+
+    public void setAutoLeveling(boolean autoLeveling) {
+        this.autoLeveling = autoLeveling;
     }
 }

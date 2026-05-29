@@ -26,16 +26,16 @@ public class WaterFilterManager {
         this.waterFilter = new WaterFilter(rootNode, new Vector3f(-.5f,-.5f,-.5f));
         waterFilter.setWaterHeight(model.getWaterHeight());
         waterFilter.setSpeed(model.getWaterSpeed());
-       // fpp.addFilter(waterFilter);
+       fpp.addFilter(waterFilter);
 
         // Crée un brouillard bleu/vert profond pour simuler l'opacité de l'eau
-        FogFilter waterFog = new FogFilter();
+        /*FogFilter waterFog = new FogFilter();
         waterFog.setFogColor(new ColorRGBA(0.05f, 0.1f, 0.15f, 1.0f)); // Couleur de l'océan
-        waterFog.setFogDistance(60f);                                // Visibilité max (60 unités)
-        waterFog.setFogDensity(1.2f);                                // Densité de l'eau
+        waterFog.setFogDistance(200f);                                // Visibilité max (60 unités)
+        waterFog.setFogDensity(0.25f);                                // Densité de l'eau*/
 
 // Ajoute ce filtre à ton processeur post-process (fpp)
-        fpp.addFilter(waterFog);
+       // fpp.addFilter(waterFog);
         viewPort.addProcessor(fpp);
     }
 
