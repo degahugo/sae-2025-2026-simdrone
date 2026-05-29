@@ -9,31 +9,19 @@ import com.jme3.math.FastMath;
 
 
 public class Drone {
-
     private String id;
-
     private Node droneSpatial;
-
     private DroneState state;
-
     private List<Sensor> sensors;
-
     private Battery battery;
-
     private boolean collisionDetected;
-
     private String collisionMessage = "Aucune collision";
 
     public Drone(String id, Node droneSpatial) {
-
         this.id = id;
-
         this.droneSpatial = droneSpatial;
-
         this.sensors = new ArrayList<>();
-
         this.state = new DroneState();
-
         this.battery = new Battery(100f);
     }
 
