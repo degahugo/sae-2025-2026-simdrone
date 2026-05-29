@@ -13,6 +13,8 @@ import com.jme3.math.Vector3f;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.scene.*;
 import com.jme3.system.AppSettings;
+import com.jme3.water.WaterFilter;
+import fr.app.controller.DroneCameraController;
 import fr.app.model.environment.EnvironmentConditions;
 import fr.app.model.environment.EnvironmentConditionsManager;
 import fr.app.model.*;
@@ -20,7 +22,7 @@ import fr.app.view.*;
 import fr.app.model.DroneManager;
 import fr.app.model.PhysicsEngine;
 import fr.app.model.WorldView;
-import fr.app.view.CameraManager;
+import fr.app.view.camera.CameraManager;
 import fr.app.view.GUIManager;
 import fr.app.model.sensor.*;
 import fr.app.model.sensor.Sensor;
@@ -29,7 +31,7 @@ import fr.app.view.LightingManager;
 import fr.app.view.WaterFilterManager;
 import fr.app.controller.DroneController;
 import fr.app.model.Drone;
-import fr.app.view.DroneCameraManager;
+import fr.app.view.camera.DroneCameraManager;
 import fr.app.view.WaterDistortionManager;
 import fr.app.model.PilotCommand;
 import fr.app.model.DroneStatus;
@@ -53,12 +55,15 @@ public class Main extends SimpleApplication {
     private GUIManager guiManager;
     private Drone drone;
     private DroneController droneController;
-    private DroneCameraManager droneCameraManager;
+    private DroneCameraManager frontCameraManager;
+    private DroneCameraManager rearCameraManager;
+    private DroneCameraController droneCameraController;
     private WaterDistortionManager waterDistortionManager;
     private DroneManager droneManager;
     private FilterPostProcessor fpp;
     private Sensor sensor;
     private WaterFilterManager waterFilterManager;
+    private WaterFilter waterFilter;
     private TemperatureSensor temperatureSensor;
     private EnvironmentConditionsManager environmentConditionsManager;
 
@@ -111,12 +116,12 @@ public class Main extends SimpleApplication {
 
         flyCam.setEnabled(false);
         // Réduit la distance minimale d'affichage de la caméra pour ne plus voir à travers les murs ou le sol en s'approchant
-        cam.setFrustumPerspective(45f, (float) cam.getWidth() / cam.getHeight(), 0.01f, 1000f);
+        cam.setFrustumPerspective(45f, (float) cam.getWidth() / cam.getHeight(), 0.05f, 1000f);
         inputManager.setCursorVisible(true);
         setPauseOnLostFocus(false);
         PhysicsEngine physicsEngine = new PhysicsEngine(this, this.model, this.guiManager, showMeshWireframe);
 
-        int terrainId = 3;
+        int terrainId = 1;
         environmentConditions = EnvironmentConditions.NORMAL_CURRENT;
         environmentVisibility = EnvironmentConditions.VERY_GOOD_VISIBILITY;
 
@@ -166,14 +171,19 @@ public class Main extends SimpleApplication {
             }
 
             droneManager.CreateDrone(droneName);            // Gets the manager and controller te be used here
-            this.droneCameraManager = droneManager.getDroneCameraManager();
+            this.frontCameraManager = droneManager.getFrontCameraManager();
+            this.rearCameraManager = droneManager.getRearCameraManager();
             this.droneController = droneManager.getDroneController();
+            this.droneCameraController = new DroneCameraController(frontCameraManager, rearCameraManager, droneController, droneManager);
             // Adding captors
             // Getting the drone
             this.drone = droneManager.getDrone();
             // Creates the water filter
             this.waterFilterManager = new WaterFilterManager(fpp, viewPort, rootNode, model);
+            this.waterFilter = waterFilterManager.getWaterFilter();
             this.waterDistortionManager = new WaterDistortionManager(fpp, viewPort, droneManager.getDrone(), model);
+            // Ajoute les filtres au viewport
+            viewPort.addProcessor(fpp);
             // Then adding the sensors
             this.sensorManager = new SensorManager(drone, lightingManager, waterFilterManager);
             sensorManager.initSensors();
@@ -206,12 +216,14 @@ public class Main extends SimpleApplication {
         if (loading) {
             return;
         }
-
         if (droneController != null) {
             droneController.updateMovement(tpf);
         }
-        // --- Free-Look Camera ---
-        if (droneController != null && droneCameraManager != null) {
+        if(droneCameraController != null){
+            droneCameraController.update(tpf);
+        }
+        // --- Free-Look Camera --- de fatou, je ne sais pas ce que ça fait du coup j'ai commenté
+        /*if (droneController != null && droneCameraManager != null) {
 
             if (droneController.isCamLeftIntention()) {
                 droneCameraManager.rotateCameraLeft(tpf);
@@ -225,12 +237,10 @@ public class Main extends SimpleApplication {
             if (droneController.isCamDownIntention()) {
                 droneCameraManager.rotateCameraDown(tpf);
             }
-
         }
-
         if (droneCameraManager != null) {
             droneCameraManager.update(tpf);
-        }
+        }*/
         if (waterDistortionManager != null) {
             waterDistortionManager.update();
         }
@@ -291,6 +301,15 @@ public class Main extends SimpleApplication {
                 s.setCollisionMessage("Collision détectée");
             } else {
                 s.setCollisionMessage("Aucune collision");
+            }
+            s.setShowingFrontCamera(droneManager.isShowingFrontCam());
+            if(frontCameraManager != null){
+                s.setFrontCamPitch(frontCameraManager.getCameraPitch());
+                s.setFrontCamYaw(frontCameraManager.getCameraYaw());
+            }
+            if (rearCameraManager != null) {
+                s.setRearCamPitch(rearCameraManager.getCameraPitch());
+                s.setRearCamYaw(rearCameraManager.getCameraYaw());
             }
 
 
@@ -398,6 +417,17 @@ public class Main extends SimpleApplication {
         status.setCollisionDetected(drone.isCollisionDetected());
         status.setCollisionMessage(drone.getCollisionMessage());
 
+        status.setShowingFrontCamera(droneManager.isShowingFrontCam());
+        if(frontCameraManager != null){
+            status.setFrontCamPitch(frontCameraManager.getCameraPitch());
+            status.setFrontCamYaw(frontCameraManager.getCameraYaw());
+        }
+        if (rearCameraManager != null) {
+            status.setRearCamPitch(rearCameraManager.getCameraPitch());
+            status.setRearCamYaw(rearCameraManager.getCameraYaw());
+        }
+
+
         return status;
     }
 
@@ -419,7 +449,7 @@ public class Main extends SimpleApplication {
      * DOIT être appelé depuis le thread JME3 (via enqueue).
      */
     public void creerViewPortOffScreen(String droneId) {
-        if (droneCameraManager == null) {
+        if (frontCameraManager == null) {
             System.err.println("[Main] creerViewPortOffScreen : droneCameraManager null pour " + droneId);
             return;
         }
@@ -427,7 +457,7 @@ public class Main extends SimpleApplication {
             System.out.println("[Main] ViewPort déjà créé pour " + droneId);
             return;
         }
-        com.jme3.renderer.Camera cameraDrone = droneCameraManager.getCamera();
+        com.jme3.renderer.Camera cameraDrone = frontCameraManager.getCamera();
         DroneFrameCapture capture = new DroneFrameCapture(droneId, cameraDrone, renderManager, rootNode, guiNode,assetManager,model,drone);
         frameCaptures.put(droneId, capture);
         System.out.println("[Main] ViewPort off-screen créé pour " + droneId);

@@ -26,7 +26,8 @@ public class WaterFilterManager {
         this.waterFilter = new WaterFilter(rootNode, new Vector3f(-.5f,-.5f,-.5f));
         waterFilter.setWaterHeight(model.getWaterHeight());
         waterFilter.setSpeed(model.getWaterSpeed());
-       fpp.addFilter(waterFilter);
+        waterFilter.setUseRefraction(true);
+        fpp.addFilter(waterFilter);
 
         // Crée un brouillard bleu/vert profond pour simuler l'opacité de l'eau
         /*FogFilter waterFog = new FogFilter();
@@ -36,7 +37,7 @@ public class WaterFilterManager {
 
 // Ajoute ce filtre à ton processeur post-process (fpp)
        // fpp.addFilter(waterFog);
-        viewPort.addProcessor(fpp);
+        //viewPort.addProcessor(fpp);
     }
 
     public void updateUnderwaterEffect(float depth) {
@@ -44,4 +45,6 @@ public class WaterFilterManager {
         waterFilter.setWaterColor(new ColorRGBA(0f, 0.1f * intensity, 0.2f * intensity, 1f));
         waterFilter.setDeepWaterColor(new ColorRGBA(0f, 0.03f * intensity, 0.08f * intensity, 1f));
     }
+
+    public WaterFilter getWaterFilter(){return this.waterFilter;}
 }

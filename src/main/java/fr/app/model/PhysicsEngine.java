@@ -381,12 +381,12 @@ public class PhysicsEngine{
                         PhysicsCollisionObject a = event.getObjectA();
                         PhysicsCollisionObject b = event.getObjectB();
 
+
                         if (a == dronePhysics || b == dronePhysics) {
 
                             drone.setCollisionDetected(true);
-                            drone.setCollisionMessage("Collision avec terrain ou obstacle");
-
-                            System.out.println("[PHYSICS] Collision détectée");
+                            //drone.setCollisionMessage("Collision avec terrain ou obstacle");
+                            System.out.println("Collision détectée");
                         }
                     }
                 }

@@ -51,6 +51,8 @@ public class DroneController {
     private boolean camUpIntention = false;
     private boolean camDownIntention = false;
 
+    private boolean switchCameraIntention = false;
+
     public boolean isCamLeftIntention() { return camLeftIntention; }
     public boolean isCamRightIntention() { return camRightIntention; }
     public boolean isCamUpIntention() { return camUpIntention; }
@@ -68,19 +70,21 @@ public class DroneController {
     private float updateSpeedHoverMode = 0.5f; // Modification de la hauteur en mode hover
 
     // noms des inputs et des mouvements
-    DroneMovement moveForward = DroneMovement.FORWARD;
-    DroneMovement moveBackward = DroneMovement.BACKWARD;
-    DroneMovement moveLeft = DroneMovement.LEFT;
-    DroneMovement moveRight = DroneMovement.RIGHT;
-    DroneMovement rotateLeft = DroneMovement.ROTATELEFT;
-    DroneMovement rotateRight = DroneMovement.ROTATERIGHT;
-    DroneMovement moveUp = DroneMovement.UP;
-    DroneMovement moveDown = DroneMovement.DOWN;
-    DroneMovement pitchUp = DroneMovement.PITCHUP;
-    DroneMovement pitchDown = DroneMovement.PITCHDOWN;
-    DroneMovement rollLeft = DroneMovement.ROLLLEFT;
-    DroneMovement rollRight = DroneMovement.ROLLRIGHT;
-    DroneMovement toggleHoverMode = DroneMovement.TOGGLEHOVERMODE;
+    PilotCommand moveForward = PilotCommand.FORWARD;
+    PilotCommand moveBackward = PilotCommand.BACKWARD;
+    PilotCommand moveLeft = PilotCommand.LEFT;
+    PilotCommand moveRight = PilotCommand.RIGHT;
+    PilotCommand rotateLeft = PilotCommand.ROTATELEFT;
+    PilotCommand rotateRight = PilotCommand.ROTATERIGHT;
+    PilotCommand moveUp = PilotCommand.UP;
+    PilotCommand moveDown = PilotCommand.DOWN;
+    PilotCommand pitchUp = PilotCommand.PITCHUP;
+    PilotCommand pitchDown = PilotCommand.PITCHDOWN;
+    PilotCommand rollLeft = PilotCommand.ROLLLEFT;
+    PilotCommand rollRight = PilotCommand.ROLLRIGHT;
+    PilotCommand toggleHoverMode = PilotCommand.TOGGLEHOVERMODE;
+    PilotCommand switchCamera = PilotCommand.SWITCHCAM;
+
 
     public DroneController(InputManager inputManager, Drone drone, WorldView worldView, CurrentMatrix currentMatrix) {
         this.inputManager = inputManager;
@@ -123,13 +127,26 @@ public class DroneController {
             case CAM_UP:    camUpIntention = pressed; break;
             case CAM_DOWN:  camDownIntention = pressed; break;
 
+            case SWITCHCAM: switchCameraIntention = pressed; break;
+
             case STOP:
                 forwardIntention = false;
                 backwardIntention = false;
                 leftIntention = false;
                 rightIntention = false;
+                rotateLeftIntention = false;
+                rotateRightIntention = false;
                 upIntention = false;
                 downIntention = false;
+                pitchForwardIntention = false;
+                pitchBackwardIntention = false;
+                rollLeftIntention = false;
+                rollRightIntention = false;
+                toggleHoverModeIntention = false;
+                camLeftIntention = false;
+                camRightIntention = false;
+                camUpIntention = false;
+                camDownIntention = false;
                 break;
         }
     }
@@ -163,6 +180,8 @@ public class DroneController {
         inputManager.addMapping(PilotCommand.CAM_UP.name(),    new KeyTrigger(KeyInput.KEY_UP));
         inputManager.addMapping(PilotCommand.CAM_DOWN.name(),  new KeyTrigger(KeyInput.KEY_DOWN));
 
+        inputManager.addMapping(PilotCommand.SWITCHCAM.name(), new KeyTrigger(KeyInput.KEY_C));
+
         // Listeners
         inputManager.addListener(actionListener,
                 moveForward.name(),
@@ -183,7 +202,9 @@ public class DroneController {
                 PilotCommand.CAM_LEFT.name(),
                 PilotCommand.CAM_RIGHT.name(),
                 PilotCommand.CAM_UP.name(),
-                PilotCommand.CAM_DOWN.name()
+                PilotCommand.CAM_DOWN.name(),
+
+                PilotCommand.SWITCHCAM.name()
         );
     }
 
@@ -260,19 +281,22 @@ public class DroneController {
         // ⭐ FREE-LOOK NE TOUCHE PAS LA PHYSIQUE
 
         if (toggleHoverModeIntention) {
-            if (!wasHoverModeCalculated) {
-                isHoverModeOn = !isHoverModeOn;
-                if(isHoverModeOn){
-                    hoverHeight = min(drone.getDroneSpatial().getLocalTranslation().getY(),waterHeight);
-                    System.out.println("Hover at : " + hoverHeight);
-                }
-                System.out.println("Hover mode is : " + isHoverModeOn);
-                wasHoverModeCalculated = true;
-            }
-        } else {
-            wasHoverModeCalculated = false;
-        }
 
+            Vector3f angularVelocity = physicsControl.getAngularVelocity();
+            Vector3f totalTorqueStabilisation = new Vector3f();
+
+            StabiliseDroneAttitude(totalTorqueStabilisation, angularVelocity);
+
+            physicsControl.applyTorque(totalTorqueStabilisation.multLocal(8f));
+
+            physicsControl.setAngularVelocity(
+                    physicsControl.getAngularVelocity().mult(0.4f)
+            );
+
+            toggleHoverModeIntention = false;
+
+            System.out.println("Stabilisation ponctuelle du drone");
+        }
         Vector3f totalForce = new Vector3f();
         Vector3f forward = drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_Z);
         Vector3f left = drone.getDroneSpatial().getLocalRotation().mult(Vector3f.UNIT_X);
@@ -411,4 +435,5 @@ public class DroneController {
     public void SetHoverHeight(float newHoverHeight){ this.hoverHeight = min(newHoverHeight,waterHeight); }
     public float GetUpdateSpeedHoverMode(){ return this.updateSpeedHoverMode; }
     public void SetUpdateSpeedHoverMode(float newUpdateSpeed){ this.updateSpeedHoverMode = newUpdateSpeed; }
+    public boolean isSwitchCameraIntention(){ return switchCameraIntention; }
 }
