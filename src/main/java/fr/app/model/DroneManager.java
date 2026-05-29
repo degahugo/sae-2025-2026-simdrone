@@ -34,6 +34,10 @@ public class DroneManager {
         this.currentMatrix = currentMatrix;
     }
 
+    /**
+     * Créer un drone
+     * @param name Si le nom n'est pas connu on utilisera le drone BR2R4
+     */
     public void CreateDrone(String name){
         String droneName;
         // Camera avant
@@ -93,6 +97,9 @@ public class DroneManager {
         }
     }
 
+    /**
+     * Change la caméra qui sera utilisée
+     */
     public void switchCamera() {
         if (rearCameraManager == null) {
             System.out.println("Pas de caméra arrière sur ce drone");
