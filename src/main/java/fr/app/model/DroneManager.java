@@ -15,16 +15,14 @@ public class DroneManager {
     private Node rootNode;
     private PhysicsEngine physicsEngine;
     private InputManager inputManager;
-    private DroneController droneController;
-    private DroneCameraManager frontCameraManager;
-    private DroneCameraManager rearCameraManager;
     private CurrentMatrix currentMatrix;
     private Camera cam;
-    private boolean showingFrontCam = true;
-    private Drone drone;
     private WorldView model;
 
-    public DroneManager(AssetManager assetManager, Node rootNode, PhysicsEngine physicsEngine, InputManager inputManager, Camera cam, WorldView worldView, CurrentMatrix currentMatrix){
+    private int droneCount = 0;
+
+    public DroneManager(AssetManager assetManager, Node rootNode, PhysicsEngine physicsEngine,
+                        InputManager inputManager, Camera cam, WorldView worldView, CurrentMatrix currentMatrix){
         this.assetManager = assetManager;
         this.rootNode = rootNode;
         this.physicsEngine = physicsEngine;
@@ -35,102 +33,131 @@ public class DroneManager {
     }
 
     /**
-     * Créer un drone
-     * @param name Si le nom n'est pas connu on utilisera le drone BR2R4
+     * Instance retournée à chaque création de drone.
+     *
+     * Porte le drone, son contrôleur, sa caméra avant et (optionnellement) sa
+     * caméra arrière. Le basculement avant/arrière est désormais géré PAR DRONE
+     * (et non globalement) afin de rester correct en multi-client.
      */
-    public void CreateDrone(String name){
-        String droneName;
-        // Camera avant
-        Vector3f camOffset;
-        float maxYaw;
-        float maxPitch;
-        // Camera arrière pour le Guardian
-        Vector3f rearCamOffset;
-        float maxRearYaw;
-        float maxRearPitch;
-        // On met le bon nom de drone
-        // On règle l'offset de la caméra pour bien la placer
-        // On définit les limites de rotation de la caméra
-        if(name.equals("Guardian")){
-            droneName = "subseatech/guardian/guardian-vehicle.j3o";
-            camOffset = new Vector3f(0, 0, 0.4f);
-            maxYaw = 90f;
-            maxPitch = 90f;
-            rearCamOffset = new Vector3f(0, 0, -0.4f);
-            maxRearYaw = 0f;
-            maxRearPitch = 90f;
-        } else{
-            droneName = "bluerobotics/br2r4/br2-r4-vehicle.j3o";
-            camOffset = new Vector3f(0, 0, 0.205f);
-            maxYaw = 0f;
-            maxPitch = 90f;
-            // Pas de camera arrière alors on initialise à 0
-            // On doit initialiser pour que ça compile à cause de la suite du code
-            rearCamOffset = new Vector3f(0, 0, 0);
-            maxRearYaw = 0f;
-            maxRearPitch = 0f;
+    public static class DroneInstance {
+        public final Drone drone;
+        public final DroneController controller;
+        public final DroneCameraManager cameraManager;       // caméra avant (nom conservé de feature)
+        public final DroneCameraManager rearCameraManager;   // null si le drone n'a pas de caméra arrière
+
+        private boolean showingFrontCam = true;
+
+        public DroneInstance(Drone drone, DroneController controller,
+                             DroneCameraManager cameraManager, DroneCameraManager rearCameraManager){
+            this.drone = drone;
+            this.controller = controller;
+            this.cameraManager = cameraManager;
+            this.rearCameraManager = rearCameraManager;
         }
-        Node droneNode = new Node("Drone");
-        Spatial droneModel = assetManager.loadModel("vehicle/" + droneName);
-        // Empêche la caméra de voir le drone
-       droneModel.setQueueBucket(Bucket.Gui);
-        droneNode.attachChild(droneModel);
-        droneNode.move(0f, 1f, 0f);
-        rootNode.attachChild(droneNode);
-        drone = new Drone("drone1", droneNode);
-        this.physicsEngine.CreateDroneHitbox(drone, name);
-        this.droneController = new DroneController(inputManager, drone, model, currentMatrix);
-        this.droneController.setUpKeys();
-        this.frontCameraManager = new DroneCameraManager(cam, drone, false);
-        // On applique l'offset de la caméra pour bien la placer et ses limites de rotation
-        this.frontCameraManager.setCameraOffset(camOffset);
-        this.frontCameraManager.setMaxYaw(maxYaw);
-        this.frontCameraManager.setMaxPitch(maxPitch);
-        if(name.equals("Guardian")){
-            this.rearCameraManager = new DroneCameraManager(cam, drone, true);
-            this.rearCameraManager.setCameraOffset(rearCamOffset);
-            this.rearCameraManager.setMaxYaw(maxRearYaw);
-            this.rearCameraManager.setMaxPitch(maxRearPitch);
-            this.rearCameraManager.setActive(false);
-        } else{
-            this.rearCameraManager = null;
+
+        public boolean hasRearCamera(){ return rearCameraManager != null; }
+
+        public boolean isShowingFrontCam(){ return showingFrontCam; }
+
+        /** Caméra actuellement affichée pour ce drone. */
+        public DroneCameraManager getActiveCameraManager(){
+            return showingFrontCam ? cameraManager : rearCameraManager;
+        }
+
+        /** Bascule entre caméra avant et arrière (sans effet si pas de cam arrière). */
+        public void switchCamera(){
+            if (rearCameraManager == null){
+                System.out.println("Pas de caméra arrière sur ce drone");
+                return;
+            }
+            if (showingFrontCam){
+                cameraManager.setActive(false);
+                rearCameraManager.setActive(true);
+                showingFrontCam = false;
+                System.out.println("Passage en vue arrière");
+            } else {
+                cameraManager.setActive(true);
+                rearCameraManager.setActive(false);
+                showingFrontCam = true;
+                System.out.println("Passage en vue avant");
+            }
         }
     }
 
     /**
-     * Change la caméra qui sera utilisée
+     * Crée un drone (usine multi-client) et renvoie son instance complète.
+     *
+     * @param modelName modèle du drone ("BR2R4", sinon traité comme Guardian)
+     * @param droneId   identifiant unique du drone
      */
-    public void switchCamera() {
-        if (rearCameraManager == null) {
-            System.out.println("Pas de caméra arrière sur ce drone");
-            return;
+    public DroneInstance createDrone(String modelName, String droneId){
+        String droneName;
+        Vector3f camOffset;
+        float maxYaw;
+        float maxPitch;
+
+        // Caméra arrière : uniquement pour le Guardian
+        boolean isGuardian = !"BR2R4".equals(modelName);
+        Vector3f rearCamOffset = new Vector3f(0f, 0f, 0f);
+        float maxRearYaw   = 0f;
+        float maxRearPitch = 0f;
+
+        if (!isGuardian){
+            // BR2R4 : caméra avant seule
+            droneName = "bluerobotics/br2r4/br2-r4-vehicle.j3o";
+            camOffset = new Vector3f(0f, 0f, 0.205f);
+            maxYaw    = 0f;
+            maxPitch  = 90f;
+        } else {
+            // Guardian : caméra avant + caméra arrière
+            droneName = "subseatech/guardian/guardian-vehicle.j3o";
+            camOffset = new Vector3f(0f, 0f, 0.4f);
+            maxYaw    = 90f;
+            maxPitch  = 90f;
+            rearCamOffset = new Vector3f(0f, 0f, -0.4f);
+            maxRearYaw    = 0f;
+            maxRearPitch  = 90f;
         }
-        if (showingFrontCam) {
-            // On éteint la cam avant et on allume la cam arrière
-            frontCameraManager.setActive(false);
-            rearCameraManager.setActive(true);
-            showingFrontCam = false;
-            System.out.println("Passage en vue arrière");
-        } else{
-            // On allume la cam avant et on éteint la cam arrière
-            frontCameraManager.setActive(true);
-            rearCameraManager.setActive(false);
-            showingFrontCam = true;
-            System.out.println("Passage en vue avant");
+
+        // Décalage de spawn pour ne pas empiler les drones les uns sur les autres
+        float spawnOffsetX = droneCount * 3.0f;
+        droneCount += 1;
+
+        Node droneNode = new Node("Drone_" + droneId);
+        Spatial droneModel = assetManager.loadModel("vehicle/" + droneName);
+        droneModel.setQueueBucket(Bucket.Opaque);
+        droneNode.attachChild(droneModel);
+        droneNode.move(spawnOffsetX, 1f, 0f);
+        rootNode.attachChild(droneNode);
+
+        Drone drone = new Drone(droneId, droneNode);
+        physicsEngine.CreateDroneHitbox(drone, modelName);
+
+        DroneController controller = new DroneController(inputManager, drone, model, currentMatrix);
+        // NB : setUpKeys() n'est PAS appelé ici. En multi-client on ne veut pas que
+        // chaque drone capture le clavier global. Main peut l'appeler sur le drone
+        // piloté localement via instance.controller.setUpKeys().
+
+        // Caméra avant
+        DroneCameraManager frontCam = new DroneCameraManager(cam, drone, false);
+        frontCam.setCameraOffset(camOffset);
+        frontCam.setMaxYaw(maxYaw);
+        frontCam.setMaxPitch(maxPitch);
+
+        // Caméra arrière (Guardian uniquement)
+        DroneCameraManager rearCam = null;
+        if (isGuardian){
+            rearCam = new DroneCameraManager(cam, drone, true);
+            rearCam.setCameraOffset(rearCamOffset);
+            rearCam.setMaxYaw(maxRearYaw);
+            rearCam.setMaxPitch(maxRearPitch);
+            rearCam.setActive(false);
         }
-    }
 
-    public Drone getDrone(){
-        return this.drone;
-    }
+        System.out.println("[DroneManager] Drone créé : id=" + droneId
+                + "  modèle=" + modelName + "  spawnX=" + spawnOffsetX
+                + (isGuardian ? "  (avec caméra arrière)" : ""));
 
-    public DroneCameraManager getFrontCameraManager(){ return this.frontCameraManager; }
-
-    public DroneCameraManager getRearCameraManager(){ return this.rearCameraManager; }
-
-    public boolean isShowingFrontCam(){ return showingFrontCam; }
-
-    public DroneController getDroneController(){
-        return this.droneController;
+        return new DroneInstance(drone, controller, frontCam, rearCam);
     }
 }

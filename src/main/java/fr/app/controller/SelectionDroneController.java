@@ -8,6 +8,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
 import javafx.stage.Stage;
+import java.util.UUID;
 
 public class SelectionDroneController {
 
@@ -51,6 +52,12 @@ public class SelectionDroneController {
 
             configuration.setDroneType(selectedDrone);
 
+            //Générer un droneId unique pour ce client  évite les collisions multi-client
+            String droneId = selectedDrone.getSimulatorName().toLowerCase()
+                    + "_" + UUID.randomUUID().toString().substring(0, 8);
+
+            //Mémoriser dans le NetworkClient pour les envois de commandes
+            client.setDroneId(droneId);
             FXMLLoader loader = new FXMLLoader(
                     getClass().getResource("/fxml/Dashboard.fxml")
             );
@@ -59,7 +66,7 @@ public class SelectionDroneController {
 
             DashboardController controller = loader.getController();
             controller.setClient(client);
-            controller.setDroneId(selectedDrone.getDroneId());
+            controller.setDroneId(droneId);
             controller.setConfiguration(configuration);
             controller.installKeyboardControls(scene);
 

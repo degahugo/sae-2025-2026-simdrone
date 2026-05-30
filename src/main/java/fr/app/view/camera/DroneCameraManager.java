@@ -49,7 +49,7 @@ public class DroneCameraManager {
         this.drone = drone;
         this.isRearCam = isRearCam;
 
-        this.cameraNode = new CameraNode("CameraNode",this.cam);
+        this.cameraNode = new CameraNode("CameraNode_" + drone.getId(), this.cam);
         this.cameraNode.setControlDir(CameraControl.ControlDirection.SpatialToCamera);
         if (isRearCam) {
             // On crée un quaternion de 180 degrés sur l'axe Y (lacet / Yaw)
@@ -62,6 +62,10 @@ public class DroneCameraManager {
         // Offset initial (compatible avec develop)
         this.cameraNode.setLocalTranslation(this.cameraOffset);
         applyRotation();
+    }
+
+    public DroneCameraManager(Camera cam, Drone drone) {
+        this(cam, drone, false);
     }
 
     // --- Contrôles Free-Look ---
@@ -195,5 +199,18 @@ public class DroneCameraManager {
      */
     public float getCameraYaw(){
         return this.cameraYaw;
+    }
+
+    public Quaternion getManualRotation() {
+        Quaternion manual = new Quaternion().fromAngles(cameraPitch, cameraYaw, 0f);
+        if (isRearCam) {
+            Quaternion flip180 = new Quaternion().fromAngleAxis(FastMath.PI, Vector3f.UNIT_Y);
+            return flip180.mult(manual);
+        }
+        return manual;
+    }
+
+    public Drone getDrone() {
+        return drone;
     }
 }

@@ -3,29 +3,21 @@ package fr.app.model;
 public enum DroneType {
 
     BR2R4(
-            "drone1",
             "ROV BlueRobotics BR2R4",
             "BR2R4"
     ),
 
     GUARDIAN(
-            "drone1",
             "ROV SubseaTech Guardian",
             "Guardian"
     );
 
-    private final String droneId;
     private final String label;
     private final String simulatorName;
 
-    DroneType(String droneId, String label, String simulatorName) {
-        this.droneId = droneId;
+    DroneType(String label, String simulatorName) {
         this.label = label;
         this.simulatorName = simulatorName;
-    }
-
-    public String getDroneId() {
-        return droneId;
     }
 
     public String getLabel() {

@@ -7,28 +7,28 @@ public class DroneCameraController {
     private DroneCameraManager frontCameraManager;
     private DroneCameraManager rearCameraManager;
     private DroneController droneController;
-    private DroneManager droneManager;
+    private DroneManager.DroneInstance droneInstance;
 
     private boolean isCameraSwitched = false;
 
-    public DroneCameraController(DroneCameraManager frontCameraManager, DroneCameraManager rearCameraManager, DroneController droneController, DroneManager droneManager){
+    public DroneCameraController(DroneCameraManager frontCameraManager, DroneCameraManager rearCameraManager, DroneController droneController, DroneManager.DroneInstance droneInstance){
         this.frontCameraManager = frontCameraManager;
         this.rearCameraManager = rearCameraManager;
         this.droneController = droneController;
-        this.droneManager = droneManager;
+        this.droneInstance = droneInstance;
     }
 
     public void update(float tpf){
         if (droneController.isSwitchCameraIntention()) {
             if (!isCameraSwitched) {
-                droneManager.switchCamera();
+                droneInstance.switchCamera();
                 isCameraSwitched = true;
             }
         } else {
             isCameraSwitched = false;
         }
         DroneCameraManager usedCameraManager;
-        if (droneManager.isShowingFrontCam()) {
+        if (droneInstance.isShowingFrontCam()) {
             usedCameraManager = frontCameraManager;
         } else {
             usedCameraManager = rearCameraManager;

@@ -276,7 +276,7 @@ public class DashboardController {
 
             client.sendStartSimulation(droneId);
 
-            DroneStatus status = client.receiveStatus();
+            DroneStatus status = client.receiveStatusFrais();
 
             lastStatus.set(status);
 
