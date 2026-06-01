@@ -596,7 +596,6 @@ public class Main extends SimpleApplication {
             }
             else {
                 s.setRearCamPitch(camPitch);
-
                 s.setRearCamYaw(camYaw);
             }
         }
