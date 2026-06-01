@@ -687,7 +687,7 @@
                             <Canvas fx:id="yawCameraCanvas" width="60" height="60"/>
                             <Label fx:id="yawCamLabel" text="0°"
                                    style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;"/>
-                            <Label text="-180  180" style="-fx-text-fill: #334155; -fx-font-size: 8px;"/>
+                            <Label text="-90  90" style="-fx-text-fill: #334155; -fx-font-size: 8px;"/>
                         </VBox>
 
                         <VBox alignment="CENTER" spacing="2" HBox.hgrow="ALWAYS"
@@ -703,7 +703,7 @@
                     </HBox>
 
                     <Button text="⇄ SWITCH CAMERA"
-                            onAction="#switchCamera"
+                            onAction="#switchCameraButton"
                             maxWidth="Infinity"
                             prefHeight="30"
                             style="-fx-background-color: #334155;

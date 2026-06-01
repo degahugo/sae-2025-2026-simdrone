@@ -582,6 +582,24 @@ public class Main extends SimpleApplication {
         s.setYaw(Math.toDegrees(angles[1]));
         s.setRoll(Math.toDegrees(angles[2]));
 
+        // Gère l'envoie des données pour la caméra
+        DroneInstance instance = droneInstances.get(droneId);
+        boolean isShowingFrontCam = instance.isShowingFrontCam();
+        s.setShowingFrontCamera(isShowingFrontCam);
+        DroneCameraManager camManager = instance.getActiveCameraManager();
+        if(camManager != null){
+            float camPitch = camManager.getCameraPitch();
+            float camYaw = camManager.getCameraYaw();
+            if(isShowingFrontCam){
+                s.setFrontCamPitch(camPitch);
+                s.setFrontCamYaw(camYaw);
+            }
+            else {
+                s.setRearCamPitch(camPitch);
+                s.setRearCamYaw(camYaw);
+            }
+        }
+
         TemperatureSensor ts = tempSensors.get(droneId);
         if (ts != null) s.setTemperature(ts.getTemperature());
 
