@@ -34,6 +34,7 @@ public class PhysicsEngine{
     private WorldView model;
     private Node rootNode;
     private GUIManager guiManager;
+    private volatile long lastCollisionTime = 0;
 
     public PhysicsEngine(SimpleApplication app, WorldView model, GUIManager guiManager, boolean showMeshWireframe) {
         this.model = model;
@@ -384,9 +385,14 @@ public class PhysicsEngine{
 
                         if (a == dronePhysics || b == dronePhysics) {
 
+                            lastCollisionTime = System.currentTimeMillis();
                             drone.setCollisionDetected(true);
-                            //drone.setCollisionMessage("Collision avec terrain ou obstacle");
+                            drone.setCollisionMessage("Collision avec terrain ou obstacle");
                             System.out.println("Collision détectée");
+                        }
+
+                        else {
+                            drone.setCollisionDetected(false);
                         }
                     }
                 }
@@ -394,7 +400,9 @@ public class PhysicsEngine{
     }
 
 
-
+    public long getLastCollisionTime() {
+        return lastCollisionTime;
+    }
 
     public void CreateDroneHitbox(Drone drone){
         CreateDroneHitbox(drone, "Auto");

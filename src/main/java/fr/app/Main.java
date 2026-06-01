@@ -281,8 +281,16 @@ public class Main extends SimpleApplication {
             String droneId = entry.getKey();
             Drone drone = entry.getValue();
 
-            drone.setCollisionDetected(false);
-            drone.setCollisionMessage("Aucune collision");
+            if (drone.isCollisionDetected()) {
+                long elapsed = System.currentTimeMillis() - physicsEngine.getLastCollisionTime();
+                if (elapsed > 1000) {
+                    drone.setCollisionDetected(false);
+                    drone.setCollisionMessage("Aucune collision");
+                }
+            }
+
+            //drone.setCollisionDetected(false);
+            //drone.setCollisionMessage("Aucune collision");
 
             DroneController droneController = droneControllers.get(droneId);
             if (droneController != null) {
