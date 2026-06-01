@@ -87,9 +87,8 @@
             </columnConstraints>
 
             <rowConstraints>
-                <RowConstraints percentHeight="52"/>
+                <RowConstraints percentHeight="66"/>
                 <RowConstraints percentHeight="34"/>
-                <RowConstraints percentHeight="14"/>
             </rowConstraints>
 
             <!--
@@ -571,6 +570,19 @@
 
                     <Region VBox.vgrow="ALWAYS"/>
 
+                    <Button text="■ ARRÊTER SIMULATION"
+                            onAction="#stopSimulation"
+                            maxWidth="Infinity"
+                            prefHeight="28"
+                            style="-fx-background-color: #334155;
+               -fx-text-fill: white;
+               -fx-font-size: 11px;
+               -fx-font-weight: bold;
+               -fx-cursor: hand;
+               -fx-background-radius: 6;
+               -fx-border-radius: 6;"/>
+
+
                     <Button text="⚠  ARRÊT D'URGENCE" onAction="#emergencyStop"
                             maxWidth="Infinity" prefHeight="34"
                             style="-fx-background-color: #991b1b; -fx-text-fill: white;
@@ -583,45 +595,12 @@
 
             </HBox>
 
-            <!--
-                 BARRE RÉSEAU — ligne 2
-             -->
 
-            <HBox spacing="0" alignment="CENTER"
-                  GridPane.columnIndex="0"
-                  GridPane.columnSpan="3"
-                  GridPane.rowIndex="2"
-                  style="-fx-background-color: #0b1824; -fx-padding: 4 16;
-                         -fx-border-color: #1e3a5f; -fx-border-radius: 8; -fx-background-radius: 8;">
-                <VBox alignment="CENTER" HBox.hgrow="ALWAYS" spacing="1">
-                    <Label text="LATENCE" style="-fx-text-fill: #475569; -fx-font-size: 9px;"/>
-                    <Label fx:id="latencyLabel" text="-- ms"
-                           style="-fx-text-fill: #38bdf8; -fx-font-size: 18px; -fx-font-weight: bold;"/>
-                </VBox>
-                <Separator orientation="VERTICAL" style="-fx-opacity:0.15;"/>
-                <VBox alignment="CENTER" HBox.hgrow="ALWAYS" spacing="1">
-                    <Label text="PAQUETS PERDUS" style="-fx-text-fill: #475569; -fx-font-size: 9px;"/>
-                    <Label fx:id="packetLossLabel" text="0%"
-                           style="-fx-text-fill: #38bdf8; -fx-font-size: 18px; -fx-font-weight: bold;"/>
-                </VBox>
-                <Separator orientation="VERTICAL" style="-fx-opacity:0.15;"/>
-                <VBox alignment="CENTER" HBox.hgrow="ALWAYS" spacing="1">
-                    <Label text="FRÉQUENCE" style="-fx-text-fill: #475569; -fx-font-size: 9px;"/>
-                    <Label fx:id="frequencyLabel" text="-- FPS"
-                           style="-fx-text-fill: #38bdf8; -fx-font-size: 18px; -fx-font-weight: bold;"/>
-                </VBox>
-                <Separator orientation="VERTICAL" style="-fx-opacity:0.15;"/>
-                <VBox alignment="CENTER" HBox.hgrow="ALWAYS" spacing="1">
-                    <Label text="UPTIME" style="-fx-text-fill: #475569; -fx-font-size: 9px;"/>
-                    <Label fx:id="uptimeLabel" text="--"
-                           style="-fx-text-fill: #38bdf8; -fx-font-size: 18px; -fx-font-weight: bold;"/>
-                </VBox>
-            </HBox>
 
             <!--
                  DROITE — span 3 lignes
              -->
-            <VBox spacing="6"
+            <VBox spacing="3"
                   GridPane.columnIndex="2" GridPane.rowIndex="0" GridPane.rowSpan="2"
                   style="-fx-background-color: #0b1824; -fx-padding: 14;
                          -fx-border-color: #1e3a5f; -fx-border-radius: 8; -fx-background-radius: 8;">
@@ -630,7 +609,7 @@
                 <Label text="BOUSSOLE"
                        style="-fx-text-fill: #cbd5e1; -fx-font-size: 11px; -fx-font-weight: bold;"/>
 
-                <StackPane prefHeight="250" maxHeight="250"
+                <StackPane prefHeight="180" maxHeight="180"
                            style="-fx-background-color: #07111b;
                   -fx-background-radius: 12;
                   -fx-border-color: #1e3a5f;
@@ -638,7 +617,7 @@
                   -fx-padding: 10 4 18 4;">
 
                     <!-- Cercle de fond -->
-                    <Canvas fx:id="compassCanvas" width="182" height="182"/>
+                    <Canvas fx:id="compassCanvas" width="140" height="140"/>
 
                     <!-- Triangle indicateur fixe -->
                     <Polygon points="0,-10,-6,2,6,2" fill="#22c55e"
@@ -694,37 +673,57 @@
 
                 <!-- GESTION CAMERAS -->
                 <Label fx:id="gestionCamText"
+                       text="GESTION CAMÉRA"
                        style="-fx-text-fill: #475569; -fx-font-size: 9px; -fx-font-weight: bold;"/>
-                <HBox spacing="6" alignment="CENTER">
-                    <VBox alignment="CENTER" spacing="2" HBox.hgrow="ALWAYS"
-                          style="-fx-background-color: #071827; -fx-padding: 6;
-                 -fx-border-radius: 6; -fx-background-radius: 6;">
-                        <Label text="YAW"   style="-fx-text-fill: #475569; -fx-font-size: 9px;"/>
-                        <Canvas fx:id="yawCameraCanvas" width="60" height="60"/>
-                        <Label fx:id="yawCamLabel" text="0°"
-                               style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;"/>
-                        <Label text="-180  180" style="-fx-text-fill: #334155; -fx-font-size: 8px;"/>
-                    </VBox>
-                    <VBox alignment="CENTER" spacing="2" HBox.hgrow="ALWAYS"
-                          style="-fx-background-color: #071827; -fx-padding: 6;
-                 -fx-border-radius: 6; -fx-background-radius: 6;">
-                        <Label text="PITCH" style="-fx-text-fill: #475569; -fx-font-size: 9px;"/>
-                        <Canvas fx:id="pitchCameraCanvas" width="60" height="60"/>
-                        <Label fx:id="pitchCamLabel" text="0°"
-                               style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;"/>
-                        <Label text="-90   90" style="-fx-text-fill: #334155; -fx-font-size: 8px;"/>
-                    </VBox>
-                    <VBox alignment="CENTER" spacing="2" HBox.hgrow="ALWAYS"
-                          style="-fx-background-color: #071827; -fx-padding: 6;
-                 -fx-border-radius: 6; -fx-background-radius: 6;">
-                        <Label text="SWITCH CAMERA" style="-fx-text-fill: #475569; -fx-font-size: 9px;"/>
-                        <Button text="Switch camera" onAction="#switchCamera"
-                                maxWidth="Infinity" prefHeight="34"
-                                style="-fx-background-color: #334155; -fx-text-fill: white;
-               -fx-font-weight: bold; -fx-font-size: 12px; -fx-cursor: hand;"/>
-                        <Label fx:id="switchCamLabel" text="Front camera" style="-fx-text-fill: #334155; -fx-font-size: 8px;"/>
-                    </VBox>
-                </HBox>
+
+                <VBox spacing="6">
+
+                    <HBox spacing="6" alignment="CENTER">
+
+                        <VBox alignment="CENTER" spacing="2" HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: #071827; -fx-padding: 6;
+                     -fx-border-radius: 6; -fx-background-radius: 6;">
+                            <Label text="YAW" style="-fx-text-fill: #475569; -fx-font-size: 9px;"/>
+                            <Canvas fx:id="yawCameraCanvas" width="60" height="60"/>
+                            <Label fx:id="yawCamLabel" text="0°"
+                                   style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;"/>
+                            <Label text="-180  180" style="-fx-text-fill: #334155; -fx-font-size: 8px;"/>
+                        </VBox>
+
+                        <VBox alignment="CENTER" spacing="2" HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: #071827; -fx-padding: 6;
+                     -fx-border-radius: 6; -fx-background-radius: 6;">
+                            <Label text="PITCH" style="-fx-text-fill: #475569; -fx-font-size: 9px;"/>
+                            <Canvas fx:id="pitchCameraCanvas" width="60" height="60"/>
+                            <Label fx:id="pitchCamLabel" text="0°"
+                                   style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;"/>
+                            <Label text="-90   90" style="-fx-text-fill: #334155; -fx-font-size: 8px;"/>
+                        </VBox>
+
+                    </HBox>
+
+                    <Button text="⇄ SWITCH CAMERA"
+                            onAction="#switchCamera"
+                            maxWidth="Infinity"
+                            prefHeight="30"
+                            style="-fx-background-color: #334155;
+                   -fx-text-fill: white;
+                   -fx-font-weight: bold;
+                   -fx-font-size: 11px;
+                   -fx-cursor: hand;
+                   -fx-background-radius: 6;
+                   -fx-border-radius: 6;"/>
+
+                    <Label fx:id="switchCamLabel"
+                           text="Front camera"
+                           alignment="CENTER"
+                           maxWidth="Infinity"
+                           style="-fx-text-fill: #38bdf8;
+                  -fx-font-size: 10px;"/>
+                </VBox>
+
+
+
 
                 <Separator/>
 
@@ -784,22 +783,14 @@
                                smooth="true"
                                managed="false"/>
 
-                    <Label text="APERÇU CAMÉRA 1"
-                           StackPane.alignment="TOP_CENTER"
+                    <Label fx:id="cameraPreviewLabel" text="APERÇU CAMÉRA ARRIÈRE"                           StackPane.alignment="TOP_CENTER"
                            style="-fx-text-fill: #38bdf8;
                   -fx-font-size: 10px;
                   -fx-background-color: rgba(0,0,0,0.45);
                   -fx-padding: 2 6;"/>
                 </StackPane>
 
-                <Region VBox.vgrow="ALWAYS"/>
-
-                <!-- ARRÊT D'URGENCE -->
-                <Button text="■  ARRÊTER SIMULATION" onAction="#stopSimulation"
-                        maxWidth="Infinity" prefHeight="34"
-                        style="-fx-background-color: #334155; -fx-text-fill: white;
-               -fx-font-weight: bold; -fx-font-size: 12px; -fx-cursor: hand;"/>
-            </VBox>
+                </VBox>
 
         </GridPane>
     </center>

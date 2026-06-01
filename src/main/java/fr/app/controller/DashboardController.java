@@ -46,6 +46,9 @@ public class DashboardController {
     @FXML private Label radarRangeLabel;
     @FXML private ImageView cameraPreviewView;
     @FXML private StackPane cameraPreviewPane;
+    private Image lastFrontFrame = null;
+    private Image lastRearFrame = null;
+    @FXML private Label cameraPreviewLabel;
 
     // ── Barre supérieure
     @FXML private Label networkLabel;
@@ -151,11 +154,16 @@ public class DashboardController {
         // Dessin initial à zéro
         Platform.runLater(() -> {
             drawCompass(0);
+
+            // Orientation drone
             drawGauge(yawCanvas,   0, -180, 180);
             drawGauge(pitchCanvas, 0,  -90,  90);
             drawGauge(rollCanvas,  0,  -90,  90);
-        });
 
+            // Orientation caméra
+            drawGauge(yawCameraCanvas, 0, -90, 90);
+            drawGauge(pitchCameraCanvas, 0, -90, 90);
+        });
         cameraView.setManaged(false);
         cameraView.fitWidthProperty().bind(cameraPane.widthProperty());
         cameraView.fitHeightProperty().bind(cameraPane.heightProperty());
@@ -233,24 +241,25 @@ public class DashboardController {
      * Peut être appelé depuis n'importe quel thread — Platform.runLater pour le thread JavaFX.
      */
     public void afficherFrameVideo(byte[] jpegBytes) {
-
         Platform.runLater(() -> {
-
             try {
+                Image image = new Image(new ByteArrayInputStream(jpegBytes));
+                DroneStatus status = lastStatus.get();
+                boolean showingFront = status == null || status.getShowingFrontCamera();
 
-                Image image = new Image(
-                        new ByteArrayInputStream(jpegBytes)
-                );
-
-                cameraView.setImage(image);
-                cameraPreviewView.setImage(image);
-
+                if (showingFront) {
+                    lastFrontFrame = image;
+                    cameraView.setImage(image);
+                    // Affiche la dernière frame arrière connue, sinon la frame actuelle
+                    cameraPreviewView.setImage(lastRearFrame != null ? lastRearFrame : image);
+                } else {
+                    lastRearFrame = image;
+                    cameraView.setImage(image);
+                    // Affiche la dernière frame avant connue, sinon la frame actuelle
+                    cameraPreviewView.setImage(lastFrontFrame != null ? lastFrontFrame : image);
+                }
             } catch (Exception e) {
-
-                System.err.println(
-                        "[Dashboard] Erreur affichage frame : "
-                                + e.getMessage()
-                );
+                System.err.println("[Dashboard] Erreur affichage frame : " + e.getMessage());
             }
         });
     }
@@ -659,6 +668,8 @@ public class DashboardController {
                         status.getSpeed()
                 )
         );
+        setText(cameraPreviewLabel,
+                status.getShowingFrontCamera() ? "APERÇU CAMÉRA ARRIÈRE" : "APERÇU CAMÉRA AVANT");
 
         // Mini-map
         updateMiniMap(status);
