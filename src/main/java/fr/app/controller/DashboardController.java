@@ -19,6 +19,7 @@ import javafx.scene.shape.Circle;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+import javafx.scene.input.KeyCode;
 
 
 import javafx.scene.canvas.Canvas;
@@ -142,6 +143,9 @@ public class DashboardController {
     private final DateTimeFormatter HH_MM_SS =
             DateTimeFormatter.ofPattern("HH:mm:ss");
 
+    // Pour les touches
+    private final java.util.Set<javafx.scene.input.KeyCode> activeKeys = new java.util.HashSet<>();
+    private javafx.animation.AnimationTimer gameLoop;
 
     // ── Init FXML
     @FXML
@@ -1010,7 +1014,13 @@ public class DashboardController {
     @FXML
     private void switchCamera(){
         send(PilotCommand.SWITCHCAM);
-        // Obligatoire sinon on doit appuyer sur le bouton stop avant de pouvoir reswitch la caméra
+    }
+
+    /**
+     * Pour le bouton on fait un STOP après pour pouvoir rappuyer dessus sans avoir à appuyer sur le bouton STOP avant
+     */
+    @FXML private void switchCameraButton(){
+        switchCamera();
         send(PilotCommand.STOP);
     }
 
@@ -1164,6 +1174,66 @@ public class DashboardController {
 
     public void installKeyboardControls(Scene scene) {
 
+        // Quand on appuie, on ajoute la touche au HashSet
+        scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            activeKeys.add(event.getCode());
+        });
+
+        // Quand on relâche, on l'enlève du HashSet
+        scene.setOnKeyReleased(event -> {
+            KeyCode code = event.getCode();
+            activeKeys.remove(code);
+
+            // Si on a relâché toutes les touches de déplacement, on stoppe le drone
+            // On vérifie si les touches majeures de vol sont vides
+                    switch (code) {
+                        // Si on lâche une touche de déplacement ou de rotation, on stoppe le drone
+                        case Z, S, A, E, R, F, Q, D, I, K, J, L, C, UP, DOWN, LEFT, RIGHT -> stopDrone();
+                    }
+        });
+
+        // On démarre la boucle qui lit les touches en continu
+        if (gameLoop != null) gameLoop.stop(); // Sécurité pour ne pas appeler deux fois
+
+        gameLoop = new javafx.animation.AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                for (KeyCode code : activeKeys) {
+                    switch (code) {
+                        case Z -> moveForward();
+                        case S -> moveBackward();
+                        case A -> moveLeft();
+                        case E -> moveRight();
+                        case R -> moveUp();
+                        case F -> moveDown();
+
+                        case Q -> rotateLeft();
+                        case D -> rotateRight();
+
+                        case I -> pitchUp();
+                        case K -> pitchDown();
+
+                        case J -> rollLeft();
+                        case L -> rollRight();
+
+                        case T -> enableStabilizedMode();
+
+
+                        // Contrôles de caméra, ne bloquent pas le drone
+                        case C -> switchCamera();
+                        case UP -> pitchCameraUp();
+                        case DOWN -> pitchCameraDown();
+                        case LEFT -> rotateCameraLeft();
+                        case RIGHT -> rotateCameraRight();
+                    }
+                }
+            }
+        };
+
+        gameLoop.start();
+    }
+    /*public void installKeyboardControls(Scene scene) {
+
         scene.addEventFilter(KeyEvent.KEY_PRESSED,event -> {
             switch (event.getCode()) {
                 case Z -> moveForward();
@@ -1198,7 +1268,7 @@ public class DashboardController {
                 case W, S, Q, E, R, F, A, D, I, K, J, L, T, UP, DOWN, LEFT, RIGHT -> stopDrone();
             }
         });
-    }
+    }*/
 
 
 

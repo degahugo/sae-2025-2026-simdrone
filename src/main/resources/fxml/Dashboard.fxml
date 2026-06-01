@@ -718,7 +718,7 @@
                           style="-fx-background-color: #071827; -fx-padding: 6;
                  -fx-border-radius: 6; -fx-background-radius: 6;">
                         <Label text="SWITCH CAMERA" style="-fx-text-fill: #475569; -fx-font-size: 9px;"/>
-                        <Button text="Switch camera" onAction="#switchCamera"
+                        <Button text="Switch camera" onAction="#switchCameraButton"
                                 maxWidth="Infinity" prefHeight="34"
                                 style="-fx-background-color: #334155; -fx-text-fill: white;
                -fx-font-weight: bold; -fx-font-size: 12px; -fx-cursor: hand;"/>
