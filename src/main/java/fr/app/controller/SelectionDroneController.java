@@ -93,7 +93,7 @@ public class SelectionDroneController {
             stage.setOnCloseRequest(e -> controller.shutdown());
 
             stage.setScene(scene);
-            stage.setMaximized(true);
+            stage.setFullScreen(true);
 
         } catch (Exception e) {
             e.printStackTrace();
