@@ -14,6 +14,7 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.shape.Circle;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;import javafx.scene.layout.StackPane;
@@ -1009,7 +1010,33 @@ public class DashboardController {
     @FXML
     private void switchCamera(){
         send(PilotCommand.SWITCHCAM);
+        // Obligatoire sinon on doit appuyer sur le bouton stop avant de pouvoir reswitch la caméra
+        send(PilotCommand.STOP);
     }
+
+    /**
+     * Dis au serveur qu'on veut orienter la caméra vers le haut
+     */
+    @FXML
+    private void pitchCameraUp() { send(PilotCommand.CAM_UP); }
+
+    /**
+     * Dis au serveur qu'on veut orienter la caméra vers le bas
+     */
+    @FXML
+    private void pitchCameraDown() { send(PilotCommand.CAM_DOWN); }
+
+    /**
+     * Dis au serveur qu'on veut orienter la caméra vers la gauche
+     */
+    @FXML
+    private void rotateCameraLeft() { send(PilotCommand.CAM_LEFT); }
+
+    /**
+     * Dis au serveur qu'on veut orienter la caméra vers le droite
+     */
+    @FXML
+    private void rotateCameraRight() { send(PilotCommand.CAM_RIGHT); }
 
     @FXML
     private void stopSimulation() {
@@ -1137,31 +1164,38 @@ public class DashboardController {
 
     public void installKeyboardControls(Scene scene) {
 
-        scene.setOnKeyPressed(event -> {
+        scene.addEventFilter(KeyEvent.KEY_PRESSED,event -> {
             switch (event.getCode()) {
-                case W -> send(PilotCommand.FORWARD);
-                case S -> send(PilotCommand.BACKWARD);
-                case Q -> send(PilotCommand.LEFT);
-                case E -> send(PilotCommand.RIGHT);
-                case R -> send(PilotCommand.UP);
-                case F -> send(PilotCommand.DOWN);
+                case Z -> moveForward();
+                case S -> moveBackward();
+                case A -> moveLeft();
+                case E -> moveRight();
+                case R -> moveUp();
+                case F -> moveDown();
 
-                case A -> send(PilotCommand.ROTATELEFT);
-                case D -> send(PilotCommand.ROTATERIGHT);
+                case Q -> rotateLeft();
+                case D -> rotateRight();
 
-                case I -> send(PilotCommand.PITCHUP);
-                case K -> send(PilotCommand.PITCHDOWN);
+                case I -> pitchUp();
+                case K -> pitchDown();
 
-                case J -> send(PilotCommand.ROLLLEFT);
-                case L -> send(PilotCommand.ROLLRIGHT);
+                case J -> rollLeft();
+                case L -> rollRight();
 
-                case T -> send(PilotCommand.TOGGLEHOVERMODE);
+                case T -> enableStabilizedMode();
+
+                // Contrôles de caméra
+                case C -> switchCamera();
+                case UP -> pitchCameraUp();
+                case DOWN -> pitchCameraDown();
+                case LEFT -> rotateCameraLeft();
+                case RIGHT -> rotateCameraRight();
             }
         });
 
         scene.setOnKeyReleased(event -> {
             switch (event.getCode()) {
-                case W, S, Q, E, R, F, A, D, I, K, J, L, T -> stopDrone();
+                case W, S, Q, E, R, F, A, D, I, K, J, L, T, UP, DOWN, LEFT, RIGHT -> stopDrone();
             }
         });
     }
