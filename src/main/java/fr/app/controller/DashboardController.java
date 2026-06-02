@@ -555,8 +555,8 @@ public class DashboardController {
 // Orientation
         drawArtificialHorizon(status.getPitch(), status.getRoll());
 
-        setText(pitchLabel, String.format("%.1f°", status.getPitch()));
-        setText(rollLabel, String.format("%.1f°", status.getRoll()));
+        setText(pitchLabel, "Pitch : " + String.format("%.1f°", -status.getPitch()));
+        setText(rollLabel, "Roll : " + String.format("%.1f°", status.getRoll()));
 
         // Gestion caméras
         double yawCamera;
@@ -1352,29 +1352,25 @@ public class DashboardController {
 
     private void drawArtificialHorizon(double pitch, double roll) {
 
-        GraphicsContext gc =
-                attitudeCanvas.getGraphicsContext2D();
+        GraphicsContext gc = attitudeCanvas.getGraphicsContext2D();
 
         double w = attitudeCanvas.getWidth();
         double h = attitudeCanvas.getHeight();
 
         gc.clearRect(0, 0, w, h);
-
         gc.save();
-
         gc.translate(w / 2, h / 2);
-
         gc.rotate(-roll);
 
         double offset = pitch * 2.0;
 
         // ciel
-        gc.setFill(Color.DEEPSKYBLUE);
+        gc.setFill(Color.WHITE);
         gc.fillRect(-300, -300 - offset,
                 600, 300);
 
         // sol
-        gc.setFill(Color.SADDLEBROWN);
+        gc.setFill(Color.ROYALBLUE);
         gc.fillRect(-300, 0 - offset,
                 600, 300);
 
