@@ -55,6 +55,11 @@ public class DroneFrameCapture implements SceneProcessor {
     // volatile car le guardian possède 2 caméra
     private volatile DroneCameraManager droneCameraManager;
 
+    // WaterFilterManager du viewport offscreen (retour vidéo client).
+    // Doit être mis à jour en même temps que celui de la fenêtre serveur
+    // pour que la couleur/turbidité soit cohérente des deux côtés.
+    private WaterFilterManager offscreenWaterFilterManager;
+
     private final AtomicReference<byte[]> derniereFrame = new AtomicReference<>(null);
 
     public DroneFrameCapture(String droneId,
@@ -88,7 +93,7 @@ public class DroneFrameCapture implements SceneProcessor {
         viewPortOffScreen.attachScene(rootNode);
         FilterPostProcessor fppOffscreen = new FilterPostProcessor(assetManager);
 
-        new WaterFilterManager(fppOffscreen, viewPortOffScreen, rootNode, model);
+        offscreenWaterFilterManager = new WaterFilterManager(fppOffscreen, viewPortOffScreen, rootNode, model);
         new WaterDistortionManager(fppOffscreen, viewPortOffScreen, drone, model);
 
         viewPortOffScreen.addProcessor(this);
@@ -207,5 +212,10 @@ public class DroneFrameCapture implements SceneProcessor {
 
     public void setDroneCameraManager(DroneCameraManager droneCameraManager) {
         this.droneCameraManager = droneCameraManager;
+    }
+
+    /** Retourne le WaterFilterManager du viewport offscreen (retour vidéo client). */
+    public WaterFilterManager getOffscreenWaterFilterManager() {
+        return offscreenWaterFilterManager;
     }
 }

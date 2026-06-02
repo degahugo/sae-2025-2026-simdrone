@@ -572,6 +572,13 @@ public class Main extends SimpleApplication {
 
         DroneFrameCapture capture = new DroneFrameCapture(droneId, cameraManager.getCamera(), renderManager, rootNode, guiNode, assetManager, model, drone, cameraManager);
         frameCaptures.put(droneId, capture);
+
+        // Branche le WaterFilterManager offscreen dans le SensorManager pour que
+        // la turbidité/couleur du retour vidéo client soit synchronisée avec la profondeur.
+        SensorManager sm = sensorManagers.get(droneId);
+        if (sm != null) {
+            sm.setOffscreenWaterFilterManager(capture.getOffscreenWaterFilterManager());
+        }
         System.out.println("[Main] ViewPort off-screen créé pour " + droneId);
     }
 
