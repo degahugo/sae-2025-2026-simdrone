@@ -106,9 +106,7 @@ public class DashboardController {
     @FXML private Label intensityLabel;
 
     @FXML private Canvas compassCanvas;
-    @FXML private Canvas yawCanvas;
-    @FXML private Canvas pitchCanvas;
-    @FXML private Canvas rollCanvas;
+    @FXML private Canvas attitudeCanvas;
 
     @FXML private Canvas yawCameraCanvas;
     @FXML private Canvas pitchCameraCanvas;
@@ -161,9 +159,7 @@ public class DashboardController {
             drawCompass(0);
 
             // Orientation drone
-            drawGauge(yawCanvas,   0, -180, 180);
-            drawGauge(pitchCanvas, 0,  -90,  90);
-            drawGauge(rollCanvas,  0,  -90,  90);
+            drawArtificialHorizon(0,0);
 
             // Orientation caméra
             drawGauge(yawCameraCanvas, 0, -90, 90);
@@ -557,12 +553,10 @@ public class DashboardController {
         setText(compassLabel, String.format("%.1f°", status.getHeading()));
 
 // Orientation
-        drawGauge(yawCanvas,   status.getYaw(),   -180, 180);
-        drawGauge(pitchCanvas, status.getPitch(),  -90,  90);
-        drawGauge(rollCanvas,  status.getRoll(),   -90,  90);
-        setText(yawLabel,   String.format("%.1f°", status.getYaw()));
+        drawArtificialHorizon(status.getPitch(), status.getRoll());
+
         setText(pitchLabel, String.format("%.1f°", status.getPitch()));
-        setText(rollLabel,  String.format("%.1f°", status.getRoll()));
+        setText(rollLabel, String.format("%.1f°", status.getRoll()));
 
         // Gestion caméras
         double yawCamera;
@@ -1354,6 +1348,66 @@ public class DashboardController {
         gc.setLineWidth(1.2);
         gc.strokeOval(cx - 9, cy - 9, 18, 18);
 
+    }
+
+    private void drawArtificialHorizon(double pitch, double roll) {
+
+        GraphicsContext gc =
+                attitudeCanvas.getGraphicsContext2D();
+
+        double w = attitudeCanvas.getWidth();
+        double h = attitudeCanvas.getHeight();
+
+        gc.clearRect(0, 0, w, h);
+
+        gc.save();
+
+        gc.translate(w / 2, h / 2);
+
+        gc.rotate(-roll);
+
+        double offset = pitch * 2.0;
+
+        // ciel
+        gc.setFill(Color.DEEPSKYBLUE);
+        gc.fillRect(-300, -300 - offset,
+                600, 300);
+
+        // sol
+        gc.setFill(Color.SADDLEBROWN);
+        gc.fillRect(-300, 0 - offset,
+                600, 300);
+
+        // horizon
+        gc.setStroke(Color.WHITE);
+        gc.setLineWidth(3);
+        gc.strokeLine(-300, -offset,
+                300, -offset);
+
+        gc.restore();
+
+        // contour circulaire
+        gc.setStroke(Color.WHITE);
+        gc.setLineWidth(2);
+        gc.strokeOval(10,10,w-20,h-20);
+
+        // avion fixe au centre
+        gc.setStroke(Color.YELLOW);
+        gc.setLineWidth(3);
+
+        gc.strokeLine(
+                w/2 - 30,
+                h/2,
+                w/2 + 30,
+                h/2
+        );
+
+        gc.strokeLine(
+                w/2,
+                h/2,
+                w/2,
+                h/2 + 15
+        );
     }
 
     // Appelle cette méthode à chaque mise à jour des angles
