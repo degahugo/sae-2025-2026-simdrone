@@ -81,7 +81,7 @@ public class LightingManager {
     }
 
     public void updateUnderwaterLighting(float depth) {
-        float intensity = Math.max(0.05f, 1.0f - (depth * 0.02f));
+        float intensity = Math.max(0.02f, 1.0f - (depth * 0.12f));
 
         ambientLight.setColor(ColorRGBA.White.mult(intensity));
         sunLight.setColor(ColorRGBA.White.mult(intensity * 0.8f));

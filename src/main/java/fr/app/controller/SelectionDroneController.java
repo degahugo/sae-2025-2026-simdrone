@@ -9,6 +9,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
 import javafx.stage.Stage;
 import java.util.UUID;
+import javafx.scene.Parent;
+import javafx.scene.control.ScrollPane;
 
 public class SelectionDroneController {
 
@@ -62,7 +64,16 @@ public class SelectionDroneController {
                     getClass().getResource("/fxml/Dashboard.fxml")
             );
 
-            Scene scene = new Scene(loader.load());
+            //Scene scene = new Scene(loader.load());
+            Parent dashboardRoot = loader.load();
+
+            ScrollPane scrollPane = new ScrollPane(dashboardRoot);
+            scrollPane.setFitToWidth(true);
+            scrollPane.setFitToHeight(true);
+            scrollPane.setPannable(true);
+            scrollPane.setStyle("-fx-background: #06111f; -fx-background-color: #06111f;");
+
+            Scene scene = new Scene(scrollPane);
 
             DashboardController controller = loader.getController();
             controller.setClient(client);
@@ -92,8 +103,14 @@ public class SelectionDroneController {
             // la fenêtre est fermée, pour éviter les fuites de thread.
             stage.setOnCloseRequest(e -> controller.shutdown());
 
+
+            stage.setResizable(true);
             stage.setScene(scene);
-            stage.setFullScreen(true);
+            //stage.setFullScreen(true);
+            stage.setMaximized(true);
+            stage.setMinWidth(1000);
+            stage.setMinHeight(700);
+
 
         } catch (Exception e) {
             e.printStackTrace();
