@@ -8,6 +8,7 @@ import com.jme3.renderer.ViewPort;
 import com.jme3.scene.Node;
 import com.jme3.water.WaterFilter;
 import fr.app.model.WorldView;
+import fr.app.model.UnderwaterUtils;
 
 public class WaterFilterManager {
 
@@ -28,6 +29,7 @@ public class WaterFilterManager {
         waterFilter.setSpeed(model.getWaterSpeed());
         waterFilter.setUseRefraction(true);
         fpp.addFilter(waterFilter);
+        viewPort.addProcessor(fpp);
 
         // Crée un brouillard bleu/vert profond pour simuler l'opacité de l'eau
         /*FogFilter waterFog = new FogFilter();
@@ -37,11 +39,11 @@ public class WaterFilterManager {
 
 // Ajoute ce filtre à ton processeur post-process (fpp)
        // fpp.addFilter(waterFog);
-        //viewPort.addProcessor(fpp);
     }
 
+
     public void updateUnderwaterEffect(float depth) {
-        float intensity = Math.max(0.01f, 1.0f - depth * 0.03f);
+        float intensity = UnderwaterUtils.computeIntensity(depth);
         waterFilter.setWaterColor(new ColorRGBA(0f, 0.1f * intensity, 0.2f * intensity, 1f));
         waterFilter.setDeepWaterColor(new ColorRGBA(0f, 0.03f * intensity, 0.08f * intensity, 1f));
     }

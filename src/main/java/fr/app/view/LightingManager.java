@@ -11,6 +11,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
 import com.jme3.scene.Node;
 import com.jme3.util.SkyFactory;
+import fr.app.model.UnderwaterUtils;
 
 public class LightingManager {
     private final Node rootNode;
@@ -81,9 +82,9 @@ public class LightingManager {
     }
 
     public void updateUnderwaterLighting(float depth) {
-        float intensity = Math.max(0.05f, 1.0f - (depth * 0.02f));
 
+        float intensity = UnderwaterUtils.computeIntensity(depth);
         ambientLight.setColor(ColorRGBA.White.mult(intensity));
-        sunLight.setColor(ColorRGBA.White.mult(intensity * 0.8f));
+        sunLight.setColor(ColorRGBA.White.mult(intensity));
     }
 }

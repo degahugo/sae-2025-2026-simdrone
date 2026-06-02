@@ -145,7 +145,7 @@ public class Main extends SimpleApplication {
         setPauseOnLostFocus(false);
         this.physicsEngine = new PhysicsEngine(this, this.model, this.guiManager, false);
 
-        int terrainId = 1;
+        int terrainId = 3;
 
         if (configuration != null && configuration.getEnvironmentType() != null) {
             terrainId = configuration.getEnvironmentType().getTerrainId();
@@ -322,7 +322,12 @@ public class Main extends SimpleApplication {
 
             if (droneCameraManager != null) {
                 droneCameraManager.update(tpf);
+                float depth = Math.max(0f, -drone.getDroneSpatial().getWorldTranslation().y);
+                lightingManager.updateUnderwaterLighting(depth);
+                System.out.println("Depth = " + depth);
             }
+
+
 
             WaterDistortionManager waterDistortionManager = distortions.get(droneId);
             if (waterDistortionManager != null) {
