@@ -129,6 +129,16 @@ public class DroneController {
 
             case SWITCHCAM: switchCameraIntention = pressed; break;
 
+            // --- Lampe d'éclairage ---
+            // TOGGLELIGHT est une action ponctuelle (comme SWITCHCAM) : on ne
+            // garde pas d'intention booléenne, le serveur gère l'anti-rebond.
+            // LIGHT_RANGE_UP/DOWN sont aussi ponctuels : un appui = un palier de portée.
+            case TOGGLELIGHT:
+            case LIGHT_RANGE_UP:
+            case LIGHT_RANGE_DOWN:
+
+                break;
+
             case STOP:
                 forwardIntention = false;
                 backwardIntention = false;
@@ -182,6 +192,14 @@ public class DroneController {
 
         inputManager.addMapping(PilotCommand.SWITCHCAM.name(), new KeyTrigger(KeyInput.KEY_C));
 
+        // --- Lampe d'éclairage ---
+        // L = toggle (allumer / éteindre la lampe)
+        // + (EQUALS) = augmenter la portée nominale de 10 m
+        // - (MINUS)  = diminuer la portée nominale de 10 m
+        inputManager.addMapping(PilotCommand.TOGGLELIGHT.name(),   new KeyTrigger(KeyInput.KEY_L));
+        inputManager.addMapping(PilotCommand.LIGHT_RANGE_UP.name(),new KeyTrigger(KeyInput.KEY_ADD));
+        inputManager.addMapping(PilotCommand.LIGHT_RANGE_DOWN.name(), new KeyTrigger(KeyInput.KEY_SUBTRACT));
+
         // Listeners
         inputManager.addListener(actionListener,
                 moveForward.name(),
@@ -204,7 +222,12 @@ public class DroneController {
                 PilotCommand.CAM_UP.name(),
                 PilotCommand.CAM_DOWN.name(),
 
-                PilotCommand.SWITCHCAM.name()
+                PilotCommand.SWITCHCAM.name(),
+
+                // --- Lampe d'éclairage ---
+                PilotCommand.TOGGLELIGHT.name(),
+                PilotCommand.LIGHT_RANGE_UP.name(),
+                PilotCommand.LIGHT_RANGE_DOWN.name()
         );
     }
 

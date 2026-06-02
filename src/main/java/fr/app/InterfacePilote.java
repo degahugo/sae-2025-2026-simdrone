@@ -18,7 +18,8 @@ public class InterfacePilote extends Application {
 
         stage.setTitle("DronSim - Connexion");
         stage.setScene(scene);
-        stage.setResizable(false);
+        stage.setResizable(true);
+        stage.setAlwaysOnTop(true);
         stage.show();
     }
 

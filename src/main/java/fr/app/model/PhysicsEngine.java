@@ -25,6 +25,8 @@ import com.jme3.bullet.collision.PhysicsCollisionListener;
 import com.jme3.bullet.collision.PhysicsCollisionObject;
 import fr.utln.dronsim.viewer.primitives.ReferentialNode;
 import com.jme3.math.FastMath;
+import com.jme3.texture.Texture;
+
 
 public class PhysicsEngine{
 
@@ -129,6 +131,9 @@ public class PhysicsEngine{
                 mat.getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Off);
                 terrainVisuel.setMaterial(mat);
                 System.out.println("Texture de point_borloo terminé");
+            }
+            else{
+                convertirEnMateriauEclaire(terrainVisuel);
             }
             System.out.println("Chargement du modèle physique lowpoly");
             app.enqueue(() -> {
@@ -307,6 +312,50 @@ public class PhysicsEngine{
         };
         System.out.println("Finished terrain mesh using the " + type + " method");
         return sceneShape;
+    }
+
+    /**
+     * Convertit le matériau d'un terrain (souvent Unshaded, insensible à la
+     * lumière) en matériau Lighting.j3md, afin que les lumières de la scène —
+     * notamment la lampe du drone (SpotLight) — puissent réellement l'éclairer.
+     * <p>
+     * Parcourt toutes les géométries du Spatial. Pour chacune, on tente de
+     * récupérer la texture diffuse existante (paramètre "ColorMap" d'Unshaded
+     * ou "DiffuseMap") et on la réapplique sur un nouveau matériau Lighting.
+     * Si aucune texture n'est trouvée, on applique une couleur diffuse neutre.
+     *
+     * @param spatial racine du terrain à convertir.
+     */
+    private void convertirEnMateriauEclaire(Spatial spatial) {
+        spatial.depthFirstTraversal(s -> {
+            if (s instanceof Geometry geo) {
+                Texture diffuse = null;
+                Material ancien = geo.getMaterial();
+                if (ancien != null) {
+                    // Unshaded stocke la texture dans "ColorMap", Lighting dans "DiffuseMap"
+                    try {
+                        if (ancien.getParam("ColorMap") != null) {
+                            diffuse = (Texture) ancien.getParam("ColorMap").getValue();
+                        } else if (ancien.getParam("DiffuseMap") != null) {
+                            diffuse = (Texture) ancien.getParam("DiffuseMap").getValue();
+                        }
+                    } catch (Exception ignored) {}
+                }
+
+                Material lit = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
+                if (diffuse != null) {
+                    lit.setTexture("DiffuseMap", diffuse);
+                } else {
+                    // Pas de texture : couleur neutre pour rester visible et éclairable
+                    lit.setBoolean("UseMaterialColors", true);
+                    lit.setColor("Diffuse", ColorRGBA.LightGray);
+                    lit.setColor("Ambient", ColorRGBA.LightGray);
+                }
+                lit.getAdditionalRenderState().setFaceCullMode(RenderState.FaceCullMode.Off);
+                geo.setMaterial(lit);
+            }
+        });
+        System.out.println("[PhysicsEngine] Terrain converti en matériau éclairable (Lighting).");
     }
 
     /**

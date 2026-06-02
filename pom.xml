@@ -183,6 +183,11 @@
                 <version>0.0.8</version>
                 <configuration>
                     <mainClass>fr.app.InterfacePilote</mainClass>
+                    <options>
+                        <option>-Dglass.win.uiScale=100%</option>
+
+                        <option>-Dglass.gtk.uiScale=100%</option>
+                    </options>
                 </configuration>
             </plugin>
         </plugins>
