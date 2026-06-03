@@ -303,6 +303,14 @@ public class DroneController {
         // ⭐ JE NE CHANGE RIEN
         // ⭐ FREE-LOOK NE TOUCHE PAS LA PHYSIQUE
 
+        if (drone.getBattery().isEmpty()) {
+
+            physicsControl.setLinearVelocity(Vector3f.ZERO);
+            physicsControl.setAngularVelocity(Vector3f.ZERO);
+
+            return;
+        }
+
         if (toggleHoverModeIntention) {
 
             Vector3f angularVelocity = physicsControl.getAngularVelocity();
