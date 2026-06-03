@@ -17,7 +17,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.shape.Circle;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.scene.input.KeyCode;
 
@@ -104,6 +105,9 @@ public class DashboardController {
     @FXML private Label rollLabel;
     @FXML private Label sensorsLabel;
     @FXML private Label intensityLabel;
+
+    // Label affichant la portée de la lampe du drone (alimenté par le LightSensor serveur).
+    @FXML private Label lightLabel;
 
     @FXML private Canvas compassCanvas;
     @FXML private Canvas attitudeCanvas;
@@ -547,6 +551,18 @@ public class DashboardController {
                         status.getIntensity()
                 )
         );
+
+        // --- Lampe d'éclairage ---
+        // Affiche la portée utile en pourcentage : combine la portée nominale
+        // choisie par le pilote et l'atténuation calculée par le LightSensor
+        // en fonction de la profondeur du drone.
+        // Le label peut être null si le FXML ne définit pas encore ce champ.
+        if (lightLabel != null) {
+            setText(
+                    lightLabel,
+                    status.getLightText()   // ex. "72 %" (0 % = éteinte ou 0 portée)
+            );
+        }
 
         // Boussole
         drawCompass(status.getHeading());
@@ -1027,6 +1043,36 @@ public class DashboardController {
     @FXML private void switchCameraButton(){
         switchCamera();
         send(PilotCommand.STOP);
+    }
+
+    // --- Lampe d'éclairage ---
+
+    /**
+     * Allume ou éteint la lampe du drone.
+     * Peut être appelé depuis un bouton FXML ou un raccourci clavier.
+     */
+    @FXML
+    private void toggleLight() {
+        send(PilotCommand.TOGGLELIGHT);
+        send(PilotCommand.STOP);
+    }
+
+    /**
+     * Augmente la portée nominale du faisceau de 10 m.
+     * La portée effective peut rester réduite si le drone est en profondeur
+     * (atténuation calculée par le LightSensor côté serveur).
+     */
+    @FXML
+    private void lightRangeUp() {
+        send(PilotCommand.LIGHT_RANGE_UP);
+    }
+
+    /**
+     * Diminue la portée nominale du faisceau de 10 m.
+     */
+    @FXML
+    private void lightRangeDown() {
+        send(PilotCommand.LIGHT_RANGE_DOWN);
     }
 
     /**

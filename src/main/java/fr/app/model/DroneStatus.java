@@ -23,6 +23,10 @@ public class DroneStatus {
     private double battery;
     private double heading;
     private double pressure;
+
+    // Niveau de lumière normalisé (0.0 à 1.0) : reçu depuis le LightSensor serveur.
+    // Représente la portée utile du faisceau rapportée à la portée maximale.
+    private double lightLevel;
     private float frontCamPitch;
     private float frontCamYaw;
     private float rearCamPitch;
@@ -123,6 +127,26 @@ public class DroneStatus {
         this.heading = heading;
     }
 
+    /**
+     * Retourne le niveau de lumière normalisé (0.0 = éteinte, 1.0 = portée max).
+     * Alimenté par le LightSensor côté serveur, transmis dans le DroneStatus JSON.
+     */
+    public double getLightLevel() {
+        return lightLevel;
+    }
+
+    public void setLightLevel(double lightLevel) {
+        this.lightLevel = lightLevel;
+    }
+
+    /**
+     * Texte d'affichage prêt à l'emploi pour le dashboard.
+     * Exprime la portée en pourcentage de la portée nominale.
+     */
+    @JsonIgnore
+    public String getLightText() {
+        return Math.round(lightLevel * 100) + " %";
+    }
 
 
     public void setDroneType(String droneType) {

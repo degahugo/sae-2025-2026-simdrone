@@ -19,5 +19,8 @@ public enum PilotCommand {
     CAM_DOWN,
     TOGGLEHOVERMODE,
     STOP,
-    SWITCHCAM
+    SWITCHCAM,
+    TOGGLELIGHT,
+    LIGHT_RANGE_UP,
+    LIGHT_RANGE_DOWN
 }

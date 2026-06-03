@@ -8,8 +8,13 @@
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="fr.app.controller.DashboardController"
-            prefWidth="1280" prefHeight="800"
+            prefWidth="-1"
+            prefHeight="-1"
+            maxWidth="Infinity"
+            maxHeight="Infinity"
             style="-fx-background-color: #06111f;">
+            <!--prefWidth="1280" prefHeight="800"-->
+
     <!--
          BARRE SUPÉRIEURE
     -->
@@ -715,6 +720,44 @@
                   -fx-font-size: 10px;"/>
                 </VBox>
 
+                <!-- ÉCLAIRAGE : toggle on/off + réglage de la portée -->
+                <Button text=" LAMPE ON / OFF"
+                        onAction="#toggleLight"
+                        maxWidth="Infinity"
+                        prefHeight="30"
+                        style="-fx-background-color: #334155;
+       -fx-text-fill: white;
+       -fx-font-weight: bold;
+       -fx-font-size: 11px;
+       -fx-cursor: hand;
+       -fx-background-radius: 6;
+       -fx-border-radius: 6;"/>
+                <HBox spacing="6" alignment="CENTER">
+                    <Button text="− Portée"
+                            onAction="#lightRangeDown"
+                            maxWidth="Infinity"
+                            HBox.hgrow="ALWAYS"
+                            prefHeight="28"
+                            style="-fx-background-color: #1e293b;
+           -fx-text-fill: #facc15;
+           -fx-font-weight: bold;
+           -fx-font-size: 11px;
+           -fx-cursor: hand;
+           -fx-background-radius: 6;
+           -fx-border-radius: 6;"/>
+                    <Button text="Portée +"
+                            onAction="#lightRangeUp"
+                            maxWidth="Infinity"
+                            HBox.hgrow="ALWAYS"
+                            prefHeight="28"
+                            style="-fx-background-color: #1e293b;
+           -fx-text-fill: #facc15;
+           -fx-font-weight: bold;
+           -fx-font-size: 11px;
+           -fx-cursor: hand;
+           -fx-background-radius: 6;
+           -fx-border-radius: 6;"/>
+                </HBox>
 
 
 
@@ -754,6 +797,15 @@
                         <Label fx:id="intensityLabel" text="--"
                                style="-fx-text-fill: white; -fx-font-size: 11px; -fx-font-weight: bold;"/>
                     </HBox>
+
+                    <HBox spacing="8" alignment="CENTER_LEFT">
+                        <Label text="💡" style="-fx-font-size: 12px;"/>
+                        <Label text="Éclairage"
+                               style="-fx-text-fill: #94a3b8; -fx-font-size: 11px; -fx-min-width: 82px;"/>
+                        <Label fx:id="lightLabel" text="-- %"
+                               style="-fx-text-fill: white; -fx-font-size: 11px; -fx-font-weight: bold;"/>
+                    </HBox>
+
                 </VBox>
                 <Label fx:id="sensorsLabel" text="Capteurs : --" wrapText="true"
                        style="-fx-text-fill: #475569; -fx-font-size: 10px;"/>

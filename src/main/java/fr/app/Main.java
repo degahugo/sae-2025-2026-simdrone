@@ -82,6 +82,9 @@ public class Main extends SimpleApplication {
     private final ConcurrentHashMap<String, TemperatureSensor> tempSensors = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, PressureSensor> pressureSensors = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, CompassSensor> compassSensors = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, LightSensor> lightSensors = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, fr.app.view.DroneLight> droneLights = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Boolean> lightToggleHeld = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, WaterDistortionManager> distortions = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, AtomicReference<DroneStatus>> statuts = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, DroneFrameCapture> frameCaptures = new ConcurrentHashMap<>();
@@ -333,6 +336,16 @@ public class Main extends SimpleApplication {
                 sensorManager.updateSensors();
             }
 
+            // Lampe d'éclairage : portée pilotée par le LightSensor + suivi du drone
+            fr.app.view.DroneLight droneLight = droneLights.get(droneId);
+            if (droneLight != null) {
+                LightSensor lightSensor = lightSensors.get(droneId);
+                if (lightSensor != null) {
+                    droneLight.setRange(lightSensor.getRange());
+                }
+                droneLight.update();
+            }
+
             if (drone.getBattery() != null) {
                 float consumption = 0.05f * tpf;
                 //Donc plus le temps passe,plus la batterie diminue
@@ -374,10 +387,12 @@ public class Main extends SimpleApplication {
         DepthSensor ds = new DepthSensor("DepthSensor_" + droneId);
         CompassSensor cs = new CompassSensor("CompassSensor_" + droneId);
         PressureSensor ps = new PressureSensor("PressureSensor_" + droneId, ds);
+        LightSensor ls = new LightSensor("LightSensor_" + droneId);
         drone.addSensor(ts);
         drone.addSensor(ds);
         drone.addSensor(cs);
         drone.addSensor(ps);
+        drone.addSensor(ls);
 
         SensorManager sm = new SensorManager(drone, lightingManager, waterFilterManager);
         sm.initSensors();
@@ -392,6 +407,11 @@ public class Main extends SimpleApplication {
         tempSensors.put(droneId, ts);
         pressureSensors.put(droneId, ps);
         compassSensors.put(droneId, cs);
+        lightSensors.put(droneId, ls);
+        // Lampe d'éclairage propre à ce drone (suit la caméra active), éteinte par défaut
+        fr.app.view.DroneLight droneLight = new fr.app.view.DroneLight(rootNode, drone, instance.getActiveCameraManager(),assetManager);
+        droneLights.put(droneId, droneLight);
+        lightToggleHeld.put(droneId, false);
         distortions.put(droneId, wdm);
         statuts.put(droneId, new AtomicReference<>(new DroneStatus()));
 
@@ -459,8 +479,42 @@ public class Main extends SimpleApplication {
             return;
         }
 
+        if (command == PilotCommand.TOGGLELIGHT) {
+            // Anti-rebond : un seul toggle tant que la touche est maintenue
+            if (Boolean.TRUE.equals(lightToggleHeld.get(droneId))) {
+                return;
+            }
+            lightToggleHeld.put(droneId, true);
+
+            enqueue(() -> {
+                fr.app.view.DroneLight light = droneLights.get(droneId);
+                if (light != null) {
+                    light.toggle();
+                    System.out.println("[Simulation] Lampe " + droneId + " : "
+                            + (light.isOn() ? "ON" : "OFF"));
+                }
+                return null;
+            });
+            return;
+        }
+
+        if (command == PilotCommand.LIGHT_RANGE_UP || command == PilotCommand.LIGHT_RANGE_DOWN) {
+            LightSensor ls = lightSensors.get(droneId);
+            if (ls != null) {
+                if (command == PilotCommand.LIGHT_RANGE_UP) {
+                    ls.augmenterPortee(10f);
+                } else {
+                    ls.diminuerPortee(10f);
+                }
+                System.out.println("[Simulation] Portée lampe " + droneId
+                        + " : " + ls.getPorteeNominale() + " m");
+            }
+            return;
+        }
+
         // Dès qu'une autre commande arrive, on autorise un futur SWITCHCAM
         switchCamHeld.put(droneId, false);
+        lightToggleHeld.put(droneId, false);
         DroneController controller = droneControllers.get(droneId);
 
         if (controller == null) {
@@ -518,6 +572,13 @@ public class Main extends SimpleApplication {
 
         DroneFrameCapture capture = new DroneFrameCapture(droneId, cameraManager.getCamera(), renderManager, rootNode, guiNode, assetManager, model, drone, cameraManager);
         frameCaptures.put(droneId, capture);
+
+        // Branche le WaterFilterManager offscreen dans le SensorManager pour que
+        // la turbidité/couleur du retour vidéo client soit synchronisée avec la profondeur.
+        SensorManager sm = sensorManagers.get(droneId);
+        if (sm != null) {
+            sm.setOffscreenWaterFilterManager(capture.getOffscreenWaterFilterManager());
+        }
         System.out.println("[Main] ViewPort off-screen créé pour " + droneId);
     }
 
@@ -619,6 +680,9 @@ public class Main extends SimpleApplication {
             s.setHeading(cs.getHeading());
             s.setYaw(cs.getHeading());
         }
+
+        LightSensor ls = lightSensors.get(droneId);
+        if (ls != null) s.setLightLevel(ls.getLightLevel());
 
         WaterDistortionManager wdm = distortions.get(droneId);
         if (wdm != null) {
