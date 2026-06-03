@@ -1404,31 +1404,36 @@ public class DashboardController {
         double h = attitudeCanvas.getHeight();
 
         gc.clearRect(0, 0, w, h);
+
         gc.save();
+
+// Clip circulaire
+        gc.beginPath();
+        gc.arc(w / 2, h / 2, (w - 20) / 2, (h - 20) / 2, 0, 360);
+        gc.closePath();
+        gc.clip();
+
         gc.translate(w / 2, h / 2);
         gc.rotate(-roll);
 
         double offset = pitch * 2.0;
 
-        // ciel
-        gc.setFill(Color.WHITE);
-        gc.fillRect(-300, -300 - offset,
-                600, 300);
-
-        // sol
+// ciel
         gc.setFill(Color.ROYALBLUE);
-        gc.fillRect(-300, 0 - offset,
-                600, 300);
+        gc.fillRect(-300, -300 - offset, 600, 300);
 
-        // horizon
+// sol
+        gc.setFill(Color.SADDLEBROWN);
+        gc.fillRect(-300, 0 - offset, 600, 300);
+
+// horizon
         gc.setStroke(Color.WHITE);
         gc.setLineWidth(3);
-        gc.strokeLine(-300, -offset,
-                300, -offset);
+        gc.strokeLine(-300, -offset, 300, -offset);
 
         gc.restore();
 
-        // contour circulaire
+// contour circulaire
         gc.setStroke(Color.WHITE);
         gc.setLineWidth(2);
         gc.strokeOval(10,10,w-20,h-20);
