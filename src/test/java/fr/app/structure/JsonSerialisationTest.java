@@ -2,6 +2,7 @@ package fr.app.structure;
 
 import fr.app.model.CommandeMessage;
 import fr.app.model.DroneStatus;
+import fr.app.model.MessageType;
 import fr.app.model.PilotCommand;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,7 +24,7 @@ class JsonSerialisationTest {
 
     @Test
     void serialisation_CommandeForward_produitJsonValide() throws SerialisationException {
-        CommandeMessage msg = new CommandeMessage(PilotCommand.FORWARD);
+        CommandeMessage msg = new CommandeMessage(MessageType.COMMAND, "drone1", PilotCommand.FORWARD);
         byte[] bytes = serializer.serialisation(msg);
         String json = new String(bytes);
 
@@ -34,7 +35,7 @@ class JsonSerialisationTest {
 
     @Test
     void serialisation_produitsDesBytes() throws SerialisationException {
-        CommandeMessage msg = new CommandeMessage(PilotCommand.LEFT);
+        CommandeMessage msg = new CommandeMessage(MessageType.COMMAND, "drone1", PilotCommand.LEFT);
         byte[] bytes = serializer.serialisation(msg);
 
         // Vérifie que le tableau de bytes n'est pas vide
@@ -79,7 +80,7 @@ class JsonSerialisationTest {
 
     @Test
     void allerRetour_CommandeMessage_donneObjetIdentique() throws SerialisationException {
-        CommandeMessage original = new CommandeMessage(PilotCommand.UP);
+        CommandeMessage original = new CommandeMessage(MessageType.COMMAND, "drone1", PilotCommand.UP);
 
         // Sérialise puis désérialise
         byte[] bytes = serializer.serialisation(original);
@@ -93,7 +94,7 @@ class JsonSerialisationTest {
     void allerRetour_toutesLesCommandes() throws SerialisationException {
         // Teste chaque valeur de l'enum PilotCommand
         for (PilotCommand cmd : PilotCommand.values()) {
-            CommandeMessage original = new CommandeMessage(cmd);
+            CommandeMessage original = new CommandeMessage(MessageType.COMMAND, "drone1", cmd);
             byte[] bytes = serializer.serialisation(original);
             CommandeMessage resultat = serializer.deserisation(bytes, CommandeMessage.class);
 
